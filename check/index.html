@@ -1,135 +1,77 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>R&#233;sum&#233; - Amitangshu Dasgupta (Work in Progress)</title>
-    <link rel="stylesheet" href="style.css">
-	<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-	<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-	<link rel="manifest" href="/site.webmanifest">
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Roboto+Slab&display=swap" rel="stylesheet">
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>AI Chat</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 12px; max-width:700px; margin:0 auto; }
+    #chat { border:1px solid #ddd; padding:10px; height:420px; overflow:auto; background:#fff; }
+    .msg { margin:8px 0; display:flex; }
+    .msg .bubble { padding:8px 12px; border-radius:12px; max-width:80%; }
+    .user { justify-content:flex-end; }
+    .user .bubble { background:#0078d4; color:white; }
+    .bot { justify-content:flex-start; }
+    .bot .bubble { background:#f1f1f1; color:#111; }
+    #inputRow { display:flex; gap:8px; margin-top:10px; }
+    #input { flex:1; padding:8px; }
+    button { padding:8px 12px; }
+  </style>
 </head>
-  <body>
-	<script src="index.js"></script>
-	<table cellspacing="15">
-	<tr>
-		<td>
-		<img src='image.png' alt='Resume Profile Picture' width="150" height="150">
-		</td>
-		<td>
-		<h1>Aham</h1>
-		<h2>Assistant Manager - Data Science<br>American Express India Pvt. Ltd.</h2>
-		<a href="https://www.linkedin.com/in/angshudg">
-		<img src='linkedin.png' width="40" alt='LinkedIn-icon'>
-		</a>
-		</td>
-	<tr>
-	</table>
-	<p>Academically, a statistician with <em>3+ years of professional experience </em>working in the field of <em>Data Science</em>, driving incremental lift in revenue and engagement through research and application of latest developments in the domain.</p>
-	<hr>
-	<h2>Work Experience (3 years 5 months)</h2>
-	<h3>American Express India Pvt. Ltd.</h3>
-	<h4>Assistant Manager (Data Science) - <em>August 2021 to present</em></h4>
-	<ul>
-		<li>Calculated customer spending and related trends across merchants to create <strong>spend linked features</strong> to incorporate them into offer ranking algorithm, thereby driving a <strong>lift of 7%-9% in mAP </strong>(Mean Average Precision) bringing in an <strong>incremental revenue of $7M</strong>, which has now been productionalised</li>
-		<li><strong>Generated offer embeddings</strong> from textual metadata and used these embeddings as features replacing manually created meta features in the model, thereby <strong>automating the entire process</strong> as well as <strong>improving the performance of the model by up to 5%</strong></li>
-	</ul>
-	<h4>Business Analyst (Data Science) - <em>March 2019 to July 2021</em></h4>
-	<ul>
-		<li>The combination of the following <strong>Graph based</strong> projects drove a <strong>lift in Gini by up to 10% over the baseline model</strong> and is now being implemented for a section of card-members with plans of ramping up in future months
-	<ul>
-	<li><strong>Created customer interest graph and applied PyTorch BigGraph</strong> on it to calculate customer behaviour embeddings that were used as features</li>
-	<li>Applied <strong>Graph Convolution Network for Link Prediction</strong> on customer-offer interaction graphs to predict clicks</li>
-	</ul>
-	</li>
-	<li>Offer Sequencing - <strong>Predicting offers with highest click probability</strong> based on user's past sequence of clicked offers using <strong>LSTM</strong>. Witnessed a <strong>lift of 3%-7% in KPIs</strong></li>
-	<li>Hyperparameter Optimisation - Developed a new approach (using coordinate descent) to optimising hyper parameters of any algorithm that <strong>reduced the runtime by upto 40% for XGBoost and 45% for CatBoost</strong></li>
-	<li>Analysed and reported multiple bugs in the team’s revenue calculation process that was used to make changes in the dashboard representing effective yield which in turn <strong>increased the yield by around $70k</strong> (unreported earlier)</li>
-	</ul>
-	<h5>Achievements</h5>
-	<ul>
-		<li>Awarded ECDS Superstar for excellent performance in Q2 2021</li>
-		<li>Awarded ECDS Champion for excellent performance in July 2020</li>
-	</ul>
-	<h3>Evalueserve</h3>
-	<h4>Business Analyst (Financial Services) - <em>January 2019 to February 2019</em></h4></body>
-	<hr>
-	<h2>Education</h2>
-	<h3>IIT Kanpur</h3>
-	<h4>M.Sc in <em>Statistics</em> (2018)</h4>
-	<h3>University of Calcutta</h3>
-	<h4>B.Sc (Hons) in <em>Statistics</em> (2016)</h4>
-	<h5>Projects and Internships</h5>
-	<ul>
-		<li>Risk Management (<strong>IIM Bangalore</strong>) - 2017
-		<br>Development of a modified GARCH algorithm that helps in hedging the risk of an investor</li>
-		<li>Data Science and Analytics Internship (<strong>IIM Lucknow</strong>) - 2017
-		<br>A study on hotel pricing across the country and analysing the factors that play a role</li>
-		<li>A Game of Cricket (<strong>IIT Kanpur</strong>) - 2018
-		<br>A game that tests the cricketing IQ of the user, created using neural networks</li>
-	</ul>
-	<h5>Achievements</h5>
-	<ul>
-		<li>Finished in <strong>top 3 teams at the IITK CS Data Mining Hackathon</strong> (2018)
-		<br>Accuracy attained: 95%, Average accuracy of all teams: 75%</li>
-		<li>Received <strong>Merit-cum-Means Scholarship from IIT Kanpur</strong> (2016-18)</li>
-		<li>Achieved <strong>All India Rank 43</strong> in IIT Joint Admission Test for MSc Entrance Examination (2016)</li>
-		<li>Invited to a radio broadcast show to comment on recent developments in the field of Data Science (2021)</li>
-	</ul>
-	<hr>
-	<h2>Technical Skills</h2>
-	<h5>Proficient Tools</h5>
-	<table cellspacing="5">
-		<tbody>
-			<tr>
-				<td>Python 3</td>
-				<td>&#9899; &#9899; &#9899; &#9899; &#9898;</td>
-			</tr>
-		</tbody>
-		<tbody>
-			<tr>
-				<td>HiveQL/SQL</td>
-				<td>&#9899; &#9899; &#9899; &#9899; &#9898;</td>
-			</tr>
-		</tbody>
-		<tbody>
-			<tr>
-				<td>MS Excel</td>
-				<td>&#9899; &#9899; &#9899; &#9898; &#9898;</td>
-			</tr>
-		</tbody>
-		<tbody>
-			<tr>
-				<td>R Programming</td>
-				<td>&#9899; &#9899; &#9899; &#9898; &#9898;</td>
-			</tr>
-		</tbody>
-		<tbody>
-			<tr>
-				<td>Tableau</td>
-				<td>&#9899; &#9899; &#9898; &#9898; &#9898;</td>
-			</tr>
-		</tbody>
-	</table>
-	<h5>Areas of Interest/Expertise</h5>
-	<ul>
-		<li>Natural Language Processing (Word2Vec, Transformers, BERT)</li>
-		<li>Random Forests and Boosting (XGBoost and CatBoost)</li>
-		<li>Neural Networks (ResNet, LSTM, DGL etc)</li>
-		<li>Hadoop(Hive) and PySpark</li>
-		<li>PyTorch, Tensorflow, Keras</li>
-		<li>Object Oriented Programming (Java, C, C++)</li>
-	</ul>
-	<hr size="3">
-		<p><strong>Contact:</strong>
-		<br>+91 9836578800
-		<br>angshudg@gmail.com
-		<br>https://www.linkedin.com/in/angshudg
-	</p>
-	<hr size="3">
+<body>
+  <h2>AI Chat</h2>
+  <div id="chat"></div>
+
+  <div id="inputRow">
+    <input id="input" placeholder="Type a message and press Enter" />
+    <button id="send">Send</button>
+  </div>
+
+  <script>
+    const API_BASE = "https://REPLACE_WITH_YOUR_VERCEL_URL/api/chat"; // <-- change this after deploying Vercel
+    const chatEl = document.getElementById('chat');
+    const inputEl = document.getElementById('input');
+    const sendBtn = document.getElementById('send');
+
+    function appendMessage(text, who) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'msg ' + (who === 'user' ? 'user' : 'bot');
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
+      wrapper.appendChild(bubble);
+      chatEl.appendChild(wrapper);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+      appendMessage(text, 'user');
+      inputEl.value = '';
+      appendMessage('…', 'bot'); // placeholder for reply
+
+      try {
+        const res = await fetch(API_BASE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text })
+        });
+        const data = await res.json();
+        // Replace last bot bubble content
+        const botBubbles = Array.from(document.querySelectorAll('.msg.bot .bubble'));
+        const last = botBubbles[botBubbles.length-1];
+        if (data.reply) last.textContent = data.reply;
+        else last.textContent = "No reply (error)";
+      } catch (err) {
+        const botBubbles = Array.from(document.querySelectorAll('.msg.bot .bubble'));
+        const last = botBubbles[botBubbles.length-1];
+        last.textContent = "Error contacting server";
+        console.error(err);
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+  </script>
+</body>
 </html>
