@@ -124,5 +124,26 @@
       <hr class="sep">
       <footer class="muted">Resume last updated: 2025</footer>
     </div>
+<!-- Chat widget -->
+<link rel="stylesheet" href="chat.css">
+<div class="chat-fab" id="chatFab" title="Chat with Amitangshu">
+  <img src="chat-icon.svg" alt="Chat">
+</div>
+
+<div class="chat-modal" id="chatModal" aria-hidden="true">
+  <div class="header">
+    <div>Chat with AI Amitangshu</div>
+    <button class="close" id="chatClose">✕</button>
+  </div>
+
+  <div id="chatFrameContainer" class="frame-container">
+    <div class="loader">
+      Loading chat…
+      <div><a id="openInNewTab" href="#" target="_blank">Open in a new tab</a></div>
+    </div>
+  </div>
+</div>
+
+<script src="chat.js"></script>
   </body>
 </html>
