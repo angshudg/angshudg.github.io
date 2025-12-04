@@ -79,10 +79,17 @@ ul {
   gap:20px;
 }
 
-@media (max-width:800px) {
+@media (max-width:600px) {
   .two-col { grid-template-columns:1fr }
   header { grid-template-columns:84px 1fr }
   .container { padding:18px }
+  .name-row {
+    gap: 8px;
+  }
+  .name-icon-btn .icon {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 .skill-list {
@@ -143,4 +150,52 @@ hr.sep {
   height: 18px;
   opacity: 0.85;
   cursor: pointer;
+}
+
+/* Align name + icons */
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Icon buttons near the name */
+.name-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.name-icon-btn .icon {
+  width: 22px;
+  height: 22px;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+
+.name-icon-btn:hover .icon {
+  opacity: 1;
+}
+
+/* Tooltip styling */
+.name-icon-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: -36px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: #333;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.name-icon-btn:hover::after {
+  opacity: 1;
 }
