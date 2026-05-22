@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Networking for Data Scientists</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:           #faf9f7;
+      --surface:      #ffffff;
+      --border:       #e8e4de;
+      --border-soft:  #f0ece6;
+      --text-primary: #1a1816;
+      --text-body:    #2d2926;
+      --text-muted:   #7a746b;
+      --text-faint:   #a89f94;
+      --accent:       #c0392b;
+      --accent-soft:  #f9ecea;
+      --accent-mid:   #e8c8c4;
+      --code-bg:      #f3f0eb;
+      --code-border:  #ddd8d0;
+      --tag-bg:       #eeeae4;
+
+      --font-serif:  'Lora', Georgia, serif;
+      --font-sans:   'DM Sans', system-ui, sans-serif;
+      --font-mono:   'DM Mono', 'Courier New', monospace;
+
+      --max-width:   720px;
+      --col-gap:     2rem;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 18px; scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text-body);
+      font-family: var(--font-serif);
+      line-height: 1.78;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout ── */
+    .page-wrap {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 1.5rem 6rem;
+    }
+
+    /* ── Header / Hero ── */
+    .hero {
+      padding: 4rem 0 2.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 3rem;
+    }
+
+    .series-tag {
+      display: inline-block;
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-mid);
+      border-radius: 3px;
+      padding: 0.25rem 0.65rem;
+      margin-bottom: 1.4rem;
+    }
+
+    h1.title {
+      font-family: var(--font-serif);
+      font-size: 2.55rem;
+      font-weight: 700;
+      line-height: 1.18;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      margin-bottom: 1.1rem;
+    }
+
+    .subtitle {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 1.08rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      color: var(--text-faint);
+    }
+    .meta-row .dot { color: var(--border); }
+
+    /* ── Section dividers ── */
+    hr.section-rule {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 3rem 0;
+    }
+
+    /* ── Headings ── */
+    h2 {
+      font-family: var(--font-serif);
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin: 3.2rem 0 0.9rem;
+      padding-top: 0.4rem;
+      letter-spacing: -0.01em;
+    }
+
+    h2 .part-label {
+      display: block;
+      font-family: var(--font-sans);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.35rem;
+    }
+
+    h3 {
+      font-family: var(--font-serif);
+      font-size: 1.18rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.35;
+      margin: 2.2rem 0 0.65rem;
+    }
+
+    /* ── Body text ── */
+    p {
+      margin-bottom: 1.35rem;
+      color: var(--text-body);
+    }
+
+    strong { font-weight: 600; color: var(--text-primary); }
+    em { font-style: italic; }
+
+    /* ── Inline code ── */
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.83em;
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 3px;
+      padding: 0.1em 0.38em;
+      color: var(--text-primary);
+    }
+
+    /* ── Code blocks ── */
+    pre {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.65;
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-left: 3px solid var(--accent-mid);
+      border-radius: 4px;
+      padding: 1.2rem 1.4rem;
+      overflow-x: auto;
+      margin: 1.5rem 0 1.8rem;
+      color: var(--text-primary);
+      white-space: pre;
+    }
+
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: inherit;
+    }
+
+    /* ── Lists ── */
+    ul, ol {
+      padding-left: 1.55rem;
+      margin-bottom: 1.35rem;
+    }
+    li {
+      margin-bottom: 0.45rem;
+      line-height: 1.72;
+    }
+    li > strong { color: var(--text-primary); }
+
+    /* ── Tables ── */
+    .table-wrap {
+      overflow-x: auto;
+      margin: 1.5rem 0 1.8rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-sans);
+      font-size: 0.875rem;
+    }
+
+    thead tr {
+      background: var(--code-bg);
+      border-bottom: 2px solid var(--border);
+    }
+
+    th {
+      text-align: left;
+      padding: 0.7rem 1rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.65rem 1rem;
+      vertical-align: top;
+      border-bottom: 1px solid var(--border-soft);
+      color: var(--text-body);
+      line-height: 1.55;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--border-soft); }
+
+    /* ── Illustration blocks ── */
+    .illustration {
+      margin: 2rem 0 2.4rem;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .illustration img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .illustration figcaption {
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      color: var(--text-faint);
+      padding: 0.6rem 1rem 0.7rem;
+      border-top: 1px solid var(--border-soft);
+      background: var(--code-bg);
+      font-style: italic;
+    }
+
+    /* ── Closing / footer ── */
+    .closing-rule {
+      border: none;
+      border-top: 2px solid var(--text-primary);
+      margin: 3.5rem 0 2rem;
+      width: 3rem;
+    }
+
+    .series-footer {
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 1.2rem 1.4rem;
+      border-left: 3px solid var(--accent-mid);
+      background: var(--accent-soft);
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      html { font-size: 16px; }
+      h1.title { font-size: 1.9rem; }
+      h2 { font-size: 1.38rem; }
+      pre { font-size: 0.74rem; padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- ═══════════════════════════════ HERO ═══════════════════════════════ -->
+  <header class="hero">
+    <div class="series-tag">System Design for Data Scientists · Vol. #1</div>
+    <h1 class="title">Networking for Data Scientists: The Infrastructure Layer You Can't Afford to Ignore</h1>
+    <p class="subtitle">How distributed systems actually talk to each other.</p>
+    <div class="meta-row">
+      <span>10 min read</span>
+      <span class="dot">·</span>
+      <span>Fundamentals &amp; System Design</span>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════ INTRO ══════════════════════════════ -->
+  <p>There's a quiet assumption baked into most early data science education: that data arrives cleanly, APIs respond politely, and the infrastructure beneath your Python notebook is someone else's problem. This is a beautiful lie, and the industry has a reliable way of dispelling it — usually in production, usually under load, and usually when you least expect it.</p>
+
+  <p>The truth is that modern data science is increasingly inseparable from distributed systems. Whether you're building a real-time feature store, deploying an LLM inference endpoint, routing model traffic across regions, or debugging why your training job can't resolve the S3 bucket hostname, you are doing networking. You might as well do it knowingly.</p>
+
+  <p>This post unpacks the core networking concepts that underpin modern system design — grounded in fundamentals, but with an eye toward the scenarios a working data scientist will actually encounter.</p>
+
+  <hr class="section-rule" />
+
+  <!-- ═══════════════════════════ PART 1: IP ═════════════════════════════ -->
+  <h2><span class="part-label">Part 1</span>IP Addresses — The Postal System of the Internet</h2>
+
+  <p>Before any two machines can talk, they need to know where each other lives. IP addresses are that location — not a human-readable name, but a numeric identifier that routing machinery uses to find a host.</p>
+
+  <h3>IPv4: The Aging Workhorse</h3>
+
+  <p>IPv4 has been running the internet since before most of us were writing code. It encodes addresses in <strong>32 bits</strong>, yielding roughly 4.3 billion unique values — which sounds like a lot until you consider that there are 8 billion people, each with multiple connected devices, and that cloud providers spin up and tear down thousands of instances an hour.</p>
+
+  <p>The format you've seen everywhere: <code>192.168.1.1</code> — four decimal numbers between 0 and 255, separated by dots. Each number is one 8-bit octet, and together they form the 32-bit address.</p>
+
+  <p>The consequences of this scarcity are real and shape system design to this day: Network Address Translation (NAT) allows multiple private machines to share a single public IP, subnetting carves address space carefully, and data centers must apply to registries to get address allocations at scale.</p>
+
+  <figure class="illustration">
+    <img src="images/01_ipv4_address_breakdown.png" alt="IPv4 address decomposed into four 8-bit octets with decimal and binary annotations, and an address exhaustion bar chart" />
+    <figcaption>Fig 1 — An IPv4 address decomposed into four 8-bit octets, with the ~4.3 billion address space shown alongside a current exhaustion indicator.</figcaption>
+  </figure>
+
+  <h3>IPv6: The Long-Awaited Upgrade</h3>
+
+  <p>IPv6 expands the address space to <strong>128 bits</strong> — which gives us approximately 3.4 × 10³⁸ unique addresses. To put it differently: there are enough IPv6 addresses to give every atom on Earth's surface its own address, several times over. Address scarcity is simply not a concern at this scale.</p>
+
+  <p>IPv6 addresses look like this: <code>2001:0db8:85a3:0000:0000:8a2e:0370:7334</code>. The colon-separated hexadecimal notation is less immediately readable, but that's a small price for essentially unlimited namespace.</p>
+
+  <p>Two practical points worth internalising:</p>
+  <ol>
+    <li><strong>IPv6 brings IPsec more naturally into the picture.</strong> While IPsec is not "automatic" in the magic sense, the standards around IPv6 were designed with network-layer security as a first-class concern — a meaningful shift from the bolt-on security posture of IPv4.</li>
+    <li><strong>Dual-stack deployments are the norm in transition.</strong> Most cloud and enterprise systems run both IPv4 and IPv6 simultaneously for a period, which has its own complexity cost.</li>
+  </ol>
+
+  <h3>Public vs. Private: Visibility Determines Architecture</h3>
+
+  <p>Orthogonal to the version question is a visibility question: is this address reachable from the open internet, or only from within a private network?</p>
+
+<pre><code>Public IP  → Globally unique, assigned by ISP or cloud provider
+             → Internet-routable, directly accessible
+             → Example: your EC2 instance's elastic IP
+
+Private IP → Used within LANs, data centers, cloud VPCs
+             → Not routable on the public internet
+             → Example: 10.0.0.5 inside a Kubernetes cluster
+             → Requires NAT or VPN to reach from outside</code></pre>
+
+  <p>For data science infrastructure, this distinction matters practically. Your training cluster nodes almost certainly talk to each other using private IPs inside a VPC. The API endpoint your model serves on — that needs a public IP (or a load balancer with one). Misconfiguring this is a very common source of connectivity bugs.</p>
+
+  <hr class="section-rule" />
+
+  <!-- ════════════════════════════ PART 2: DNS ═══════════════════════════ -->
+  <h2><span class="part-label">Part 2</span>DNS — The Internet's Phonebook, and Why It's More Interesting Than It Sounds</h2>
+
+  <p>You type <code>api.mycompany.com</code> into a request. Somewhere, a machine figures out this means <code>203.0.113.42</code>. How?</p>
+
+  <p>That process is DNS — the Domain Name System — and it's a masterclass in distributed, cached, hierarchical lookup. Understanding it well will save you hours of debugging.</p>
+
+  <h3>The Resolution Journey</h3>
+
+  <p>When a DNS lookup happens, it follows a specific chain:</p>
+
+<pre><code>[Your Browser/App]
+       |
+       ▼
+[1. Local Cache Check]  ← Browser cache, then OS cache
+   (TTL still valid? → Return immediately. Done.)
+       |
+       ▼
+[2. Recursive Resolver]  ← Usually your ISP's or a cloud provider's (e.g., 8.8.8.8)
+   (Has it cached the answer? → Return. Otherwise, start climbing.)
+       |
+       ▼
+[3. Root Name Servers]   ← "I don't know api.mycompany.com, but I know where .com lives"
+       |
+       ▼
+[4. TLD Name Servers]    ← "I don't know api.mycompany.com, but mycompany.com's
+                            authoritative servers are at X"
+       |
+       ▼
+[5. Authoritative Name Server]  ← "api.mycompany.com → 203.0.113.42. There you go."
+       |
+       ▼
+[Answer propagates back up, cached at each layer, and returned to you]</code></pre>
+
+  <figure class="illustration">
+    <img src="images/02_dns_resolution_chain.png" alt="Vertical flowchart showing DNS resolution: Browser/OS Cache → Recursive Resolver → Root Name Servers → TLD Name Servers → Authoritative Name Server, with return arrow labelled 'Answer cached and returned'" />
+    <figcaption>Fig 2 — The DNS resolution chain. Each node delegates responsibility downward; the answer bubbles back up and is cached at every layer along the way.</figcaption>
+  </figure>
+
+  <p>The key design insight: DNS is hierarchical delegation. No single server knows everything. Instead, the system delegates responsibility progressively — the root knows the TLDs, TLDs know the authoritative servers, authoritative servers know the actual records. This is how DNS scales to billions of queries daily without centralised bottlenecks.</p>
+
+  <h3>Recursive vs. Authoritative: Two Very Different Jobs</h3>
+
+  <p>These two server types are often confused, but they have fundamentally different roles:</p>
+  <ul>
+    <li>A <strong>recursive resolver</strong> is a generalist. It doesn't own data; it chases referrals until it finds an answer, then caches it. It works for the client.</li>
+    <li>An <strong>authoritative server</strong> is a specialist. It owns the definitive zone records for a domain. When you update a DNS record in your domain registrar, you're changing what the authoritative server says.</li>
+  </ul>
+
+  <h3>TTL: The Freshness Dial</h3>
+
+  <p>Every DNS record has a Time-To-Live (TTL) — a number of seconds after which cached copies must be discarded and re-fetched. This is one of the most operationally significant knobs in distributed system design.</p>
+  <ul>
+    <li><strong>Low TTL (e.g., 60 seconds)</strong>: changes propagate quickly; high query load on authoritative servers.</li>
+    <li><strong>High TTL (e.g., 86400 = 1 day)</strong>: very efficient caching; but if you update a record, stale clients will keep hitting the old destination for up to a day.</li>
+  </ul>
+
+  <p>The practical implication: if you're migrating a service from one IP to another, reduce the TTL well in advance — at least 24 hours before the change. This is a lesson most engineers learn the hard way.</p>
+
+  <h3>DNS Threats: Not Just an Academic Concern</h3>
+
+  <p>DNS is a critical attack surface. The three major threat classes to know:</p>
+  <ul>
+    <li><strong>Spoofing / Cache Poisoning</strong>: An attacker injects a fraudulent DNS record into a resolver's cache, redirecting users to a malicious server — one that might look like yours.</li>
+    <li><strong>DDoS</strong>: DNS infrastructure can be flooded with queries to make a domain unreachable, or DNS servers can be used as amplifiers for larger attacks (since DNS responses are typically larger than requests).</li>
+    <li><strong>MITM (Man-in-the-Middle)</strong>: On-path attackers can intercept DNS queries and return tampered responses.</li>
+  </ul>
+
+  <p>DNSSEC is the response to spoofing, adding cryptographic signatures to records. For ML systems that pull model weights from remote registries or route traffic through DNS-based service discovery, these threats are very real.</p>
+
+  <hr class="section-rule" />
+
+  <!-- ══════════════════════ PART 3: CLIENT-SERVER ════════════════════════ -->
+  <h2><span class="part-label">Part 3</span>The Client-Server Model — Sync, Async, Stateful, Stateless</h2>
+
+  <p>The client-server model is so fundamental it's almost invisible — until it isn't. A client sends a request; a server processes and responds. Simple. But the <em>how</em> of that exchange produces radically different systems depending on two choices: <strong>synchronous vs. asynchronous</strong>, and <strong>stateless vs. stateful</strong>.</p>
+
+  <h3>Synchronous vs. Asynchronous</h3>
+
+<pre><code>Synchronous (blocking):
+  Client:  → Request → [waits...] → receives Response → continues
+  Server:                          processes → responds
+
+Asynchronous (non-blocking):
+  Client:  → Request → [continues doing other things] → callback/event fires later
+  Server:             processes at its own pace → notifies or stores result</code></pre>
+
+  <p>In synchronous communication, every request blocks the caller until the server replies. This is simple to reason about — think of a standard REST API call — but it creates tight coupling. If the server is slow, the client stalls.</p>
+
+  <p>Asynchronous communication decouples the production of a result from its consumption. The canonical pattern for ML systems is a <strong>job queue</strong>: a client submits an inference request, gets a job ID immediately, and polls (or subscribes to a webhook) to retrieve results later. This architecture is essential for long-running workloads — training jobs, large batch inference, or anything where you simply can't afford to hold a connection open for minutes.</p>
+
+  <figure class="illustration">
+    <img src="images/03_sync_vs_async_sequence.png" alt="Side-by-side sequence diagrams comparing synchronous (client waits with a long blocking bar) and asynchronous (client continues after receiving job ID, then receives result notification later) communication" />
+    <figcaption>Fig 3 — Synchronous vs. asynchronous communication. Colour distinguishes wait-states from active work. The async pattern is essential for long-running ML jobs.</figcaption>
+  </figure>
+
+  <h3>Stateless vs. Stateful: The Scaling Dimension</h3>
+
+  <p>This is perhaps the most consequential architectural decision in backend design:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Stateless</th>
+          <th>Stateful</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Server memory</strong></td>
+          <td>None between requests</td>
+          <td>Session context retained</td>
+        </tr>
+        <tr>
+          <td><strong>Scaling</strong></td>
+          <td>Easy — any node can handle any request</td>
+          <td>Hard — client must reach same node</td>
+        </tr>
+        <tr>
+          <td><strong>Resilience</strong></td>
+          <td>A node failure is transparent</td>
+          <td>A node failure may lose session</td>
+        </tr>
+        <tr>
+          <td><strong>Caching</strong></td>
+          <td>Highly cacheable</td>
+          <td>Tricky</td>
+        </tr>
+        <tr>
+          <td><strong>Examples</strong></td>
+          <td>REST APIs, model inference endpoints</td>
+          <td>WebSocket sessions, multi-turn LLM chat with memory</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>The dominant pattern for scalable ML serving is stateless. Each inference request carries all the context needed (the input, auth token, parameters), and any backend replica can handle it. This is why horizontal scaling feels "natural" for REST-based ML APIs.</p>
+
+  <p>Where stateful design becomes relevant in ML: streaming inference with state (e.g., an LLM generating tokens step by step), long-lived agent sessions, or any interaction where the model needs conversational history that isn't re-sent on every call.</p>
+
+  <hr class="section-rule" />
+
+  <!-- ══════════════════════════ PART 4: PROXIES ══════════════════════════ -->
+  <h2><span class="part-label">Part 4</span>Proxies — The Invisible Intermediaries</h2>
+
+  <p>Proxies sit between communicating parties and act on their behalf. They're one of those concepts that feels abstract until you see how pervasively they appear in real deployments. There are two fundamental orientations:</p>
+
+  <h3>Forward Proxy: Acting for the Client</h3>
+
+  <p>A forward proxy sits between client devices and the internet. Clients talk to the proxy; the proxy talks to the destination. The destination server may never see the original client's IP.</p>
+
+  <p>Use cases:</p>
+  <ul>
+    <li><strong>Corporate filtering</strong>: block certain categories of outbound traffic</li>
+    <li><strong>Privacy / anonymity</strong>: hide client IPs from external services</li>
+    <li><strong>Caching outbound requests</strong>: in ML, this can accelerate repeated pulls from package repositories or dataset mirrors</li>
+  </ul>
+
+  <p>The forward proxy knows who the client is, but the outside world doesn't.</p>
+
+  <h3>Reverse Proxy: Acting for the Server</h3>
+
+  <p>A reverse proxy sits in front of your backend servers. External clients talk to the proxy, which routes to the actual servers. The clients may not even know multiple backend servers exist.</p>
+
+<pre><code>[ User Browser ] ==== HTTPS ====> [ Reverse Proxy ] ---- HTTP ----> [ Backend Server A ]
+                                                    \---- HTTP ----> [ Backend Server B ]
+                                                    \---- HTTP ----> [ Backend Server C ]</code></pre>
+
+  <p>A reverse proxy is doing several things simultaneously:</p>
+  <ul>
+    <li><strong>TLS/SSL termination</strong>: It handles the encrypted handshake with the client, then communicates with backends over simpler (often unencrypted) internal HTTP. This centralises certificate management — you renew certs in one place.</li>
+    <li><strong>Load balancing</strong>: It distributes incoming requests across backends (more on this shortly).</li>
+    <li><strong>Security perimeter</strong>: It shields the actual server IPs from the public internet.</li>
+  </ul>
+
+  <p>In ML deployments, Nginx and Envoy are classic reverse proxies. Kubernetes's ingress controller is effectively a reverse proxy for your pods. Knowing this mental model makes reading Kubernetes configs far less mysterious.</p>
+
+  <hr class="section-rule" />
+
+  <!-- ════════════════════════ PART 5: LOAD BALANCING ═══════════════════════ -->
+  <h2><span class="part-label">Part 5</span>Load Balancing — Scaling Without Bottlenecks</h2>
+
+  <p>Once traffic outgrows a single server, load balancing becomes the mechanism by which work is distributed across a fleet. But "distribute traffic" is far too vague — the <em>how</em> depends critically on which layer of the stack you're operating at, and which algorithm you use.</p>
+
+  <h3>Layer 4 vs. Layer 7: Where Does the Balancer Look?</h3>
+
+<pre><code>OSI Model (simplified):
+  Layer 7 — Application  (HTTP, gRPC, headers, paths, cookies)
+  Layer 4 — Transport    (TCP/UDP, IP:port pairs)
+  ...</code></pre>
+
+  <p><strong>Layer 4 balancing</strong> operates on TCP/UDP information only. It sees source/destination IPs and ports. It's fast and simple — great for raw throughput and when you don't need to inspect what's inside the packet.</p>
+
+  <p><strong>Layer 7 balancing</strong> understands application-level protocols. It can route based on:</p>
+  <ul>
+    <li>URL path (<code>/v1/predict</code> → GPU cluster, <code>/health</code> → lightweight pod)</li>
+    <li>HTTP headers (route by API version, tenant ID, or <code>Content-Type</code>)</li>
+    <li>Cookies (affinity to a specific backend)</li>
+  </ul>
+
+  <p>For ML serving, Layer 7 is almost always the right choice. Different model versions, different hardware tiers, A/B experiment traffic splits — these are routing decisions that require HTTP context.</p>
+
+  <figure class="illustration">
+    <img src="images/04_l4_vs_l7_load_balancer.png" alt="Two parallel diagrams: left shows L4 load balancer routing by IP/port only to identical backends; right shows L7 load balancer routing /predict to GPU server, /embed to CPU server, and /health to a lightweight healthcheck pod" />
+    <figcaption>Fig 4 — L4 vs. L7 load balancing. L4 is faster but blind to content; L7 unlocks intelligent routing by path, header, or tenant — essential for heterogeneous ML serving fleets.</figcaption>
+  </figure>
+
+  <h3>Load Balancing Algorithms: Choosing Who Gets the Next Request</h3>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Algorithm</th>
+          <th>How It Works</th>
+          <th>Best When</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Round Robin</strong></td>
+          <td>Requests cycle sequentially across servers</td>
+          <td>All servers are similar; requests are roughly equal in cost</td>
+        </tr>
+        <tr>
+          <td><strong>Least Connections</strong></td>
+          <td>Route to the server with fewest active connections</td>
+          <td>Request durations vary widely (some fast, some slow)</td>
+        </tr>
+        <tr>
+          <td><strong>IP Hashing</strong></td>
+          <td>Hash the client IP → always same server</td>
+          <td>You need weak session affinity (but watch out for NAT skew)</td>
+        </tr>
+        <tr>
+          <td><strong>Weighted</strong></td>
+          <td>Assign bigger share to more powerful servers</td>
+          <td>Your fleet has heterogeneous capacity (e.g., a mix of GPU types)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>For ML inference clusters, <strong>weighted balancing</strong> is often the most natural fit — if you have A100s and T4s in the same pool, they should not receive the same traffic volume.</p>
+
+  <hr class="section-rule" />
+
+  <!-- ════════════════════════ PART 6: API GATEWAY ══════════════════════════ -->
+  <h2><span class="part-label">Part 6</span>API Gateway — The Front Door You Didn't Know You Needed</h2>
+
+  <p>An API gateway is a centralised entry point that receives all client API calls, applies shared policy, and routes to backend services. It's what makes microservice architectures tractable.</p>
+
+  <p>Think of it as infrastructure middleware. Without a gateway, every microservice independently handles authentication, rate limiting, versioning, and logging. That's an enormous surface area for inconsistency. With a gateway, those concerns are pushed to the edge, and services can focus on their own logic.</p>
+
+  <p>Key functions of an API gateway:</p>
+
+  <p><strong>Rate Limiting &amp; Throttling</strong> — caps the request rate from a given client, protecting backends from overload or abuse. In ML APIs, this is critical: inference endpoints are expensive, and a single misconfigured client can saturate your GPU fleet.</p>
+
+  <p><strong>Request Transformation</strong> — rewrites paths, headers, or payloads before forwarding to the backend. This decouples your external API contract from internal service formats. You can evolve one without breaking the other.</p>
+
+  <p><strong>Composition &amp; Aggregation</strong> — the gateway can stitch together calls to multiple backend services into a single response for the client. This is particularly useful in LLM-powered applications where a single user query might trigger calls to a retrieval service, a reranker, and a generator — the gateway presents a clean unified API over this pipeline.</p>
+
+<pre><code>Client Request: POST /ask
+       |
+       ▼
+  [API Gateway]
+   ├── Auth check
+   ├── Rate limit check
+   ├── Route to:
+   │     ├── Retrieval Service (finds docs)
+   │     ├── Reranker Service (scores docs)
+   │     └── LLM Service (generates answer)
+   └── Aggregate responses → single JSON to client</code></pre>
+
+  <p>AWS API Gateway, Kong, and Apigee are the common implementations you'll encounter in practice.</p>
+
+  <hr class="section-rule" />
+
+  <!-- ════════════════════════════ PART 7: CDN ══════════════════════════════ -->
+  <h2><span class="part-label">Part 7</span>CDNs — Putting Your Data at the Edge of the World</h2>
+
+  <p>A Content Delivery Network is a geographically distributed fleet of <strong>edge servers</strong> (called Points of Presence, or PoPs) that cache and serve content close to users. The physics are simple: fewer kilometres between client and server means fewer milliseconds of latency.</p>
+
+  <h3>The Cache Hit / Cache Miss Dynamic</h3>
+
+  <p>When a user requests content:</p>
+  <ul>
+    <li><strong>Cache hit</strong>: The edge server has the content cached and responds immediately. Origin never involved.</li>
+    <li><strong>Cache miss</strong>: The edge doesn't have it; it fetches from the origin (or a mid-tier cache), stores the result, and serves it. Future requests to the same PoP will hit.</li>
+  </ul>
+
+  <p>Cache hit rate is the central performance metric of a CDN. A 95% hit rate means 95% of requests never touch your origin — dramatic reductions in origin load, bandwidth costs, and latency.</p>
+
+  <figure class="illustration">
+    <img src="images/05_cdn_world_map.png" alt="World map with two origin servers in US-East and EU-West, five PoP nodes in Tokyo, Singapore, Frankfurt, São Paulo, and New York, with green ticks for cache hits near PoPs and an orange arrow showing a cache miss routing back to origin for a remote user" />
+    <figcaption>Fig 5 — CDN topology. Users near PoPs enjoy cache hits (green); users farther away trigger a cache miss (orange) that round-trips to origin — the latency cost of geographic gaps in coverage.</figcaption>
+  </figure>
+
+  <h3>Geo-Based Routing</h3>
+
+  <p>CDNs pair caching with geographic routing — DNS or Anycast mechanisms that resolve a user's request to the nearest (or most appropriate) PoP. This is relevant for ML applications in several non-obvious ways:</p>
+  <ul>
+    <li><strong>Model weight distribution</strong>: Some inference frameworks (like TensorFlow Serving, or Triton clients) pull model weights on startup. If you're deploying globally, a CDN can serve those weight files from edge nodes instead of a single origin bucket.</li>
+    <li><strong>Static asset acceleration</strong>: Dashboards, front-ends for ML tools, Jupyter notebook servers — all benefit from CDN-cached assets.</li>
+    <li><strong>Data residency</strong>: Geo-routing can be configured to keep certain data within a region, which matters for GDPR and similar compliance frameworks.</li>
+  </ul>
+
+  <hr class="section-rule" />
+
+  <!-- ══════════════════════════ END-TO-END TRACE ═════════════════════════════ -->
+  <h2>Putting It All Together: What a Request Actually Does</h2>
+
+  <p>Let's trace a single API call to a deployed ML model — end to end — through every layer we've covered:</p>
+
+<pre><code>1. User types: https://api.mycompany.com/v1/predict
+                          │
+2. DNS Resolution         │ Browser checks local cache → miss
+                          │ Recursive resolver → Root → TLD → Authoritative
+                          │ Returns: 203.0.113.42 (CDN edge node IP)
+                          ▼
+3. CDN Edge (PoP)         Request arrives at nearest edge server
+                          Static response? → Cache hit, serve immediately.
+                          Dynamic API call? → Forward to origin.
+                          │
+                          ▼
+4. API Gateway            Auth token validated
+                          Rate limit checked
+                          Request transformed / enriched
+                          Routed to: /v1/predict → ML Serving cluster
+                          │
+                          ▼
+5. Load Balancer (L7)     Routes to the least-loaded GPU replica
+                          (Weighted, because you have A100s and T4s)
+                          │
+                          ▼
+6. Reverse Proxy          TLS terminated upstream (at CDN or Gateway)
+                          Request forwarded to backend pod
+                          │
+                          ▼
+7. ML Model Server        Inference runs; JSON response returned
+                          ▲
+                          │ (Response travels back up the same chain)</code></pre>
+
+  <p>Every layer has a reason to exist. Every layer is a potential failure point, a tuning dial, and an observability boundary.</p>
+
+  <hr class="section-rule" />
+
+  <!-- ══════════════════════════ CLOSING ══════════════════════════════════════ -->
+  <h2>Closing Thoughts</h2>
+
+  <p>Networking is not glamorous. It doesn't make it into conference talks the way transformers or diffusion models do. But it is the connective tissue of every system that actually ships, scales, and serves real users.</p>
+
+  <p>The concepts here — IP addressing, DNS resolution, proxies, load balancing, API gateways, CDNs — are not deep computer science research. They are engineering primitives, the kind that a good data scientist should understand well enough to read architecture diagrams fluently, ask the right questions in system design discussions, and debug the right layer when something breaks in production.</p>
+
+  <p>The goal was never to make you a network engineer. It was to make the infrastructure beneath your models legible — so that when a deployment behaves strangely, you know where to look.</p>
+
+  <hr class="closing-rule" />
+
+  <!-- <p class="series-footer">Next in this series: <strong>Storage Systems</strong> — when to reach for SQL, NoSQL, object storage, or a vector database, and how those choices interact with the patterns we covered here.</p> -->
+
+</div><!-- /page-wrap -->
+</body>
+</html>
