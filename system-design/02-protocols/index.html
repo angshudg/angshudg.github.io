@@ -533,24 +533,24 @@
 
       <p>Before we dive into protocols, let's ground ourselves. A modern data science system is rarely a single Python script. It's a web of services talking to each other:</p>
 
-<pre class="ascii"><code>&#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;
-&#x2502;                     A Typical ML System                             &#x2502;
-&#x2502;                                                                     &#x2502;
-&#x2502;  &#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;    REST API    &#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;    gRPC    &#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510; &#x2502;
-&#x2502;  &#x2502;  Client  &#x2502; &#x25BA;&#x25BA;&#x25BA;&#x25BA;&#x25BA;&#x25BA;&#x25BA;&#x25BA;&#x25BA;&#x25BA;&#x25BA;&#x25BA;&#x25BA;&#x25BA; &#x2502;  API Gateway  &#x2502; &#x25BA;&#x25BA;&#x25BA;&#x25BA;&#x25BA;&#x25BA;&#x25BA;&#x25BA;&#x25BA; &#x2502; Model &#x2502; &#x2502;
-&#x2502;  &#x2502;  (App /  &#x2502;               &#x2502;  (FastAPI /   &#x2502;            &#x2502;Serving&#x2502; &#x2502;
-&#x2502;  &#x2502;  Browser)&#x2502;               &#x2502;   Flask)      &#x2502;            &#x2502;Service&#x2502; &#x2502;
-&#x2502;  &#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;               &#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;            &#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518; &#x2502;
-&#x2502;                                    &#x2502;                        &#x2502;      &#x2502;
-&#x2502;                              WebSocket                   gRPC      &#x2502;
-&#x2502;                                    &#x2502;                        &#x2502;      &#x2502;
-&#x2502;                             &#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x25BC;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;         &#x250C;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x25BC;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510; &#x2502;
-&#x2502;                             &#x2502;  Real-Time  &#x2502;         &#x2502;  Feature  &#x2502; &#x2502;
-&#x2502;                             &#x2502;  Dashboard  &#x2502;         &#x2502;   Store   &#x2502; &#x2502;
-&#x2502;                             &#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;         &#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518; &#x2502;
-&#x2502;                                                                     &#x2502;
-&#x2502;              Everything flows over TCP/IP at the bottom            &#x2502;
-&#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;</code></pre>
+<pre class="ascii"><code>┌───────────────────────────────────────────────────────────────────────┐
+│                     A Typical ML System                               │
+│                                                                       │
+│  ┌──────────┐    REST API    ┌──────────────┐    gRPC    ┌───────┐    │
+│  │  Client  │ ►►►►►►►►►►►►►► │ API Gateway  │ ►►►►►►►►►► │ Model │    │
+│  │  (App /  │                │ (FastAPI /   │            │Serving│    │
+│  │  Browser)│                │  Flask)      │            │Service│    │
+│  └──────────┘                └──────────────┘            └───────┘    │
+│                                    │                        │         │
+│                                WebSocket                   gRPC       │
+│                                    │                        │         │
+│                             ┌──────▼──────┐         ┌──────▼────┐     │
+│                             │  Real-Time  │         │  Feature  │     │
+│                             │  Dashboard  │         │   Store   │     │
+│                             └─────────────┘         └───────────┘     │
+│                                                                       │
+│              Everything flows over TCP/IP at the bottom               │
+└───────────────────────────────────────────────────────────────────────┘</code></pre>
 
       <p>Every arrow in that diagram is a protocol decision. Making the <em>right</em> choice at each layer determines whether your system is fast, reliable, cheap to run, and easy to maintain. Let's build up that intuition from the ground floor.</p>
 
@@ -573,7 +573,7 @@
      │                               │
      │  ──── SYN ──────────────────► │   "Hey, I want to connect"
      │                               │
-     │  ◄─── SYN-ACK ────────────── │   "Got it. Ready on my end"
+     │  ◄─── SYN-ACK ─────────────── │   "Got it. Ready on my end"
      │                               │
      │  ──── ACK ──────────────────► │   "Great, let's go"
      │                               │
@@ -664,28 +664,28 @@
 
 <pre class="ascii"><code>  ┌─────────────────────────────────────────────────────────────┐
   │                   HTTP Request                              │
-  │  ┌──────────────────────────────────────────────────────┐  │
-  │  │ POST /v1/predict HTTP/1.1                            │  │
-  │  │ Host: api.mymodel.com                                │  │
-  │  │ Content-Type: application/json                       │  │
-  │  │ Authorization: Bearer eyJhbGciOiJIUz...             │  │
-  │  │                                                      │  │
-  │  │ {"text": "The movie was surprisingly good"}         │  │
-  │  └──────────────────────────────────────────────────────┘  │
+  │  ┌──────────────────────────────────────────────────────┐   │
+  │  │ POST /v1/predict HTTP/1.1                            │   │
+  │  │ Host: api.mymodel.com                                │   │
+  │  │ Content-Type: application/json                       │   │
+  │  │ Authorization: Bearer eyJhbGciOiJIUz...              │   │
+  │  │                                                      │   │
+  │  │ {"text": "The movie was surprisingly good"}          │   │
+  │  └──────────────────────────────────────────────────────┘   │
   │                          │                                  │
   │                          ▼                                  │
-  │                   ┌─────────────┐                          │
-  │                   │   Server    │                          │
-  │                   │  (FastAPI)  │                          │
-  │                   └─────────────┘                          │
+  │                   ┌─────────────┐                           │
+  │                   │   Server    │                           │
+  │                   │  (FastAPI)  │                           │
+  │                   └─────────────┘                           │
   │                          │                                  │
   │                          ▼                                  │
-  │  ┌──────────────────────────────────────────────────────┐  │
-  │  │ HTTP/1.1 200 OK                                      │  │
-  │  │ Content-Type: application/json                       │  │
-  │  │                                                      │  │
-  │  │ {"sentiment": "positive", "confidence": 0.94}       │  │
-  │  └──────────────────────────────────────────────────────┘  │
+  │  ┌──────────────────────────────────────────────────────┐   │
+  │  │ HTTP/1.1 200 OK                                      │   │
+  │  │ Content-Type: application/json                       │   │
+  │  │                                                      │   │
+  │  │ {"sentiment": "positive", "confidence": 0.94}        │   │
+  │  └──────────────────────────────────────────────────────┘   │
   └─────────────────────────────────────────────────────────────┘</code></pre>
 
       <h3>Statelessness — And Why It's a Feature, Not a Bug</h3>
@@ -864,24 +864,24 @@ embeddings = response.<span class="fn">json</span>()[<span class="st">"embedding
       <p>The connection begins with an HTTP <em>upgrade request</em>:</p>
 
 <pre class="ascii"><code>  Client                                Server
-    │                                     │
+    │                                      │
     │ ── GET /ws HTTP/1.1              ──► │
     │    Upgrade: websocket                │
     │    Connection: Upgrade               │
-    │    Sec-WebSocket-Key: dGhlIHNhbXBsZQ│
-    │                                     │
-    │ ◄── HTTP/1.1 101 Switching Protocols│
+    │    Sec-WebSocket-Key: dGhlIHNhbXBsZQ │
+    │                                      │
+    │ ◄── HTTP/1.1 101 Switching Protocols │
     │     Upgrade: websocket               │
     │     Connection: Upgrade              │
     │     Sec-WebSocket-Accept: ...        │
-    │                                     │
-    │ ══════════ WebSocket Open ══════════│
-    │                                     │
-    │ ◄── {"epoch": 1, "loss": 2.34}  ───│  Server pushes training metrics
-    │ ◄── {"epoch": 2, "loss": 1.89}  ───│  without client asking
-    │ ─── {"action": "pause"}         ──► │  Client can also send commands
-    │ ◄── {"epoch": 3, "loss": 1.71}  ───│
-    │                                     │</code></pre>
+    │                                      │
+    │ ══════════ WebSocket Open ══════════ │
+    │                                      │
+    │ ◄── {"epoch": 1, "loss": 2.34}  ───  │  Server pushes training metrics
+    │ ◄── {"epoch": 2, "loss": 1.89}  ───  │  without client asking
+    │ ─── {"action": "pause"}         ──►  │  Client can also send commands
+    │ ◄── {"epoch": 3, "loss": 1.71}  ───  │
+    │                                      │</code></pre>
 
       <figure>
         <img src="images/websocket-vs-polling.png" alt="Split-screen diagram comparing HTTP polling on the left (choppy, repeated round-trips) versus WebSockets on the right (single persistent connection with freely flowing bidirectional messages)." />
@@ -964,14 +964,14 @@ asyncio.<span class="fn">run</span>(<span class="fn">stream_training_metrics</sp
       <p><strong>HTTP/2</strong> as the transport layer. Unlike HTTP/1.1 which handles one request per connection at a time, HTTP/2 supports <em>multiplexing</em> — sending many requests and responses simultaneously over a single connection, with header compression and native streaming support:</p>
 
 <pre class="ascii"><code>  HTTP/1.1 (sequential):                HTTP/2 (multiplexed):
-  ┌────────────────────┐                ┌────────────────────────────┐
+  ┌────────────────────┐                ┌─────────────────────────────┐
   │ Req A ────────────►│                │ Req A ─────────────────────►│
   │ ◄─────── Resp A    │                │ Req B ─────────────────────►│
   │ Req B ────────────►│                │ Req C ─────────────────────►│
   │ ◄─────── Resp B    │                │ ◄─────── Resp B             │
   │ Req C ────────────►│                │ ◄─────── Resp A             │
   │ ◄─────── Resp C    │                │ ◄─────── Resp C             │
-  └────────────────────┘                └────────────────────────────┘
+  └────────────────────┘                └─────────────────────────────┘
   One at a time. Head-of-line           All in parallel. Much faster.
   blocking is real.</code></pre>
 
@@ -1080,25 +1080,25 @@ response = stub.<span class="fn">Predict</span>(request)
 <pre class="ascii"><code>  ┌────────────────────────────────────────────────────────────────┐
   │         When should I use which protocol?                      │
   │                                                                │
-  │  ┌─────────────────────────────────────────────────────────┐  │
-  │  │  Public-facing web API or data product?                 │  │
-  │  │  ──────────────────────────────────────────────────► REST│  │
-  │  └─────────────────────────────────────────────────────────┘  │
+  │  ┌─────────────────────────────────────────────────────────┐   │
+  │  │  Public-facing web API or data product?                 │   │
+  │  │  ─────────────────────────────────────────────────► REST│   │
+  │  └─────────────────────────────────────────────────────────┘   │
   │                                                                │
-  │  ┌─────────────────────────────────────────────────────────┐  │
-  │  │  Internal microservice or high-throughput ML inference? │  │
-  │  │  ─────────────────────────────────────────────────► gRPC│  │
-  │  └─────────────────────────────────────────────────────────┘  │
+  │  ┌─────────────────────────────────────────────────────────┐   │
+  │  │  Internal microservice or high-throughput ML inference? │   │
+  │  │  ─────────────────────────────────────────────────► gRPC│   │
+  │  └─────────────────────────────────────────────────────────┘   │
   │                                                                │
-  │  ┌─────────────────────────────────────────────────────────┐  │
-  │  │  Complex frontend with many data shapes / relationships?│  │
-  │  │  ─────────────────────────────────────────────► GraphQL │  │
-  │  └─────────────────────────────────────────────────────────┘  │
+  │  ┌─────────────────────────────────────────────────────────┐   │
+  │  │  Complex frontend with many data shapes / relationships?│   │
+  │  │  ─────────────────────────────────────────────► GraphQL │   │
+  │  └─────────────────────────────────────────────────────────┘   │
   │                                                                │
-  │  ┌─────────────────────────────────────────────────────────┐  │
-  │  │  Live dashboards, streaming predictions, alerts?        │  │
-  │  │  ──────────────────────────────────────────► WebSockets │  │
-  │  └─────────────────────────────────────────────────────────┘  │
+  │  ┌─────────────────────────────────────────────────────────┐   │
+  │  │  Live dashboards, streaming predictions, alerts?        │   │
+  │  │  ──────────────────────────────────────────► WebSockets │   │
+  │  └─────────────────────────────────────────────────────────┘   │
   └────────────────────────────────────────────────────────────────┘</code></pre>
 
       <hr />
@@ -1159,7 +1159,7 @@ response = stub.<span class="fn">Predict</span>(request)
 
       <!-- ── Post footer ──────────────────────────────────────── -->
       <div class="post-footer">
-        <p><em>If this post was helpful, consider following for more content on the intersection of data science and system design. Next up: <strong>Storage Systems for Data Scientists</strong> — why you should care about LSM trees, columnar formats, and the difference between OLAP and OLTP.</em></p>
+        <p><em>If this post was helpful, consider following for more content on system design for data science.</em></p>
       </div>
 
       <!-- ── Tags ────────────────────────────────────────────── -->
