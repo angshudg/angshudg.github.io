@@ -1,0 +1,316 @@
+{
+  "node_name": "System Design: Networking & Communication Protocols",
+  "description": "This mind map organizes the foundational networking and communication concepts commonly used in modern system design. It connects transport-layer protocols, web communication standards, API architectural styles, real-time communication models, and modern service-to-service protocols. Together, these concepts explain how distributed systems exchange data efficiently, securely, reliably, and at scale across browsers, mobile apps, backend services, and microservice ecosystems. :contentReference[oaicite:0]{index=0}",
+  "children": [
+    {
+      "node_name": "Transport Layer Protocols",
+      "description": "Transport layer protocols define how data moves reliably or efficiently between systems over IP networks. In system design, these protocols influence latency, reliability, throughput, packet ordering, and congestion behavior. Choosing between TCP and UDP directly impacts application characteristics such as streaming quality, transactional reliability, and responsiveness in distributed systems. :contentReference[oaicite:1]{index=1}",
+      "children": [
+        {
+          "node_name": "TCP",
+          "description": "TCP is a connection-oriented transport protocol designed for reliable and ordered communication between systems. It establishes a session using a three-way handshake and includes retransmission and error-checking mechanisms. In system design, TCP is commonly used where correctness and guaranteed delivery matter more than minimal latency. :contentReference[oaicite:2]{index=2}",
+          "children": [
+            {
+              "node_name": "Connection-oriented",
+              "description": "TCP establishes a dedicated connection between communicating systems before data transfer begins. This connection-oriented model allows systems to maintain synchronized communication state, improving reliability and enabling ordered packet delivery for web applications, databases, APIs, and distributed services.",
+              "children": []
+            },
+            {
+              "node_name": "Reliable delivery",
+              "description": "TCP guarantees that packets arrive correctly and in order by using acknowledgments, retransmissions, and sequence tracking. In system design, this reliability is critical for operations such as payment processing, authentication, file transfer, and transactional APIs.",
+              "children": []
+            },
+            {
+              "node_name": "Three-way handshake",
+              "description": "The TCP three-way handshake initializes communication between client and server before application data is exchanged. It synchronizes connection parameters and confirms both sides are ready, forming the basis for reliable stateful communication across distributed systems.",
+              "children": []
+            },
+            {
+              "node_name": "Error checking",
+              "description": "TCP validates transmitted data using checksums, acknowledgments, and retransmission logic. This error-checking process helps ensure corrupted or missing packets are detected and resent, improving data integrity for enterprise systems and internet communication.",
+              "children": []
+            },
+            {
+              "node_name": "Use cases: Web, Email, File transfer",
+              "description": "TCP powers many internet applications requiring consistency and correctness. Web browsing, email systems, and file transfer protocols rely on TCP because they require ordered delivery, complete transmission, and dependable communication across unstable or large-scale networks.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "UDP",
+          "description": "UDP is a lightweight connectionless transport protocol optimized for speed and low overhead. Unlike TCP, it does not guarantee delivery, ordering, or retransmission. In system design, UDP is preferred for latency-sensitive applications where occasional packet loss is acceptable. :contentReference[oaicite:3]{index=3}",
+          "children": [
+            {
+              "node_name": "Connectionless",
+              "description": "UDP transmits packets without first establishing a persistent connection between systems. This connectionless design minimizes setup overhead and enables rapid communication suitable for fast-moving or real-time workloads.",
+              "children": []
+            },
+            {
+              "node_name": "Low latency",
+              "description": "UDP minimizes communication delays by avoiding acknowledgments, retransmissions, and connection management. In system design, this low-latency behavior benefits gaming, video streaming, live communication, and telemetry pipelines.",
+              "children": []
+            },
+            {
+              "node_name": "Unreliable delivery",
+              "description": "UDP does not guarantee packet arrival, ordering, or duplicate prevention. Systems using UDP often implement custom reliability mechanisms only when necessary, trading delivery guarantees for speed and reduced protocol complexity.",
+              "children": []
+            },
+            {
+              "node_name": "Use cases: Gaming, Streaming, VoIP",
+              "description": "Applications such as online gaming, live streaming, and voice-over-IP prioritize responsiveness over perfect reliability. UDP enables these systems to maintain fluid real-time interaction even if occasional packets are lost during transmission.",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "HTTP & HTTPS",
+      "description": "HTTP and HTTPS define the dominant communication model for web-based distributed systems. They support request-response communication between clients and servers and form the foundation for REST APIs, web applications, and internet services. HTTPS extends HTTP with encryption and secure identity verification using SSL/TLS. :contentReference[oaicite:4]{index=4}",
+      "children": [
+        {
+          "node_name": "Request-Response Cycle",
+          "description": "HTTP communication follows a request-response cycle where a client sends a request and the server returns a response. This stateless interaction model simplifies scalability and enables independent handling of millions of concurrent API or browser requests.",
+          "children": []
+        },
+        {
+          "node_name": "Stateless Nature",
+          "description": "HTTP treats each request independently without automatically preserving prior session context. This stateless behavior improves scalability and load balancing because servers do not need to maintain persistent client communication state between requests.",
+          "children": []
+        },
+        {
+          "node_name": "State Management",
+          "description": "Although HTTP itself is stateless, modern systems often maintain user context using external mechanisms. State management techniques help support authentication, personalization, and continuity across multiple requests in scalable distributed applications.",
+          "children": [
+            {
+              "node_name": "Cookies",
+              "description": "Cookies store lightweight client-side state information that browsers send with subsequent requests. They are commonly used for authentication persistence, personalization, session tracking, and analytics in web-based distributed systems.",
+              "children": []
+            },
+            {
+              "node_name": "Sessions",
+              "description": "Sessions store server-side user state linked to a client identifier. They help maintain authenticated interactions across multiple requests while centralizing control of user activity and permissions.",
+              "children": []
+            },
+            {
+              "node_name": "Tokens (JWT, OAuth)",
+              "description": "Token-based authentication uses digitally signed credentials such as JWTs or OAuth tokens to verify user identity without maintaining centralized server session state. This approach improves scalability for APIs, microservices, and distributed authentication systems.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Methods",
+          "description": "HTTP methods define the intended operation being performed on resources. REST APIs use standardized methods to create predictable interfaces that improve interoperability, caching, scalability, and API consistency across distributed applications.",
+          "children": [
+            {
+              "node_name": "GET (Retrieve)",
+              "description": "GET requests retrieve resource data without modifying server state. They are commonly used for reading records, fetching web pages, querying APIs, and supporting cache-friendly communication patterns.",
+              "children": []
+            },
+            {
+              "node_name": "POST (Create)",
+              "description": "POST requests submit new data to the server and are commonly used to create resources, submit forms, trigger workflows, or initiate operations that modify application state.",
+              "children": []
+            },
+            {
+              "node_name": "PUT (Full update)",
+              "description": "PUT replaces an existing resource with a full updated representation. In RESTful systems, it is commonly used for idempotent update operations where repeated requests produce the same result.",
+              "children": []
+            },
+            {
+              "node_name": "PATCH (Partial update)",
+              "description": "PATCH modifies only selected fields of an existing resource instead of replacing the entire object. This reduces bandwidth usage and improves efficiency for partial data updates in APIs.",
+              "children": []
+            },
+            {
+              "node_name": "DELETE (Remove)",
+              "description": "DELETE removes a resource from the system. REST APIs use this method to expose predictable deletion behavior for records, entities, or application resources.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Status Codes",
+          "description": "HTTP status codes communicate the result of a request using standardized response categories. They help clients interpret whether operations succeeded, failed, redirected, or encountered authentication or server issues.",
+          "children": [
+            {
+              "node_name": "2xx Success",
+              "description": "2xx responses indicate that the request was successfully received, processed, and completed by the server. Examples include successful retrieval, creation, or update operations.",
+              "children": []
+            },
+            {
+              "node_name": "3xx Redirection",
+              "description": "3xx responses inform clients that the requested resource has moved or requires additional navigation steps. Redirection codes are widely used in routing, caching, and URL migration strategies.",
+              "children": []
+            },
+            {
+              "node_name": "4xx Client Error",
+              "description": "4xx responses indicate that the client request was invalid, unauthorized, malformed, or referenced unavailable resources. These errors help applications validate and debug API interactions.",
+              "children": []
+            },
+            {
+              "node_name": "5xx Server Error",
+              "description": "5xx responses indicate failures occurring on the server side during request processing. These errors often signal outages, dependency failures, overload, or unexpected backend exceptions in distributed systems.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "HTTPS: SSL/TLS Encryption",
+          "description": "HTTPS secures HTTP communication using SSL/TLS encryption. It protects transmitted data from interception and tampering while verifying server identity. Modern production systems use HTTPS for secure APIs, authentication flows, financial transactions, and privacy-sensitive communication. :contentReference[oaicite:5]{index=5}",
+          "children": []
+        }
+      ]
+    },
+    {
+      "node_name": "REST & RESTful Design",
+      "description": "REST is an architectural style for designing scalable networked APIs using standard HTTP semantics. RESTful systems expose resources through predictable interfaces and emphasize stateless communication, scalability, and interoperability between independently evolving services and clients. :contentReference[oaicite:6]{index=6}",
+      "children": [
+        {
+          "node_name": "Core Constraints",
+          "description": "REST defines architectural constraints that guide scalable distributed communication. These constraints encourage loose coupling, caching, layered architectures, and standardized interactions between clients and backend services.",
+          "children": [
+            {
+              "node_name": "Client-Server",
+              "description": "The client-server constraint separates user interfaces from backend data processing. This separation enables independent scaling, development, and deployment of frontend and backend systems.",
+              "children": []
+            },
+            {
+              "node_name": "Statelessness",
+              "description": "REST APIs treat every request independently and avoid retaining client context on the server. Statelessness simplifies scaling and improves reliability in distributed environments.",
+              "children": []
+            },
+            {
+              "node_name": "Cacheability",
+              "description": "REST encourages cacheable responses to reduce redundant requests and improve performance. Caching lowers server load and speeds up content delivery across distributed systems.",
+              "children": []
+            },
+            {
+              "node_name": "Layered System",
+              "description": "REST architectures may contain intermediary layers such as gateways, proxies, and load balancers. Clients interact uniformly without needing awareness of internal service topology.",
+              "children": []
+            },
+            {
+              "node_name": "Uniform Interface",
+              "description": "REST standardizes resource interaction using consistent URLs, methods, and representations. This uniform interface simplifies API consumption and improves interoperability between systems.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Resources & URIs",
+          "description": "REST models application entities as resources accessible through unique URIs. APIs expose these resources using standardized HTTP methods and structured representations such as JSON.",
+          "children": []
+        },
+        {
+          "node_name": "HATEOAS Principle",
+          "description": "HATEOAS allows API responses to include navigational links describing available next actions. This enables clients to dynamically discover workflows and resource relationships through server-provided metadata.",
+          "children": []
+        },
+        {
+          "node_name": "Best Practices: Plural nouns, Versioning, Pagination",
+          "description": "RESTful API design commonly follows conventions such as plural resource names, explicit versioning, and paginated responses. These practices improve maintainability, backward compatibility, consistency, and scalability for production APIs.",
+          "children": []
+        }
+      ]
+    },
+    {
+      "node_name": "Real-Time Communication",
+      "description": "Real-time communication technologies enable low-latency data exchange between systems. Unlike traditional request-response models, these approaches support continuous updates, live synchronization, and bidirectional interaction for collaborative and streaming applications. :contentReference[oaicite:7]{index=7}",
+      "children": [
+        {
+          "node_name": "WebSockets",
+          "description": "WebSockets provide persistent bidirectional communication over a single TCP connection. After an HTTP upgrade handshake, clients and servers can exchange messages continuously without repeated request overhead, making WebSockets ideal for live collaborative or event-driven systems. :contentReference[oaicite:8]{index=8}",
+          "children": [
+            {
+              "node_name": "Full-duplex",
+              "description": "WebSockets allow clients and servers to simultaneously send and receive data. This full-duplex capability supports highly interactive applications such as multiplayer games, chats, dashboards, and collaborative editing.",
+              "children": []
+            },
+            {
+              "node_name": "Persistent connection",
+              "description": "WebSockets maintain a long-lived connection instead of repeatedly opening new HTTP requests. Persistent communication reduces latency and overhead for systems requiring constant synchronization.",
+              "children": []
+            },
+            {
+              "node_name": "HTTP Upgrade Handshake",
+              "description": "WebSocket communication begins with an HTTP request that upgrades the protocol from HTTP to WebSocket. This handshake preserves compatibility with existing web infrastructure and proxies.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Long Polling",
+          "description": "Long polling simulates near real-time communication using repeated HTTP requests. The server holds a request open until new data becomes available, after which the client reconnects to continue receiving updates.",
+          "children": [
+            {
+              "node_name": "Simulated real-time",
+              "description": "Long polling approximates real-time behavior despite relying on traditional HTTP request-response cycles. It enables systems to push updates without constant rapid polling intervals.",
+              "children": []
+            },
+            {
+              "node_name": "Server holds request",
+              "description": "In long polling, the server delays its response until new information is available or a timeout occurs. This reduces unnecessary client requests while enabling asynchronous updates.",
+              "children": []
+            },
+            {
+              "node_name": "High overhead",
+              "description": "Long polling creates repeated HTTP connection management overhead because clients must continuously reopen requests. This approach scales less efficiently than persistent communication models like WebSockets.",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "Modern API Protocols",
+      "description": "Modern API protocols address limitations of traditional REST communication by optimizing performance, flexibility, or service interaction patterns. These protocols are widely used in microservices, distributed architectures, and data-intensive applications requiring efficient communication strategies. :contentReference[oaicite:9]{index=9}",
+      "children": [
+        {
+          "node_name": "gRPC",
+          "description": "gRPC is a high-performance remote procedure call framework built on HTTP/2 and Protocol Buffers. It enables efficient binary communication, streaming, and strongly typed service contracts, making it popular in internal microservice communication. :contentReference[oaicite:10]{index=10}",
+          "children": [
+            {
+              "node_name": "HTTP/2 based",
+              "description": "gRPC leverages HTTP/2 features such as multiplexing, streaming, and header compression to improve communication efficiency and reduce latency between distributed services.",
+              "children": []
+            },
+            {
+              "node_name": "Protocol Buffers (Binary)",
+              "description": "gRPC commonly serializes data using Protocol Buffers, a compact binary format that reduces payload size and improves serialization speed compared to text-based formats like JSON.",
+              "children": []
+            },
+            {
+              "node_name": "Microservices focus",
+              "description": "gRPC is widely adopted in microservice ecosystems because it supports efficient internal communication, strict schemas, code generation, and high-performance service-to-service interactions.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "GraphQL",
+          "description": "GraphQL is a query language and API runtime that allows clients to request precisely the data they need. It centralizes access through a single endpoint and reduces unnecessary over-fetching common in traditional REST APIs. :contentReference[oaicite:11]{index=11}",
+          "children": [
+            {
+              "node_name": "Flexible queries",
+              "description": "GraphQL enables clients to specify exact fields and nested relationships required in a response. This flexibility improves frontend efficiency and reduces redundant network traffic.",
+              "children": []
+            },
+            {
+              "node_name": "Single endpoint",
+              "description": "Unlike REST APIs with many resource URLs, GraphQL commonly exposes one endpoint that processes different structured queries and mutations against a shared schema.",
+              "children": []
+            },
+            {
+              "node_name": "Prevents over-fetching",
+              "description": "GraphQL minimizes unnecessary data transfer by allowing clients to request only relevant fields. This improves efficiency for mobile apps, dashboards, and bandwidth-sensitive applications.",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -362,7 +362,7 @@ Private IP → Used within LANs, data centers, cloud VPCs
   <hr class="section-rule" />
 
   <!-- ════════════════════════════ PART 2: DNS ═══════════════════════════ -->
-  <h2><span class="part-label">Part 2</span>DNS — The Internet's Phonebook, and Why It's More Interesting Than It Sounds</h2>
+  <h2><span class="part-label">Part 2</span>DNS — The Internet's Phonebook</h2>
 
   <p>You type <code>api.mycompany.com</code> into a request. Somewhere, a machine figures out this means <code>203.0.113.42</code>. How?</p>
 
@@ -612,11 +612,11 @@ Asynchronous (non-blocking):
   <hr class="section-rule" />
 
   <!-- ════════════════════════ PART 6: API GATEWAY ══════════════════════════ -->
-  <h2><span class="part-label">Part 6</span>API Gateway — The Front Door You Didn't Know You Needed</h2>
+  <h2><span class="part-label">Part 6</span>API Gateway — The Front Door for Traffic</h2>
 
   <p>An API gateway is a centralised entry point that receives all client API calls, applies shared policy, and routes to backend services. It's what makes microservice architectures tractable.</p>
 
-  <p>Think of it as infrastructure middleware. Without a gateway, every microservice independently handles authentication, rate limiting, versioning, and logging. That's an enormous surface area for inconsistency. With a gateway, those concerns are pushed to the edge, and services can focus on their own logic.</p>
+  <p>Think of it as infrastructure middleware that acts as a reverse proxy by routing client requests to backend servers, but it goes far beyond simple traffic forwarding. Without a gateway, every microservice independently handles authentication, rate limiting, versioning, and logging. That's an enormous surface area for inconsistency. With a gateway, those concerns are pushed to the edge, and services can focus on their own logic.</p>
 
   <p>Key functions of an API gateway:</p>
 
@@ -695,11 +695,14 @@ Asynchronous (non-blocking):
                           Routed to: /v1/predict → ML Serving cluster
                           │
                           ▼
-5. Load Balancer (L7)     Routes to the least-loaded GPU replica
+5. Load Balancer (L7)     Routes to the least-loaded GPU cluster
                           (Weighted, because you have A100s and T4s)
                           │
                           ▼
 6. Reverse Proxy          TLS terminated upstream (at CDN or Gateway)
+                          Handles fine-grained internal routing
+                          Performs protocol translation 
+                            (e.g HTTP/3 → gRPC)
                           Request forwarded to backend pod
                           │
                           ▼
