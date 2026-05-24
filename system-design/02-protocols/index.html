@@ -911,13 +911,63 @@ embeddings = response.<span class="fn">json</span>()[<span class="st">"embedding
 
 <span class="kw">async def</span> <span class="fn">stream_training_metrics</span>():
     uri = <span class="st">"wss://ml-platform.com/ws/jobs/train-981/metrics"</span>
+
     <span class="kw">async with</span> websockets.<span class="fn">connect</span>(uri) <span class="kw">as</span> ws:
         <span class="kw">async for</span> message <span class="kw">in</span> ws:
             metrics = json.<span class="fn">loads</span>(message)
-            <span class="fn">print</span>(<span class="st">f"Epoch {metrics['epoch']}: loss={metrics['loss']:.4f}"</span>)
 
-asyncio.<span class="fn">run</span>(<span class="fn">stream_training_metrics</span>())</code></pre>
+            <span class="fn">print</span>(
+                <span class="st">f"Epoch {metrics['epoch']}: "</span>
+                <span class="st">f"loss={metrics['loss']:.4f}"</span>
+            )
 
+<span class="kw">async def</span> <span class="fn">main</span>():
+    <span class="kw">await</span> <span class="fn">stream_training_metrics</span>()
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</code></pre>
+
+<p><strong>Core Components Explained</strong></p>
+
+<ul>
+    <li>
+        <strong><code>asyncio</code> and <code>async/await</code>:</strong>
+        WebSockets are inherently asynchronous because they keep a connection open indefinitely.
+        Instead of blocking your entire program while waiting for the next data packet to arrive,
+        <code>asyncio</code> allows Python to pause this specific task and run other background
+        operations until the server pushes new data.
+    </li>
+
+    <li>
+        <strong>The Secure URI (<code>wss://</code>):</strong>
+        The <code>uri</code> string starts with <code>wss://</code> (WebSocket Secure),
+        which is the WebSocket equivalent of <code>https://</code>. It establishes an encrypted
+        TLS tunnel so that the data flowing back and forth cannot be intercepted in plaintext.
+    </li>
+
+    <li>
+        <strong><code>async with websockets.connect(uri) as ws:</code></strong>
+        This sets up an asynchronous context manager. It initiates the HTTP
+        "Upgrade" handshake to establish the persistent TCP connection. Crucially,
+        when the code exits this block (due to completion or an error), it automatically
+        handles the connection teardown and closes the socket cleanly.
+    </li>
+
+    <li>
+        <strong><code>async for message in ws:</code></strong>
+        This is an infinite asynchronous loop. It tells the client to sit and wait passively.
+        Every time the server decides to push a new packet of data down the stream,
+        this loop triggers, yields the incoming <code>message</code>, and runs the code block inside.
+    </li>
+
+    <li>
+        <strong><code>json.loads(message)</code>:</strong>
+        Data transmitted over WebSockets typically arrives as a raw string or binary blob.
+        Since ML systems usually communicate using structured text, this converts the incoming
+        JSON string into a native Python dictionary so you can easily access key-value pairs like
+        <code>metrics['loss']</code>.
+    </li>
+</ul>
       <hr />
 
       <h3>Long Polling — The HTTP Workaround</h3>
@@ -1003,7 +1053,89 @@ asyncio.<span class="fn">run</span>(<span class="fn">stream_training_metrics</sp
   <span class="kw">repeated float</span> embeddings = <span class="nu">3</span>;
 }</code></pre>
 
-      <p>This <code>.proto</code> file is then compiled into client and server code in any language (Python, Go, Java, etc.). The result is:</p>
+      <p>This <code>.proto</code> file is then compiled into client and server code in any language (Python, Go, Java, etc.).</p>
+      <p><strong>Explaining the Code Snippet</strong></p>
+
+<ul>
+  <li>
+    <strong><code>syntax = "proto3";</code></strong>:
+    This specifies the compiler version being used.
+  </li>
+</ul>
+
+<p><strong>Service Definition (The Interface)</strong></p>
+
+<ul>
+  <li>
+    <strong><code>service PredictionService</code></strong>:
+    This defines an API interface (used by gRPC). Think of this like defining a
+    class with methods that can be called remotely over the network.
+  </li>
+
+  <li>
+    <strong><code>rpc Predict (...)</code></strong>:
+    This is a standard <strong>Request-Response</strong> function.
+    The client sends <em>one</em> <code>PredictRequest</code> object,
+    and the server returns <em>one</em> <code>PredictResponse</code>.
+  </li>
+
+  <li>
+    <strong><code>rpc PredictStream (stream ...) returns (stream ...)</code></strong>:
+    The <code>stream</code> keyword changes the behavior entirely.
+    This enables <strong>bidirectional streaming</strong> over HTTP/2.
+    The client can continuously push chunks of data, and the server can
+    stream back chunks of responses in parallel without waiting for the
+    whole request to finish.
+  </li>
+</ul>
+
+<p><strong>The Input Schema (The Request)</strong></p>
+
+<ul>
+  <li>
+    <strong><code>message</code></strong>:
+    This is the equivalent of a <code>class</code> or a <code>struct</code>.
+    It defines a data object.
+  </li>
+
+  <li>
+    <strong><code>string text = 1;</code> and <code>string model_id = 2;</code></strong>:
+    These are fields with their data types.
+  </li>
+
+  <li>
+    <strong>The numbers <code>= 1</code> and <code>= 2</code> are NOT values or default assignments.</strong>
+    They are <strong>Field Tags</strong> (unique identifiers). In binary format,
+    Protobuf doesn't transmit the text names <code>"text"</code> or
+    <code>"model_id"</code> because that wastes bandwidth. Instead, it just
+    sends the tag numbers <code>1</code> and <code>2</code>.
+    <em>Once a tag number is assigned, it should never be changed.</em>
+  </li>
+</ul>
+
+<p><strong>The Output Schema (The Response)</strong></p>
+
+<ul>
+  <li>
+    <strong><code>string label = 1;</code></strong>:
+    The predicted category (e.g., <code>"positive"</code> or <code>"spam"</code>).
+  </li>
+
+  <li>
+    <strong><code>float confidence = 2;</code></strong>:
+    A floating-point number representing the model's confidence score
+    (e.g., <code>0.94</code>).
+  </li>
+
+  <li>
+    <strong><code>repeated float embeddings = 3;</code></strong>:
+    The <code>repeated</code> keyword is Protobuf's way of defining a
+    <strong>List</strong> or an <strong>Array</strong>. This tells the system
+    that field <code>3</code> will contain a list of floating-point numbers
+    (the vector embeddings generated by the ML model).
+  </li>
+</ul></p>      
+      <p>The result is:</p>
       <ul>
         <li><strong>~5x smaller payloads</strong> than JSON (binary is more compact)</li>
         <li><strong>~10x faster serialization</strong> (no text parsing)</li>
@@ -1025,20 +1157,121 @@ asyncio.<span class="fn">run</span>(<span class="fn">stream_training_metrics</sp
 
       <p><strong>A gRPC call in Python:</strong></p>
 
+<p><strong>Client Code</strong></p>
+
 <pre data-lang="python"><code><span class="kw">import</span> grpc
-<span class="kw">import</span> prediction_pb2
-<span class="kw">import</span> prediction_pb2_grpc
+<span class="kw">import</span> prediction_service_pb2
+<span class="kw">import</span> prediction_service_pb2_grpc
 
-channel = grpc.<span class="fn">insecure_channel</span>(<span class="st">'model-server:50051'</span>)
-stub = prediction_pb2_grpc.<span class="fn">PredictionServiceStub</span>(channel)
+<span class="kw">def</span> <span class="fn">run_prediction</span>():
+    <span class="cm"># 1. Open a secure or insecure channel to the server's IP and port</span>
+    <span class="kw">with</span> grpc.<span class="fn">insecure_channel</span>(<span class="st">'localhost:50051'</span>) <span class="kw">as</span> channel:
 
-request = prediction_pb2.<span class="fn">PredictRequest</span>(
-    text=<span class="st">"The model performed surprisingly well on unseen data."</span>,
-    model_id=<span class="st">"sentiment-v3"</span>
-)
+        <span class="cm"># 2. Create the client "stub" linked to that channel</span>
+        client = prediction_service_pb2_grpc.<span class="fn">PredictionServiceStub</span>(channel)
 
-response = stub.<span class="fn">Predict</span>(request)
-<span class="fn">print</span>(<span class="st">f"Label: {response.label}, Confidence: {response.confidence:.3f}"</span>)</code></pre>
+        <span class="cm"># 3. Construct your request payload</span>
+        request = prediction_service_pb2.<span class="fn">PredictRequest</span>(
+            text=<span class="st">"The model performed surprisingly well on unseen data."</span>,
+            model_id=<span class="st">"sentiment-v3"</span>
+        )
+
+        <span class="fn">print</span>(<span class="st">"Sending request to server..."</span>)
+
+        <span class="cm"># 4. Make the call like a local function!</span>
+        <span class="cm"># gRPC handles serialization, network transmission,</span>
+        <span class="cm"># and deserialization under the hood.</span>
+        response = client.<span class="fn">Predict</span>(request)
+
+        <span class="cm"># 5. Access the fields directly from the response object</span>
+        <span class="fn">print</span>(<span class="st">f"Prediction Label: {response.label}"</span>)
+        <span class="fn">print</span>(<span class="st">f"Confidence Score: {response.confidence:.2f}"</span>)
+        <span class="fn">print</span>(<span class="st">f"First 3 Vector Embeddings: {response.embeddings[:3]}"</span>)
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    <span class="fn">run_prediction</span>()</code></pre>
+
+<p><strong>What the Server-Side Looks Like</strong></p>
+
+<p>
+  For that client code to work, a server must be running on port
+  <code>50051</code> implementing the model logic.
+</p>
+
+<pre data-lang="python"><code><span class="kw">import</span> grpc
+<span class="kw">from</span> concurrent <span class="kw">import</span> futures
+<span class="kw">import</span> prediction_service_pb2
+<span class="kw">import</span> prediction_service_pb2_grpc
+
+<span class="cm"># Inherit from the generated stub to implement your logic</span>
+<span class="kw">class</span> <span class="nm">PredictionServicer</span>(
+    prediction_service_pb2_grpc.<span class="fn">PredictionServiceServicer</span>
+):
+
+    <span class="kw">def</span> <span class="fn">Predict</span>(self, request, context):
+
+        <span class="cm"># Read incoming data safely typed from the request object</span>
+        user_text = request.text
+        model = request.model_id
+
+        <span class="cm"># --- Your ML Model Inference Code Goes Here ---</span>
+        <span class="cm"># (e.g., outputs = my_model(user_text))</span>
+        predicted_label = <span class="st">"positive"</span>
+        model_confidence = <span class="nu">0.98</span>
+        mock_embeddings = [<span class="nu">0.12</span>, -<span class="nu">0.43</span>, <span class="nu">0.89</span>, <span class="nu">0.23</span>]
+        <span class="cm"># -----------------------------------------------</span>
+
+        <span class="cm"># Return the exact type promised in the schema</span>
+        <span class="kw">return</span> prediction_service_pb2.<span class="fn">PredictResponse</span>(
+            label=predicted_label,
+            confidence=model_confidence,
+            embeddings=mock_embeddings
+        )
+
+<span class="kw">def</span> <span class="fn">serve</span>():
+    server = grpc.<span class="fn">server</span>(
+        futures.<span class="fn">ThreadPoolExecutor</span>(max_workers=<span class="nu">10</span>)
+    )
+
+    prediction_service_pb2_grpc.<span class="fn">add_PredictionServiceServicer_to_server</span>(
+        PredictionServicer(), server
+    )
+
+    server.<span class="fn">add_insecure_port</span>(<span class="st">'[::]:50051'</span>)
+
+    <span class="fn">print</span>(<span class="st">"Server started on port 50051..."</span>)
+
+    server.<span class="fn">start</span>()
+    server.<span class="fn">wait_for_termination</span>()</code></pre>
+
+    <p><strong>The Workflow Summary</strong></p>
+
+<ul>
+  <li>
+    The client runtime serializes your
+    <code>PredictRequest</code> object into raw binary bytes.
+  </li>
+
+  <li>
+    It sends those bytes over an optimized HTTP/2 connection.
+  </li>
+
+  <li>
+    The server receives the bytes, instantiates a Python
+    <code>PredictRequest</code> object, and runs your
+    <code>Predict</code> logic.
+  </li>
+
+  <li>
+    The server creates a <code>PredictResponse</code> object,
+    serializes it to binary, and sends it back.
+  </li>
+
+  <li>
+    The client turns those bytes back into a native Python object
+    seamlessly.
+  </li>
+</ul>
 
       <hr />
 
@@ -1089,22 +1322,22 @@ response = stub.<span class="fn">Predict</span>(request)
   │                                                                │
   │  ┌─────────────────────────────────────────────────────────┐   │
   │  │  Public-facing web API or data product?                 │   │
-  │  │  ─────────────────────────────────────────────────► REST│   │
-  │  └─────────────────────────────────────────────────────────┘   │
-  │                                                                │
-  │  ┌─────────────────────────────────────────────────────────┐   │
-  │  │  Internal microservice or high-throughput ML inference? │   │
-  │  │  ─────────────────────────────────────────────────► gRPC│   │
-  │  └─────────────────────────────────────────────────────────┘   │
-  │                                                                │
-  │  ┌─────────────────────────────────────────────────────────┐   │
-  │  │  Complex frontend with many data shapes / relationships?│   │
-  │  │  ─────────────────────────────────────────────► GraphQL │   │
+  │  │  ──────────────────────────────────────────► REST       │   │
   │  └─────────────────────────────────────────────────────────┘   │
   │                                                                │
   │  ┌─────────────────────────────────────────────────────────┐   │
   │  │  Live dashboards, streaming predictions, alerts?        │   │
   │  │  ──────────────────────────────────────────► WebSockets │   │
+  │  └─────────────────────────────────────────────────────────┘   │
+  │                                                                │
+  │  ┌─────────────────────────────────────────────────────────┐   │
+  │  │  Internal microservice or high-throughput ML inference? │   │
+  │  │  ──────────────────────────────────────────► gRPC       │   │
+  │  └─────────────────────────────────────────────────────────┘   │
+  │                                                                │
+  │  ┌─────────────────────────────────────────────────────────┐   │
+  │  │  Complex frontend with many data shapes / relationships?│   │
+  │  │  ──────────────────────────────────────────► GraphQL    │   │
   │  └─────────────────────────────────────────────────────────┘   │
   └────────────────────────────────────────────────────────────────┘</code></pre>
 
