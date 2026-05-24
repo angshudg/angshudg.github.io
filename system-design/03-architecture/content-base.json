@@ -1,0 +1,216 @@
+{
+  "node_name": "Software Architecture Patterns & Styles",
+  "description": "A top-level map of common application architecture styles, showing how systems are organized, how responsibilities are split, and what trade-offs matter when choosing a design. The image compares centralized, layered, distributed, and event-based approaches, then ends with the practical factors that drive the final choice. :contentReference[oaicite:0]{index=0}",
+  "children": [
+    {
+      "node_name": "Monolithic Architecture",
+      "description": "A monolithic style keeps the application in one tightly integrated codebase and deployment unit. In this map, it serves as the simplest baseline: easy to start with, but harder to grow, isolate failures, or change safely as the system expands. :contentReference[oaicite:1]{index=1}",
+      "children": [
+        {
+          "node_name": "Definition: Single unified system with tightly integrated components",
+          "description": "Within this architecture discussion, the whole application is built as one unified system where modules depend on the same shared runtime and deployment lifecycle. The image uses this definition to contrast monoliths with layered, service-based, and event-driven styles. :contentReference[oaicite:2]{index=2}",
+          "children": []
+        },
+        {
+          "node_name": "Pros: Simple development, easy deployment, low initial complexity",
+          "description": "These advantages matter because a single codebase is straightforward to understand, test, and release early on. In the context of architecture selection, the monolith wins when the priority is fast delivery and minimal coordination overhead rather than long-term distribution. :contentReference[oaicite:3]{index=3}",
+          "children": []
+        },
+        {
+          "node_name": "Cons: Scaling difficulties, maintenance overhead, single point of failure",
+          "description": "The drawback is that growth affects the whole system at once: a hot path can force broader scaling, shared code becomes harder to maintain, and one failure can impact the entire application. The map highlights these costs as the main reason teams move away from monoliths. :contentReference[oaicite:4]{index=4}",
+          "children": []
+        },
+        {
+          "node_name": "Use Cases: Startups, small applications, simple CRUD apps",
+          "description": "This style fits early-stage products and simple CRUD systems where one team can own the whole stack and deployment speed matters more than fine-grained scaling. The image treats it as the practical choice when the business is still validating the product and the scope is small. :contentReference[oaicite:5]{index=5}",
+          "children": []
+        }
+      ]
+    },
+    {
+      "node_name": "Multi-Tier Architecture",
+      "description": "A multi-tier design splits an application into layers, usually separating client, business logic, and data concerns. In this map, the style shows how adding tiers improves organization and scaling flexibility, but also adds latency, operational complexity, and cost. :contentReference[oaicite:6]{index=6}",
+      "children": [
+        {
+          "node_name": "Tiers",
+          "description": "This node introduces the layered structure itself: the application is divided into distinct tiers so each layer has a clearer responsibility. In the image, it expands into 2-tier, 3-tier, and N-tier variants to show how systems become more specialized as they grow. :contentReference[oaicite:7]{index=7}",
+          "children": [
+            {
+              "node_name": "2-Tier: Client and Database",
+              "description": "A two-tier setup connects the client directly to the database, keeping the system compact while still separating the user-facing part from persistence. In the map, it is the simplest tiered form and a stepping stone before adding a dedicated middle layer. :contentReference[oaicite:8]{index=8}",
+              "children": []
+            },
+            {
+              "node_name": "3-Tier: Presentation, Business Logic, and Data",
+              "description": "A three-tier system inserts a business-logic layer between the user interface and the data store. This separation is important in the architecture context because it improves maintainability and makes it easier to scale or change one layer without redesigning the whole application. :contentReference[oaicite:9]{index=9}",
+              "children": []
+            },
+            {
+              "node_name": "N-Tier: Specialized layers like Caching and API Gateways",
+              "description": "N-tier architecture extends the layered idea beyond three tiers by adding specialized infrastructure roles such as caching, gateways, or other middle services. The image uses it to show how mature systems split responsibilities more finely to support performance and governance. :contentReference[oaicite:10]{index=10}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Pros: Separation of concerns, independent scaling, improved security",
+          "description": "These benefits come from isolating responsibilities across layers, which makes each tier easier to evolve and defend. In the architecture-choice context, the map is emphasizing that a well-placed middle tier can improve control, scalability, and access boundaries compared with a single unified application. :contentReference[oaicite:11]{index=11}",
+          "children": []
+        },
+        {
+          "node_name": "Cons: Increased latency, deployment complexity, higher costs",
+          "description": "The trade-off for layering is that requests may pass through more hops, releases must coordinate across more pieces, and the infrastructure bill usually rises. The map presents these as the main reasons a tiered design can be heavier than a monolith for simpler products. :contentReference[oaicite:12]{index=12}",
+          "children": []
+        },
+        {
+          "node_name": "Key Concepts: Load balancing, horizontal vs vertical scaling",
+          "description": "This node captures the scaling vocabulary used when a tiered system grows. Load balancing spreads traffic, horizontal scaling adds more instances, and vertical scaling enlarges a single node. Those ideas matter here because tiered systems are often chosen to support controlled growth. :contentReference[oaicite:13]{index=13}",
+          "children": []
+        }
+      ]
+    },
+    {
+      "node_name": "Microservices Architecture",
+      "description": "A microservices style breaks the application into small, loosely coupled services that can be built, deployed, and scaled independently. In this map, it is presented as the distributed alternative to monoliths, with the benefit of flexibility and the cost of coordination overhead. :contentReference[oaicite:14]{index=14}",
+      "children": [
+        {
+          "node_name": "Definition: Collection of small, loosely coupled, independent services",
+          "description": "Here the architecture is defined by service autonomy: each service owns a narrow business capability and communicates through explicit interfaces. The map uses this definition to show why microservices are attractive when teams need to move independently and scale different parts of the system separately. :contentReference[oaicite:15]{index=15}",
+          "children": []
+        },
+        {
+          "node_name": "Benefits",
+          "description": "This branch groups the reasons teams adopt microservices despite the extra operational work. The common theme is flexibility: independent services allow faster change, better fault boundaries, and more freedom in how each part is built and deployed. :contentReference[oaicite:16]{index=16}",
+          "children": [
+            {
+              "node_name": "Independent scaling and deployment",
+              "description": "This benefit matters because each service can be released or scaled on its own, instead of forcing the whole application to move together. In the architecture context, that makes capacity planning more precise and reduces coupling between teams and workloads. :contentReference[oaicite:17]{index=17}",
+              "children": []
+            },
+            {
+              "node_name": "Fault isolation and tolerance",
+              "description": "If one service fails or slows down, the rest of the system can sometimes continue operating, especially when resilience patterns are in place. The map includes this to show that distributed decomposition can improve tolerance compared with a single shared runtime. :contentReference[oaicite:18]{index=18}",
+              "children": []
+            },
+            {
+              "node_name": "Technology stack flexibility (Polyglot)",
+              "description": "A microservices ecosystem can let different teams choose the best-fit technology for each service rather than forcing one stack everywhere. In the image, this polyglot idea reflects one of the style’s biggest organizational advantages: autonomy at the implementation layer. :contentReference[oaicite:19]{index=19}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Challenges",
+          "description": "This branch records the hidden cost of distribution. Once the application is split into services, the system must deal with network calls, shared business consistency, and a larger operational surface area for debugging and observability. :contentReference[oaicite:20]{index=20}",
+          "children": [
+            {
+              "node_name": "Inter-service communication complexity",
+              "description": "Service-to-service calls introduce network latency, retries, and failure handling that do not exist in a simple monolith. The map treats this as a core microservices challenge because communication patterns become part of the application design itself. :contentReference[oaicite:21]{index=21}",
+              "children": []
+            },
+            {
+              "node_name": "Distributed data consistency",
+              "description": "When data is split across services, transactions become harder to coordinate and consistency often has to be managed with eventual consistency or workflow patterns. This leaf captures one of the most important architectural trade-offs in distributed systems. :contentReference[oaicite:22]{index=22}",
+              "children": []
+            },
+            {
+              "node_name": "Monitoring and tracing overhead",
+              "description": "A microservices system needs strong observability because failures and slowdowns can span many services and hops. The map highlights that logs, traces, and metrics become essential infrastructure rather than optional extras once the system is distributed. :contentReference[oaicite:23]{index=23}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Components: API Gateway, Service Mesh, CI/CD pipelines",
+          "description": "These are the operational building blocks that help microservices work at scale. An API gateway handles external entry points, a service mesh helps manage internal service communication, and CI/CD pipelines keep frequent independent releases manageable. :contentReference[oaicite:24]{index=24}",
+          "children": []
+        },
+        {
+          "node_name": "Examples: Netflix, Uber, Amazon",
+          "description": "The image uses these large internet-scale companies as familiar examples of organizations associated with distributed service ecosystems. In context, the point is not the brand names themselves but the need for many independently managed capabilities at large scale. :contentReference[oaicite:25]{index=25}",
+          "children": []
+        }
+      ]
+    },
+    {
+      "node_name": "Event-Driven Architecture (EDA)",
+      "description": "An event-driven style organizes the system around events that are published, captured, routed, and consumed asynchronously. In this map, it is the pattern for loose coupling and real-time reaction, especially when combined with distributed services and streaming platforms. :contentReference[oaicite:26]{index=26}",
+      "children": [
+        {
+          "node_name": "Definition: Components communicate via asynchronous events",
+          "description": "This definition means services do not have to wait on direct request-response calls; instead, they react when something changes. In the architecture context, that makes the system more responsive and more decoupled, especially for workflows that can be processed as events arrive. :contentReference[oaicite:27]{index=27}",
+          "children": []
+        },
+        {
+          "node_name": "Models",
+          "description": "This node separates the two main ways event-based systems are often organized. The image contrasts message distribution patterns with durable streaming logs, showing that EDA can be implemented in more than one communication style. :contentReference[oaicite:28]{index=28}",
+          "children": [
+            {
+              "node_name": "Pub-Sub: One-to-many distribution (RabbitMQ, SNS)",
+              "description": "Publish-subscribe sends a message from one producer to many interested consumers, making it useful when several parts of the system need to react to the same change. The map presents it as the simpler event-distribution model in the EDA family. :contentReference[oaicite:29]{index=29}",
+              "children": []
+            },
+            {
+              "node_name": "Event Streaming: Ordered, persistent logs (Kafka, Kinesis)",
+              "description": "Event streaming keeps events in an ordered, durable log so consumers can process, replay, and catch up from a shared history. In the architecture context, this model is favored when event sequence and long-lived data flow matter. :contentReference[oaicite:30]{index=30}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Key Components",
+          "description": "EDA systems usually revolve around the actors that create, move, and consume events. This branch breaks the pattern into the roles needed to publish state changes, route them through the system, and react on the other side. :contentReference[oaicite:31]{index=31}",
+          "children": [
+            {
+              "node_name": "Producers: Generate events",
+              "description": "Producers are the sources of change: they emit an event when something meaningful happens inside a service or workflow. In the map, they are the starting point for the asynchronous communication chain. :contentReference[oaicite:32]{index=32}",
+              "children": []
+            },
+            {
+              "node_name": "Brokers: Route and store events",
+              "description": "Brokers sit in the middle to deliver events to consumers and, in some models, retain them for later processing. The map includes them because routing and durability are what make event systems scalable and resilient. :contentReference[oaicite:33]{index=33}",
+              "children": []
+            },
+            {
+              "node_name": "Consumers: React to events",
+              "description": "Consumers subscribe to events and execute follow-up work, such as updating state, triggering notifications, or starting another workflow. In this architecture style, they are the response layer that turns events into business action. :contentReference[oaicite:34]{index=34}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Pros: Loose coupling, high scalability, real-time processing",
+          "description": "These advantages come from letting services work independently and react as soon as events appear. The architecture map highlights EDA as a fit for systems that need scalable fan-out, low coordination overhead, and near-real-time responses. :contentReference[oaicite:35]{index=35}",
+          "children": []
+        },
+        {
+          "node_name": "Best Practices: Idempotency, Dead-Letter Queues (DLQs), Event versioning",
+          "description": "These practices help event systems stay reliable as messages are retried, delayed, or evolved over time. In context, idempotency prevents duplicate side effects, DLQs isolate failed messages, and versioning keeps older and newer event shapes compatible. :contentReference[oaicite:36]{index=36}",
+          "children": []
+        }
+      ]
+    },
+    {
+      "node_name": "Decision Factors",
+      "description": "This branch collects the real-world criteria used to choose among architecture styles. Instead of asking which pattern is best in the abstract, the map focuses on business urgency, technical demands, and practical constraints such as team size and legacy systems. :contentReference[oaicite:37]{index=37}",
+      "children": [
+        {
+          "node_name": "Business Needs: Speed to market vs long-term growth",
+          "description": "This factor asks whether the priority is launching quickly or building a foundation that can absorb future complexity. In the architecture context, it often decides whether a simple monolith is enough now or whether a more modular style is worth the upfront cost. :contentReference[oaicite:38]{index=38}",
+          "children": []
+        },
+        {
+          "node_name": "Technical Requirements: Scalability, performance, and fault tolerance",
+          "description": "These requirements shape the acceptable trade-offs for the system. Some applications can stay simple, while others need stronger scaling, lower latency, or better resilience; the map shows that these nonfunctional needs heavily influence the chosen architecture style. :contentReference[oaicite:39]{index=39}",
+          "children": []
+        },
+        {
+          "node_name": "Constraints: Budget, team size, and existing legacy systems",
+          "description": "This node reminds you that architecture is not chosen in a vacuum. Limited budget, a small team, or heavy legacy integration can make one style much more practical than another, even if a more ambitious design looks attractive on paper. :contentReference[oaicite:40]{index=40}",
+          "children": []
+        }
+      ]
+    }
+  ]
+}
