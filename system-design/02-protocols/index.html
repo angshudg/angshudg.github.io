@@ -1312,6 +1312,193 @@ embeddings = response.<span class="fn">json</span>()[<span class="st">"embedding
         <li><strong>Model registries with complex relationships</strong> — querying a model along with its lineage, datasets, hyperparameters, and downstream deployments is natural in GraphQL.</li>
         <li><strong>Data discovery portals</strong> — flexible search and filtering over heterogeneous datasets without building N different REST endpoints.</li>
       </ul>
+<p>
+  To implement a GraphQL API in Python, a schema is needed that defines the
+  data structure, a server to run it, and a client to query it.
+</p>
+
+<p>
+  The easiest way to do this in Python is using
+  <strong><code>ariadne</code></strong>
+  (a schema-first GraphQL library) and
+  <strong><code>uvicorn</code></strong>
+  (an ASGI server) to run it, alongside standard
+  <strong><code>requests</code></strong>
+  for the client.
+</p>
+
+<hr />
+
+<p><strong>The Schema (<code>schema.graphql</code>)</strong></p>
+
+<p>
+  GraphQL relies on a strict schema file that acts as a contract between the
+  client and the server. It tells the client exactly what data is available.
+</p>
+
+<pre data-lang="graphql"><code><span class="kw">type</span> <span class="nm">User</span> {
+    id: ID!
+    displayName: String!
+}
+
+<span class="kw">type</span> <span class="nm">Evaluation</span> {
+    accuracy: Float!
+    f1Score: Float!
+}
+
+<span class="kw">type</span> <span class="nm">Model</span> {
+    id: ID!
+    name: String!
+    latestEvaluation: Evaluation!
+    author: User!
+}
+
+<span class="kw">type</span> <span class="nm">Query</span> {
+    model(id: ID!): Model
+}</code></pre>
+
+<hr />
+
+<p><strong>The Server Code (<code>server.py</code>)</strong></p>
+
+<p>
+  The server uses <strong>Resolvers</strong> — functions that map to the schema
+  fields and actually fetch the data (from a database, an ML model registry,
+  or an internal memory dictionary).
+</p>
+
+<pre data-lang="python"><code><span class="kw">from</span> ariadne <span class="kw">import</span> (
+    load_schema_from_path,
+    make_executable_schema,
+    query,
+    graphql_sync
+)
+<span class="kw">from</span> ariadne.asgi <span class="kw">import</span> GraphQL
+<span class="kw">import</span> uvicorn
+
+<span class="cm"># 1. Load the schema file</span>
+type_defs = load_schema_from_path(<span class="st">"schema.graphql"</span>)
+
+<span class="cm"># Mock Database / Registry Data</span>
+MOCK_MODELS = {
+    <span class="st">"42"</span>: {
+        <span class="st">"id"</span>: <span class="st">"42"</span>,
+        <span class="st">"name"</span>: <span class="st">"sentiment-v3"</span>,
+        <span class="st">"latestEvaluation"</span>: {
+            <span class="st">"accuracy"</span>: <span class="nu">0.945</span>,
+            <span class="st">"f1Score"</span>: <span class="nu">0.921</span>
+        },
+        <span class="st">"author"</span>: {
+            <span class="st">"id"</span>: <span class="st">"17"</span>,
+            <span class="st">"displayName"</span>: <span class="st">"ABC MLOps"</span>
+        }
+    }
+}
+
+<span class="cm"># 2. Define the resolver for the root 'model' query</span>
+@query.field(<span class="st">"model"</span>)
+<span class="kw">def</span> <span class="fn">resolve_model</span>(_, info, id):
+
+    <span class="cm"># Returns the model matching the ID, or None if not found</span>
+    <span class="kw">return</span> MOCK_MODELS.get(id)
+
+<span class="cm"># 3. Create the executable schema and ASGI application</span>
+schema = make_executable_schema(type_defs, query)
+app = GraphQL(schema, debug=<span class="kw">True</span>)
+
+<span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+
+    <span class="fn">print</span>(
+        <span class="st">"GraphQL Server running on http://localhost:8000"</span>
+    )
+
+    uvicorn.run(
+        app,
+        host=<span class="st">"0.0.0.0"</span>,
+        port=<span class="nu">8000</span>
+    )</code></pre>
+
+<hr />
+
+<p><strong>The Client Code (<code>client.py</code>)</strong></p>
+
+<p>
+  Unlike REST, which uses unique endpoints for different data requirements,
+  GraphQL routes <strong>all</strong> requests to a single
+  <code>/</code> endpoint using an HTTP <code>POST</code> method.
+  The client specifies exactly what fields it wants in the body
+  of the payload.
+</p>
+
+<pre data-lang="python"><code><span class="kw">import</span> requests
+<span class="kw">import</span> json
+
+<span class="cm"># Define the single endpoint URL</span>
+url = <span class="st">"http://localhost:8000"</span>
+
+<span class="cm"># Craft a query asking ONLY for specific data fields</span>
+query_string = <span class="st">"""
+query GetModelDetails($modelId: ID!) {
+    model(id: $modelId) {
+        name
+        latestEvaluation {
+            accuracy
+        }
+        author {
+            displayName
+        }
+    }
+}
+"""</span>
+
+<span class="cm"># Variables are passed separately to keep queries clean and secure</span>
+variables = {<span class="st">"modelId"</span>: <span class="st">"42"</span>}
+
+<span class="cm"># Send the request as a POST payload</span>
+<span class="cm"># with 'query' and 'variables' keys</span>
+response = requests.post(
+    url,
+    json={
+        <span class="st">"query"</span>: query_string,
+        <span class="st">"variables"</span>: variables
+    }
+)
+
+<span class="kw">if</span> response.status_code == <span class="nu">200</span>:
+
+    result = response.json()
+
+    <span class="fn">print</span>(<span class="st">"GraphQL Response Data:"</span>)
+    <span class="fn">print</span>(json.dumps(result, indent=<span class="nu">2</span>))
+
+<span class="kw">else</span>:
+
+    <span class="fn">print</span>(
+        <span class="st">f"Failed with status code: {response.status_code}"</span>
+    )</code></pre>
+
+<h3>The Output</h3>
+
+<p>
+  When you run the client code, you get a clean dictionary back matching the
+  exact nested structure you requested — omitting fields like
+  <code>f1Score</code> or user <code>id</code> because they weren't
+  explicitly asked for.
+</p>
+
+<pre data-lang="json"><code>{
+  <span class="st">"data"</span>: {
+    <span class="st">"model"</span>: {
+      <span class="st">"name"</span>: <span class="st">"sentiment-v3"</span>,
+      <span class="st">"latestEvaluation"</span>: {
+        <span class="st">"accuracy"</span>: <span class="nu">0.945</span>
+      },
+      <span class="st">"author"</span>: {
+        <span class="st">"displayName"</span>: <span class="st">"ABC MLOps"</span>
+      }
+    }
+  }
+}</code></pre>
 
       <p><strong>The trade-offs:</strong> GraphQL adds complexity. The schema requires maintenance, resolvers can be performance bottlenecks if not carefully implemented (the N+1 query problem is notorious), and its caching story is weaker than REST's (since every query is a <code>POST</code>). Don't reach for it unless you genuinely have a flexible querying problem.</p>
 
