@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stateless by Default, Stateful by Design — Web Sessions, Serialization & CORS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  /* ── Design tokens ─────────────────────────────────────────── */
+  :root {
+    --bg:           #faf9f6;
+    --surface:      #ffffff;
+    --border:       #e8e4dc;
+    --text:         #1a1a18;
+    --text-muted:   #6b6760;
+    --accent:       #1a5276;
+    --accent-warm:  #b5451b;
+    --accent-light: #e8f0f8;
+    --code-bg:      #1e1e2e;
+    --code-text:    #cdd6f4;
+    --highlight:    #f4a261;
+    --rule:         #d4cfc7;
+    --tag-bg:       #eef2f7;
+    --tag-text:     #1a5276;
+    --font-serif:   'Lora', Georgia, serif;
+    --font-sans:    'DM Sans', system-ui, sans-serif;
+    --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+    --max-w:        740px;
+    --gutter:       clamp(1.25rem, 5vw, 3rem);
+  }
+
+  /* ── Reset & base ──────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 18px; scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-serif);
+    line-height: 1.78;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Layout ────────────────────────────────────────────────── */
+  .site-wrap {
+    max-width: calc(var(--max-w) + var(--gutter) * 2);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+  }
+
+  /* ── Progress bar ──────────────────────────────────────────── */
+  #progress-bar {
+    position: fixed; top: 0; left: 0;
+    height: 3px; width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--highlight));
+    z-index: 100;
+    transition: width 0.1s linear;
+  }
+
+  /* ── Header ────────────────────────────────────────────────── */
+  header {
+    padding: 4rem 0 2rem;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 3.5rem;
+  }
+
+  .article-tags {
+    display: flex; flex-wrap: wrap; gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .tag {
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    padding: 0.28em 0.8em;
+    border-radius: 3px;
+  }
+
+  h1 {
+    font-family: var(--font-serif);
+    font-size: clamp(2rem, 5vw, 2.9rem);
+    font-weight: 700;
+    line-height: 1.22;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 0.9rem;
+  }
+
+  .subtitle {
+    font-family: var(--font-serif);
+    font-size: 1.2rem;
+    font-style: italic;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin-bottom: 2rem;
+    max-width: 600px;
+  }
+
+  .meta {
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;
+  }
+  .meta-dot { opacity: 0.4; }
+
+  /* ── TOC ───────────────────────────────────────────────────── */
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 4px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 3.5rem;
+  }
+  .toc h2 {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    border: none; padding-top: 0;
+  }
+  .toc ol { padding-left: 1.2rem; }
+  .toc li {
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    margin-bottom: 0.35rem;
+  }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ol ol { margin-top: 0.3rem; padding-left: 1.2rem; }
+  .toc ol ol li { font-size: 0.82rem; color: var(--text-muted); }
+
+  /* ── Article body typography ───────────────────────────────── */
+  article p {
+    margin-bottom: 1.5rem;
+    font-size: 1.01rem;
+  }
+
+  article > .lede {
+    font-size: 1.13rem;
+    color: #2d2d2b;
+    line-height: 1.72;
+    font-weight: 400;
+    margin-bottom: 2rem;
+  }
+
+  /* ── Section headings ──────────────────────────────────────── */
+  .part-label {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+    margin-top: 4rem;
+    display: block;
+  }
+
+  h2 {
+    font-family: var(--font-serif);
+    font-size: clamp(1.5rem, 3.5vw, 1.9rem);
+    font-weight: 700;
+    line-height: 1.28;
+    color: var(--text);
+    margin-top: 3.5rem;
+    margin-bottom: 1.2rem;
+    padding-top: 1.2rem;
+    border-top: 2px solid var(--rule);
+    scroll-margin-top: 2rem;
+  }
+
+  h3 {
+    font-family: var(--font-serif);
+    font-size: 1.22rem;
+    font-weight: 600;
+    font-style: italic;
+    color: var(--text);
+    margin-top: 2.2rem;
+    margin-bottom: 0.8rem;
+    scroll-margin-top: 2rem;
+  }
+
+  h4 {
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-top: 1.8rem;
+    margin-bottom: 0.6rem;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 3rem 0;
+  }
+
+  /* ── Inline elements ───────────────────────────────────────── */
+  strong { font-weight: 600; color: #111; }
+  em { font-style: italic; }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.82em;
+    background: #eef0f5;
+    color: #2d3a52;
+    padding: 0.12em 0.42em;
+    border-radius: 3px;
+    letter-spacing: -0.01em;
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ── Code blocks ───────────────────────────────────────────── */
+  pre {
+    background: var(--code-bg);
+    border-radius: 8px;
+    padding: 1.5rem 1.75rem;
+    overflow-x: auto;
+    margin: 1.75rem 0;
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  }
+
+  pre code {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    background: none;
+    color: var(--code-text);
+    padding: 0;
+    border-radius: 0;
+    line-height: 1.65;
+    letter-spacing: 0;
+    white-space: pre;
+  }
+
+  /* Token colours — minimal set */
+  .tok-comment { color: #6c7086; font-style: italic; }
+  .tok-keyword { color: #cba6f7; }
+  .tok-string  { color: #a6e3a1; }
+  .tok-number  { color: #fab387; }
+  .tok-func    { color: #89dceb; }
+  .tok-type    { color: #f9e2af; }
+  .tok-op      { color: #89b4fa; }
+  .tok-label   { color: #f38ba8; }
+  .tok-http    { color: #cba6f7; }
+  .tok-header  { color: #f9e2af; }
+  .tok-value   { color: #a6e3a1; }
+
+  .code-label {
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6c7086;
+    margin-bottom: -0.5rem;
+    display: block;
+  }
+
+  /* ── Figures / Illustrations ───────────────────────────────── */
+  figure {
+    margin: 2.5rem -1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+  }
+
+  figure img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  figcaption {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--border);
+    background: #f8f7f4;
+    line-height: 1.55;
+  }
+
+  figcaption strong {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* Placeholder for missing images */
+  .fig-placeholder {
+    background: linear-gradient(135deg, #e8f0f8 0%, #eef2f7 50%, #e8edf5 100%);
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .fig-placeholder-inner {
+    text-align: center;
+    max-width: 420px;
+  }
+
+  .fig-placeholder-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .fig-placeholder-title {
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }
+
+  .fig-placeholder-desc {
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* ── Callouts / Aside boxes ────────────────────────────────── */
+  .callout {
+    background: var(--accent-light);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    padding: 1rem 1.5rem;
+    margin: 1.75rem 0;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  .callout.warn {
+    background: #fef8f0;
+    border-color: var(--accent-warm);
+  }
+  .callout.danger {
+    background: #fff2f2;
+    border-color: #c0392b;
+  }
+  .callout-title {
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+    color: var(--accent);
+  }
+  .callout.warn .callout-title { color: var(--accent-warm); }
+  .callout.danger .callout-title { color: #c0392b; }
+
+  /* ── Comparison table ──────────────────────────────────────── */
+  .table-wrap {
+    overflow-x: auto;
+    margin: 2rem 0;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-sans);
+    font-size: 0.83rem;
+    background: var(--surface);
+  }
+
+  th {
+    background: var(--accent);
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  td {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text);
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #fafafa; }
+
+  .cell-good  { color: #1a7a4a; font-weight: 600; }
+  .cell-warn  { color: #b5451b; font-weight: 600; }
+  .cell-neutral { color: var(--text-muted); }
+
+  /* ── Footnote / Reference section ─────────────────────────── */
+  .references {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .references h2 {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border: none;
+    padding-top: 0;
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+
+  .references ul { list-style: none; }
+  .references li {
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    padding: 0.3rem 0;
+    padding-left: 1rem;
+    position: relative;
+  }
+  .references li::before {
+    content: '›';
+    position: absolute; left: 0;
+    color: var(--accent);
+    font-weight: bold;
+  }
+  .references a { color: var(--accent); }
+
+  /* ── Footer ────────────────────────────────────────────────── */
+  footer {
+    text-align: center;
+    padding: 3rem 0 4rem;
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--rule);
+    margin-top: 4rem;
+  }
+
+  /* ── Syntax decorations (manually applied in spans) ─────────── */
+  .ascii-diagram {
+    font-family: var(--font-mono);
+    font-size: 0.79rem;
+    line-height: 1.55;
+    background: var(--code-bg);
+    color: #a6adc8;
+    padding: 1.5rem 1.75rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1.75rem 0;
+    white-space: pre;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* ── Responsive ────────────────────────────────────────────── */
+  @media (max-width: 600px) {
+    html { font-size: 16px; }
+    h2 { font-size: 1.45rem; }
+    pre { padding: 1.1rem 1.25rem; border-radius: 6px; }
+    figure { margin: 2rem 0; }
+    .toc { padding: 1.2rem 1.4rem; }
+  }
+
+  /* ── Print ─────────────────────────────────────────────────── */
+  @media print {
+    #progress-bar { display: none; }
+    pre, .ascii-diagram { break-inside: avoid; }
+    h2, h3 { break-after: avoid; }
+  }
+
+  /* ── Scroll-reveal fade-in ─────────────────────────────────── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<div class="site-wrap">
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- HEADER                                                      -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<header>
+  <div class="article-tags">
+    <span class="tag">System Design</span>
+    <span class="tag">Web Architecture</span>
+    <span class="tag">Security</span>
+    <span class="tag">Data Engineering</span>
+    <span class="tag">ML Engineering</span>
+  </div>
+
+  <h1>Stateless by Default,<br>Stateful by Design</h1>
+  <p class="subtitle">Web Sessions, Serialization, and the Browser Security Model — a practical guide to the three web concepts that sit invisibly beneath every distributed system you'll ever build.</p>
+
+  <div class="meta">
+    <span>System Design Series</span>
+    <span class="meta-dot">·</span>
+    <span>~28 min read</span>
+    <span class="meta-dot">·</span>
+    <span>Part I: Sessions &nbsp;·&nbsp; Part II: Serialization &nbsp;·&nbsp; Part III: CORS</span>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- TABLE OF CONTENTS                                           -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<nav class="toc reveal" aria-label="Table of contents">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#intro">Introduction</a></li>
+    <li>
+      <a href="#part1">Part I — Web Sessions</a>
+      <ol>
+        <li><a href="#http-statelessness">The Statelessness at HTTP's Core</a></li>
+        <li><a href="#session-based">Session-Based: Cookies + Server Storage</a></li>
+        <li><a href="#token-based">Token-Based: JWT + OAuth 2.0</a></li>
+        <li><a href="#client-storage">Client-Side Storage</a></li>
+        <li><a href="#security-concerns">Security Concerns</a></li>
+        <li><a href="#scaling-sessions">Scaling Sessions</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#part2">Part II — Serialization</a>
+      <ol>
+        <li><a href="#why-serialization">Why Data Needs a Lingua Franca</a></li>
+        <li><a href="#format-zoo">The Format Zoo: Five Formats to Know</a></li>
+        <li><a href="#tradeoffs">Trade-offs In Depth</a></li>
+        <li><a href="#ser-security">Security: When Deserialization Becomes a Weapon</a></li>
+      </ol>
+    </li>
+    <li>
+      <a href="#part3">Part III — CORS &amp; Web Security</a>
+      <ol>
+        <li><a href="#sop">The Same-Origin Policy</a></li>
+        <li><a href="#cors-mechanism">The CORS Handshake</a></li>
+        <li><a href="#cors-headers">The CORS Response Headers</a></li>
+        <li><a href="#implementation">Implementation Alternatives</a></li>
+        <li><a href="#cors-mistakes">Common CORS Mistakes</a></li>
+      </ol>
+    </li>
+    <li><a href="#unified">Bringing It All Together</a></li>
+    <li><a href="#conclusion">Conclusion</a></li>
+  </ol>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- ARTICLE                                                     -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<article>
+
+<p class="lede" id="intro">There is a particular kind of humbling experience in distributed systems engineering: you deploy a service confidently, it works flawlessly in isolation, and then it breaks in production in a way that makes no sense. The user logs in on one request and is mysteriously anonymous on the next. Your internal microservices emit payloads that an upstream consumer misparses. Your beautifully crafted frontend calls your own API and gets blocked by the browser with a cryptic error message.</p>
+
+<p>Nine times out of ten, the culprit is one of three things: <strong>sessions</strong>, <strong>serialization</strong>, or <strong>CORS</strong>.</p>
+
+<p>These are not glamorous topics. They don't make conference keynotes. Yet they are the invisible substrate beneath every web system you'll ever build — whether you're running a Django monolith, a Kubernetes-orchestrated microservices mesh, or a data pipeline that feeds a machine learning model. Understanding them from first principles is the difference between an engineer who can debug a production incident in twelve minutes and one who chases ghosts for twelve hours.</p>
+
+<p>This article covers all three. We start from the ground — HTTP itself — and build upward to distributed session stores, binary serialization formats used in Kafka pipelines, and the browser security model that governs what your React frontend is even allowed to ask. The goal is not a reference manual. It's <em>intuition</em>: the kind that lets you make confident architectural decisions and see failure modes before they bite.</p>
+
+<hr />
+
+<!-- ═══════ PART I ═══════════════════════════════════════════ -->
+<span class="part-label">Part I</span>
+<h2 id="part1">Web Sessions — Building Memory Into a Forgetful Protocol</h2>
+
+<h3 id="http-statelessness">The Statelessness at HTTP's Core</h3>
+
+<p>HTTP was designed to be stateless, and this was not an oversight — it was a deliberate architectural virtue. Tim Berners-Lee's original vision was a system where documents linked to other documents, and a client could fetch any of them independently. No handshakes required. No prior history assumed. Each request carries everything the server needs to respond.</p>
+
+<p>This design decision has enormous practical benefits that are easy to underappreciate. Because each request is fully self-contained and independent, <em>any</em> server instance can handle <em>any</em> request at any time. You can spin up ten more backend nodes under a load balancer, and traffic will distribute across them naturally. A server crash mid-session? Route the next request to a different instance. This is why horizontal scaling — one of the defining properties of modern cloud architecture — is even possible.</p>
+
+<p>But here is the paradox that every web developer eventually confronts: <strong>users expect continuity</strong>. They want to log in once and stay logged in. They want their shopping cart to persist between pages. None of that falls out of HTTP naturally.</p>
+
+<div class="ascii-diagram" aria-label="HTTP statelessness illustrated">Time ──────────────────────────────────────────────────►
+
+Client                    Server
+  │                          │
+  │─── GET /products ───────►│  ← Server has no idea who this is
+  │◄── 200 OK ───────────────│
+  │                          │
+  │─── GET /checkout ───────►│  ← Server still has no idea who this is
+  │◄── 200 OK ───────────────│
+  │                          │
+  │─── POST /order ─────────►│  ← Server: who sent this? unknown.
+  │◄── 401 Unauthorized ─────│</div>
+
+<figure class="reveal">
+  <img
+    src="images/http-stateless-vs-stateful.png"
+    alt="HTTP Stateless vs Stateful via Sessions diagram"
+    class="figure-image"
+  />
+
+  <!-- <div class="fig-placeholder">
+    <div class="fig-placeholder-inner">
+      <span class="fig-placeholder-icon">🔄</span>
+      <div class="fig-placeholder-title">
+        Figure 1 — HTTP: Stateless vs. Stateful via Sessions
+      </div>
+      <div class="fig-placeholder-desc">
+        Two-panel diagram contrasting anonymous HTTP requests with
+        cookie-based session continuity. Left panel shows three requests
+        with no identity context; right panel shows the same requests
+        enriched with a session cookie and a Redis lookup.
+      </div>
+    </div>
+  </div> -->
+
+  <figcaption>
+    <strong>Figure 1.</strong>
+    Without a session mechanism, every HTTP request is anonymous.
+    Cookies bridge the stateless protocol to a stateful user experience
+    by carrying a session identifier the server can look up.
+  </figcaption>
+</figure>
+
+<p>Every mechanism for making web applications feel stateful is, at bottom, a workaround for this fundamental property. Understanding which workaround you're using — and why — is the beginning of session management literacy.</p>
+
+<!-- ─── Management Technique 1 ─────────────────────────────── -->
+<h3 id="session-based">Management Technique 1: Session-Based (Cookies + Server Storage)</h3>
+
+<p>The classical approach is deceptively simple: when a user authenticates, the server generates a random, high-entropy identifier — a <strong>session ID</strong> — stores it in a key-value store alongside the user's data, and sends that ID to the browser as a cookie. On every subsequent request, the browser automatically attaches the cookie, the server looks up the session ID, and retrieves the associated user state.</p>
+
+<span class="code-label">Session lifecycle — Python/Redis pseudocode</span>
+<pre><code><span class="tok-comment"># 1. User logs in with credentials</span>
+<span class="tok-comment">#    ├── Server validates credentials</span>
+<span class="tok-comment">#    ├── Server creates session record</span>
+<span class="tok-comment">#    ├── Server stores in Redis: SET session:abc123 &lt;data&gt; EX 3600</span>
+<span class="tok-comment">#    └── Server sends: Set-Cookie: session_id=abc123; HttpOnly; Secure; SameSite=Lax</span>
+
+<span class="tok-comment"># 2. User makes subsequent requests</span>
+<span class="tok-comment">#    ├── Browser automatically sends: Cookie: session_id=abc123</span>
+<span class="tok-comment">#    ├── Server looks up: GET session:abc123</span>
+<span class="tok-comment">#    └── Server retrieves user state and processes request</span>
+
+<span class="tok-keyword">import</span> secrets, redis
+
+<span class="tok-keyword">def</span> <span class="tok-func">create_session</span>(user_id, role, redis_client):
+    session_id = secrets.<span class="tok-func">token_urlsafe</span>(<span class="tok-number">32</span>)   <span class="tok-comment"># high-entropy ID</span>
+    session_data = {<span class="tok-string">"user_id"</span>: user_id, <span class="tok-string">"role"</span>: role}
+    redis_client.<span class="tok-func">setex</span>(
+        <span class="tok-func">f</span><span class="tok-string">"session:{session_id}"</span>,
+        <span class="tok-number">3600</span>,                              <span class="tok-comment"># 1-hour TTL</span>
+        json.<span class="tok-func">dumps</span>(session_data)
+    )
+    <span class="tok-keyword">return</span> session_id
+
+<span class="tok-keyword">def</span> <span class="tok-func">revoke_session</span>(session_id, redis_client):
+    redis_client.<span class="tok-func">delete</span>(<span class="tok-func">f</span><span class="tok-string">"session:{session_id}"</span>)  <span class="tok-comment"># instant logout</span></code></pre>
+
+<p>The beauty of this approach is <strong>centralized control</strong>. Logging a user out means deleting the session record — instantly and irrevocably. The session ID itself is meaningless without the backing store, so an attacker who steals an ID can be cut off the moment the session is revoked.</p>
+
+<p>The tradeoff is <strong>coupling and storage</strong>. The server must now maintain state, which means every backend instance needs access to the same session store. This creates a dependency — your application is no longer fully stateless, and that shared session store becomes a potential bottleneck and single point of failure if not designed carefully.</p>
+
+<!-- ─── Management Technique 2 ─────────────────────────────── -->
+<h3 id="token-based">Management Technique 2: Token-Based (JWT + OAuth 2.0)</h3>
+
+<p>The frustration with server-side sessions at scale gave rise to a different idea: what if the server didn't need to <em>remember</em> anything? What if the identity information traveled <em>inside</em> the token, cryptographically signed so it couldn't be tampered with?</p>
+
+<p>This is the premise behind <strong>JSON Web Tokens (JWTs)</strong>. A JWT is not an opaque identifier — it is a self-contained packet of claims, encoded and signed by the server.</p>
+
+<span class="code-label">JWT structure — decoded</span>
+<pre><code><span class="tok-comment">// JWT = base64url(HEADER) + "." + base64url(PAYLOAD) + "." + SIGNATURE</span>
+
+<span class="tok-comment">// Decoded HEADER:</span>
+{
+  <span class="tok-string">"alg"</span>: <span class="tok-string">"RS256"</span>,
+  <span class="tok-string">"typ"</span>: <span class="tok-string">"JWT"</span>
+}
+
+<span class="tok-comment">// Decoded PAYLOAD:</span>
+{
+  <span class="tok-string">"sub"</span>:  <span class="tok-string">"user_42"</span>,
+  <span class="tok-string">"role"</span>: <span class="tok-string">"data-scientist"</span>,
+  <span class="tok-string">"exp"</span>:  <span class="tok-number">1748390400</span>,   <span class="tok-comment">// expiry UNIX timestamp — keep this SHORT</span>
+  <span class="tok-string">"iat"</span>:  <span class="tok-number">1748304000</span>,   <span class="tok-comment">// issued-at timestamp</span>
+  <span class="tok-string">"iss"</span>:  <span class="tok-string">"https://auth.myplatform.com"</span>
+}
+
+<span class="tok-comment">// SIGNATURE:</span>
+RS256(<span class="tok-func">base64url</span>(header) + <span class="tok-string">"."</span> + <span class="tok-func">base64url</span>(payload), privateKey)</code></pre>
+
+<!-- Figure 2 -->
+<figure class="reveal">
+  <img
+    src="images/session-vs-token-auth.png"
+    alt="Session-Based vs Token-Based Authentication diagram"
+    class="figure-image"
+  />
+
+  <!-- <div class="fig-placeholder">
+    <div class="fig-placeholder-inner">
+      <span class="fig-placeholder-icon">⚖️</span>
+      <div class="fig-placeholder-title">
+        Figure 2 — Session-Based vs. Token-Based Authentication
+      </div>
+      <div class="fig-placeholder-desc">
+        Side-by-side architecture diagram. Left: Browser → Server → Redis
+        session store, with a "state lives in the store" annotation.
+        Right: Browser → Server only, with a "verify signature, no lookup"
+        annotation. A comparison table below highlights revocation ease,
+        scalability, and state location.
+      </div>
+    </div>
+  </div> -->
+
+  <figcaption>
+    <strong>Figure 2.</strong>
+    Session-based auth centralizes state in a shared store; token-based
+    auth embeds state in a signed token. The former makes revocation
+    trivial; the latter makes horizontal scaling trivial. Choose based
+    on which property your system needs most urgently.
+  </figcaption>
+</figure>
+
+
+<p>When a request arrives carrying this token, the server verifies the signature using its public key. If valid, it trusts the claims without any database lookup. Zero state. Zero round trips to a session store. Any backend instance can independently verify any token.</p>
+
+<p><strong>OAuth 2.0</strong> is the delegation layer built on top of this idea — not "who are you?" but "what are you allowed to do on behalf of whom?" When a data pipeline needs to access a user's BigQuery tables, or when a third-party ML tool requests permissions to your Slack workspace, OAuth 2.0 is orchestrating that dance.</p>
+
+<div class="callout warn">
+  <div class="callout-title">⚠ The Revocation Problem</div>
+  A stolen JWT remains valid until its <code>exp</code> timestamp elapses. The standard mitigations — short-lived access tokens (15 minutes), refresh token rotation, token blocklists — all add operational complexity. Set expiry aggressively short and rotate refresh tokens on every use.
+</div>
+
+<!-- ─── Management Technique 3 ─────────────────────────────── -->
+<h3 id="client-storage">Management Technique 3: Client-Side Storage</h3>
+
+<p>The browser also offers its own key-value stores for applications that need to persist small amounts of state client-side.</p>
+
+<span class="code-label">localStorage vs. sessionStorage</span>
+<pre><code><span class="tok-comment">// localStorage: persists across browser restarts, scoped to origin</span>
+localStorage.<span class="tok-func">setItem</span>(<span class="tok-string">'theme'</span>, <span class="tok-string">'dark'</span>);
+localStorage.<span class="tok-func">setItem</span>(<span class="tok-string">'preferredRegion'</span>, <span class="tok-string">'us-east-1'</span>);
+<span class="tok-keyword">const</span> theme = localStorage.<span class="tok-func">getItem</span>(<span class="tok-string">'theme'</span>); <span class="tok-comment">// 'dark' even after browser restart</span>
+
+<span class="tok-comment">// sessionStorage: lives only while this tab is open</span>
+sessionStorage.<span class="tok-func">setItem</span>(<span class="tok-string">'draft_query'</span>, JSON.<span class="tok-func">stringify</span>(sqlDraft));
+<span class="tok-comment">// Close the tab → gone.</span></code></pre>
+
+<div class="callout danger">
+  <div class="callout-title">🚨 Never Store Auth Tokens in localStorage</div>
+  <code>localStorage</code> is accessible to any JavaScript running on the page. A single XSS vulnerability exposes everything stored there. Use <code>HttpOnly</code> cookies for session secrets — they are unreadable by JavaScript by design.
+</div>
+
+<!-- ─── Security Concerns ──────────────────────────────────── -->
+<h3 id="security-concerns">Security Concerns: The Attack Surface of Sessions</h3>
+
+<p>Every mechanism that stores user identity creates a target. Three vulnerabilities deserve particular attention.</p>
+
+<h4>Session Hijacking</h4>
+
+<p>Session hijacking occurs when an attacker obtains a valid session identifier and impersonates the legitimate user. The mechanics vary: network interception (solved by HTTPS), cross-site scripting reading <code>document.cookie</code> (solved by <code>HttpOnly</code>), and session fixation (solved by regenerating the session ID upon login).</p>
+
+<h4>Cross-Site Request Forgery (CSRF)</h4>
+
+<p>CSRF exploits a subtle feature of browsers: they automatically attach cookies to requests, regardless of where the request originates. If you are logged into <code>bank.com</code> and you visit a malicious page containing:</p>
+
+<pre><code><span class="tok-comment">&lt;!-- On evil.com — fires automatically when page loads --&gt;</span>
+<span class="tok-op">&lt;</span><span class="tok-type">img</span> src=<span class="tok-string">"https://bank.com/transfer?to=attacker&amp;amount=1000"</span> <span class="tok-op">/&gt;</span></code></pre>
+
+<p>Your browser fires a GET request to <code>bank.com</code> — with your session cookie attached — without any deliberate action on your part. The bank server sees a valid session and processes the transfer. CSRF doesn't steal your credentials. It <em>is</em> you, from the server's perspective.</p>
+
+<!-- Figure 3 -->
+<figure class="reveal">
+  <img
+    src="images/csrf-attack-flow.png"
+    alt="CSRF Attack Flow diagram"
+    class="figure-image"
+  />
+
+  <!-- <div class="fig-placeholder">
+    <div class="fig-placeholder-inner">
+      <span class="fig-placeholder-icon">🎭</span>
+      <div class="fig-placeholder-title">
+        Figure 3 — CSRF Attack Flow
+      </div>
+      <div class="fig-placeholder-desc">
+        Step-numbered sequence showing: (1) user logged into bank.com,
+        (2) user visits attacker.com in another tab, (3) hidden request
+        fires to bank.com with session cookie auto-attached,
+        (4) bank processes the forged transfer. A countermeasure
+        annotation shows SameSite=Strict blocking step 3.
+      </div>
+    </div>
+  </div> -->
+
+  <figcaption>
+    <strong>Figure 3.</strong>
+    CSRF exploits the browser's automatic cookie attachment. The
+    <code>SameSite=Strict</code> or <code>SameSite=Lax</code> cookie
+    attribute is the most effective modern countermeasure — it tells
+    the browser not to send the cookie on cross-site navigations.
+  </figcaption>
+</figure>
+
+<h4>Cookie Flags: Your First Line of Defense</h4>
+
+<pre><code><span class="tok-comment"># These three flags together form a robust session cookie baseline</span>
+Set-Cookie: session_id=abc123;
+  Secure;           <span class="tok-comment"># Only transmit over HTTPS — blocks network interception</span>
+  HttpOnly;         <span class="tok-comment"># Inaccessible to JavaScript — blocks XSS cookie theft</span>
+  SameSite=Lax;     <span class="tok-comment"># No cross-site sending by default — primary CSRF defense</span>
+  Path=/;
+  Max-Age=3600</code></pre>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>SameSite Value</th>
+        <th>Cross-Site Subresource</th>
+        <th>Top-Level Navigation</th>
+        <th>Recommendation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>Strict</code></td>
+        <td class="cell-good">Blocked ✓</td>
+        <td class="cell-good">Blocked ✓</td>
+        <td class="cell-neutral">Most secure; may break OAuth redirects</td>
+      </tr>
+      <tr>
+        <td><code>Lax</code></td>
+        <td class="cell-good">Blocked ✓</td>
+        <td class="cell-warn">Allowed (GET only)</td>
+        <td class="cell-good">Modern default; safe for most apps</td>
+      </tr>
+      <tr>
+        <td><code>None</code></td>
+        <td class="cell-warn">Allowed</td>
+        <td class="cell-warn">Allowed</td>
+        <td class="cell-neutral">Requires <code>Secure</code>; use for cross-site embeds</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ─── Scaling Sessions ───────────────────────────────────── -->
+<h3 id="scaling-sessions">Scaling Sessions: From One Server to Many</h3>
+
+<p>When a single server becomes two, three, or fifty, session management gets architecturally interesting.</p>
+
+<h4>Sticky Sessions (Session Affinity)</h4>
+
+<p>The blunt solution: configure the load balancer to always route a given user to the same backend node. Simple, but it sacrifices the load balancer's core job — if one node is overwhelmed and another is idle, sticky sessions can't rebalance.</p>
+
+<div class="ascii-diagram" aria-label="Sticky sessions load balancer diagram">                   ┌──────────────────────────────────────┐
+                   │  Load Balancer                       │
+User A ────────────┤ (cookie: srv=node1) ────────────────► Node 1
+User B ────────────┤ (cookie: srv=node2) ────────────────► Node 2
+User C ────────────┤ (cookie: srv=node2) ────────────────► Node 2
+                   └──────────────────────────────────────┘
+
+⚠ Node 1 crash → User A's session is lost
+⚠ Uneven traffic? → Load balancer can't rebalance sticky users</div>
+
+<h4>Distributed Stores: Redis</h4>
+
+<p>The more robust solution: extract session state from individual nodes into shared infrastructure. All backend nodes read from the same Redis cluster — any node handles any request, because session data is centralized.</p>
+
+<span class="code-label">Flask + Redis session store</span>
+<pre><code><span class="tok-keyword">import</span> redis
+<span class="tok-keyword">from</span> flask <span class="tok-keyword">import</span> Flask, session
+<span class="tok-keyword">from</span> flask_session <span class="tok-keyword">import</span> Session
+
+app = <span class="tok-func">Flask</span>(__name__)
+app.config[<span class="tok-string">'SESSION_TYPE'</span>] = <span class="tok-string">'redis'</span>
+app.config[<span class="tok-string">'SESSION_REDIS'</span>] = redis.<span class="tok-func">from_url</span>(<span class="tok-string">'redis://session-store:6379'</span>)
+<span class="tok-func">Session</span>(app)
+
+<span class="tok-comment"># Any backend node handles any request — no stickiness needed</span>
+<span class="tok-label">@app.route</span>(<span class="tok-string">'/login'</span>, methods=[<span class="tok-string">'POST'</span>])
+<span class="tok-keyword">def</span> <span class="tok-func">login</span>():
+    <span class="tok-comment"># ... authenticate user ...</span>
+    session[<span class="tok-string">'user_id'</span>] = user.id     <span class="tok-comment"># stored in Redis, not in-process</span>
+    session[<span class="tok-string">'role'</span>] = user.role
+    <span class="tok-keyword">return</span> <span class="tok-func">redirect</span>(<span class="tok-string">'/dashboard'</span>)</code></pre>
+
+<h4>Stateless JWTs for Horizontal Scaling</h4>
+
+<p>The cleanest scaling solution architecturally: if every request carries a self-verifying JWT, your backend nodes need no shared state at all. Any of hundreds of nodes can verify the token independently using the same public key.</p>
+
+<div class="ascii-diagram" aria-label="Stateless JWT horizontal scaling diagram">                    ┌────────────────┐
+                    │ Load Balancer  │
+                    └───────┬────────┘
+                            │
+             ┌──────────────┼──────────────┐
+             ▼              ▼              ▼
+          Node 1          Node 2          Node 3
+     (verifies JWT)  (verifies JWT)  (verifies JWT)
+             │              │              │
+             └──── NO shared session store needed ────┘</div>
+
+<hr />
+
+<!-- ═══════ PART II ══════════════════════════════════════════ -->
+<span class="part-label">Part II</span>
+<h2 id="part2">Serialization — A Common Language for Systems That Don't Share Memory</h2>
+
+<h3 id="why-serialization">Why Data Needs a Lingua Franca</h3>
+
+<p>Here is a fact so obvious it is easy to overlook: two processes on different machines cannot share memory. When a Python service needs to send a dictionary to a Go service, neither process can pass a pointer. The data must be transformed into bytes, transmitted, and reconstructed on the other side.</p>
+
+<p>That transformation is <strong>serialization</strong>, and its inverse is <strong>deserialization</strong>. Every API call, every Kafka event, every model checkpoint, every database write involves serialization at some layer. The three design goals — data exchange, storage efficiency, and interoperability — are in permanent tension, and the format you choose is a declaration about which tradeoff you're making.</p>
+
+<!-- Figure 4 -->
+<figure class="reveal">
+  <img
+    src="images/serialization-process-boundaries.png"
+    alt="Serialization Bridging Process Boundaries diagram"
+    class="figure-image"
+  />
+
+  <!-- <div class="fig-placeholder">
+    <div class="fig-placeholder-inner">
+      <span class="fig-placeholder-icon">🔀</span>
+      <div class="fig-placeholder-title">
+        Figure 4 — Serialization: Bridging Process Boundaries
+      </div>
+      <div class="fig-placeholder-desc">
+        Data flow diagram showing a Python dict being serialized to bytes
+        (JSON text or Protobuf binary), transmitted across a network
+        boundary, and deserialized into a Go struct. Three diverging
+        arrows below show the three format choices: JSON, Protobuf, Avro.
+      </div>
+    </div>
+  </div> -->
+
+  <figcaption>
+    <strong>Figure 4.</strong>
+    Serialization is the act of crossing a process boundary. The format
+    choice determines whether the crossing is human-readable, compact,
+    or schema-safe — you rarely get all three simultaneously.
+  </figcaption>
+</figure>
+
+<!-- ─── Format Zoo ─────────────────────────────────────────── -->
+<h3 id="format-zoo">The Format Zoo: Five Formats Worth Knowing</h3>
+
+<h4>JSON — The Lingua Franca of Web APIs</h4>
+
+<p>JSON's success is not primarily technical — it's social. It is human-readable, trivially parseable in every language, and natively understood by browsers. For public-facing APIs, developer tooling, and debugging scenarios, JSON is usually the right default.</p>
+
+<span class="code-label">JSON — typical ML prediction response</span>
+<pre><code>{
+  <span class="tok-string">"model_id"</span>: <span class="tok-string">"fraud-detector-v3"</span>,
+  <span class="tok-string">"prediction"</span>: {
+    <span class="tok-string">"label"</span>:         <span class="tok-string">"suspicious"</span>,
+    <span class="tok-string">"confidence"</span>:    <span class="tok-number">0.94</span>,
+    <span class="tok-string">"features_used"</span>: [<span class="tok-string">"transaction_amount"</span>, <span class="tok-string">"location_delta"</span>, <span class="tok-string">"time_since_last_txn"</span>]
+  },
+  <span class="tok-string">"latency_ms"</span>: <span class="tok-number">12.4</span>
+}</code></pre>
+
+<h4>XML — Verbose, Enterprise, and Stubbornly Alive</h4>
+
+<p>XML's moment was the early 2000s, when SOAP web services were the enterprise standard. It is two to three times larger than equivalent JSON and proportionally more expensive to parse. You will still encounter it in banking APIs, healthcare integrations (HL7/FHIR), and SAML-based single sign-on. Treat it as a legacy integration concern, not a design choice.</p>
+
+<h4>Protocol Buffers — Binary, Fast, and Google's Gift to Service Meshes</h4>
+
+<p>Protobuf uses integer field tags instead of string key names, producing a binary encoding dramatically smaller and faster than JSON. It is the native format of gRPC and, for ML engineers, TensorFlow's internal serialization format for <code>tf.train.Example</code>, model checkpoints, and SavedModels.</p>
+
+<span class="code-label">Protobuf schema + Python usage</span>
+<pre><code><span class="tok-comment">// fraud_detection.proto</span>
+<span class="tok-keyword">syntax</span> = <span class="tok-string">"proto3"</span>;
+
+<span class="tok-type">message</span> <span class="tok-func">PredictionResponse</span> {
+  <span class="tok-keyword">string</span> model_id      = <span class="tok-number">1</span>;   <span class="tok-comment">// field number, not name, in the wire format</span>
+  <span class="tok-keyword">string</span> label         = <span class="tok-number">2</span>;
+  <span class="tok-keyword">float</span>  confidence    = <span class="tok-number">3</span>;
+  <span class="tok-keyword">repeated string</span> features_used = <span class="tok-number">4</span>;
+  <span class="tok-keyword">float</span>  latency_ms    = <span class="tok-number">5</span>;
+}
+
+<span class="tok-comment"># Python — generated code</span>
+response = <span class="tok-func">PredictionResponse</span>(
+    model_id=<span class="tok-string">"fraud-detector-v3"</span>,
+    label=<span class="tok-string">"suspicious"</span>,
+    confidence=<span class="tok-number">0.94</span>,
+    features_used=[<span class="tok-string">"transaction_amount"</span>, <span class="tok-string">"location_delta"</span>],
+    latency_ms=<span class="tok-number">12.4</span>
+)
+serialized = response.<span class="tok-func">SerializeToString</span>()  <span class="tok-comment"># compact binary bytes — no string keys</span></code></pre>
+
+<h4>Apache Avro — Schema-First, Kafka-Native</h4>
+
+<p>Avro was designed for <strong>schema evolution</strong> in streaming data systems. A payload can be decoded with either the schema it was written with or a compatible evolved schema, allowing producers and consumers to change independently — the golden property for long-lived data pipelines.</p>
+
+<span class="code-label">Avro + Confluent Schema Registry (Kafka)</span>
+<pre><code><span class="tok-comment"># Avro schema — stored in the Schema Registry, not in every message</span>
+schema = {
+  <span class="tok-string">"type"</span>: <span class="tok-string">"record"</span>, <span class="tok-string">"name"</span>: <span class="tok-string">"FraudPrediction"</span>,
+  <span class="tok-string">"fields"</span>: [
+    {<span class="tok-string">"name"</span>: <span class="tok-string">"model_id"</span>,   <span class="tok-string">"type"</span>: <span class="tok-string">"string"</span>},
+    {<span class="tok-string">"name"</span>: <span class="tok-string">"label"</span>,      <span class="tok-string">"type"</span>: <span class="tok-string">"string"</span>},
+    {<span class="tok-string">"name"</span>: <span class="tok-string">"confidence"</span>, <span class="tok-string">"type"</span>: <span class="tok-string">"float"</span>},
+    <span class="tok-comment"># Added in v2 — null default ensures backward compatibility</span>
+    {<span class="tok-string">"name"</span>: <span class="tok-string">"latency_ms"</span>, <span class="tok-string">"type"</span>: [<span class="tok-string">"null"</span>, <span class="tok-string">"float"</span>], <span class="tok-string">"default"</span>: <span class="tok-keyword">null</span>}
+  ]
+}
+
+<span class="tok-keyword">from</span> confluent_kafka.avro <span class="tok-keyword">import</span> AvroProducer
+<span class="tok-comment"># Only a 4-byte schema ID is prepended to each message — highly efficient</span>
+producer = <span class="tok-func">AvroProducer</span>({
+    <span class="tok-string">'bootstrap.servers'</span>: <span class="tok-string">'kafka:9092'</span>,
+    <span class="tok-string">'schema.registry.url'</span>: <span class="tok-string">'http://schema-registry:8081'</span>
+}, default_value_schema=avro.<span class="tok-func">loads</span>(json.<span class="tok-func">dumps</span>(schema)))</code></pre>
+
+<h4>BSON — MongoDB's Binary JSON</h4>
+
+<p>BSON is MongoDB's internal storage and wire format. It extends JSON's type system with richer native types — <code>Date</code>, <code>Binary</code>, <code>ObjectId</code>, <code>Decimal128</code> — encoded in binary for efficient traversal. From a data engineering perspective, BSON matters when you're exporting data for migration or working with MongoDB change data capture streams.</p>
+
+<!-- Figure 5 -->
+<figure class="reveal">
+  <img
+    src="images/serialization-format-comparison-matrix.png"
+    alt="Serialization Format Comparison Matrix"
+    class="figure-image"
+  />
+
+  <!-- <div class="fig-placeholder">
+    <div class="fig-placeholder-inner">
+      <span class="fig-placeholder-icon">📊</span>
+      <div class="fig-placeholder-title">
+        Figure 5 — Serialization Format Comparison Matrix
+      </div>
+      <div class="fig-placeholder-desc">
+        Color-coded 5×6 comparison table (JSON, XML, Protobuf, Avro,
+        BSON vs. human-readable, encoding, schema required, typical use
+        case, relative size, performance). Green for favorable
+        properties, amber for neutral, red for unfavorable. Includes a
+        decision tree below the table.
+      </div>
+    </div>
+  </div> -->
+
+  <figcaption>
+    <strong>Figure 5.</strong>
+    No format dominates across all dimensions. JSON maximizes
+    readability and ecosystem breadth; Protobuf maximizes throughput;
+    Avro maximizes schema-evolution safety. The right choice depends on
+    the system boundary where data crosses.
+  </figcaption>
+</figure>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Format</th>
+        <th>Encoding</th>
+        <th>Readable</th>
+        <th>Schema</th>
+        <th>Relative Size</th>
+        <th>Best For</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>JSON</strong></td>
+        <td>Text</td>
+        <td class="cell-good">Yes ✓</td>
+        <td class="cell-neutral">Optional</td>
+        <td class="cell-warn">Large</td>
+        <td>Public APIs, debugging</td>
+      </tr>
+      <tr>
+        <td><strong>XML</strong></td>
+        <td>Text</td>
+        <td class="cell-good">Yes ✓</td>
+        <td class="cell-neutral">Optional (XSD)</td>
+        <td class="cell-warn">Very large</td>
+        <td>Legacy enterprise, SAML</td>
+      </tr>
+      <tr>
+        <td><strong>Protobuf</strong></td>
+        <td>Binary</td>
+        <td class="cell-warn">No</td>
+        <td class="cell-good">Required ✓</td>
+        <td class="cell-good">Small ✓</td>
+        <td>gRPC, internal RPC</td>
+      </tr>
+      <tr>
+        <td><strong>Avro</strong></td>
+        <td>Binary</td>
+        <td class="cell-warn">No</td>
+        <td class="cell-good">Required ✓</td>
+        <td class="cell-good">Small ✓</td>
+        <td>Kafka, data pipelines</td>
+      </tr>
+      <tr>
+        <td><strong>BSON</strong></td>
+        <td>Binary</td>
+        <td class="cell-warn">No</td>
+        <td class="cell-neutral">None</td>
+        <td class="cell-neutral">Medium</td>
+        <td>MongoDB storage</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ─── Trade-offs ─────────────────────────────────────────── -->
+<h3 id="tradeoffs">Trade-offs in Depth</h3>
+
+<h4>Readability vs. Efficiency</h4>
+
+<p>The tension is stark. Every character in a JSON key name (<code>"transaction_amount"</code>) is twenty bytes repeated in every single message. At 10,000 messages per second, that's 200 KB/s spent on a single field name. Protobuf replaces this with a single integer tag — one byte in the wire format.</p>
+
+<span class="code-label">Rough parsing performance comparison</span>
+<pre><code><span class="tok-comment"># At 100,000 requests per second, format choice has real cost:</span>
+<span class="tok-comment">#</span>
+<span class="tok-comment"># Standard json:  ~50µs/parse  →  5,000ms CPU per second per core</span>
+<span class="tok-comment"># ujson (fast):   ~15µs/parse  →  1,500ms CPU per second per core</span>
+<span class="tok-comment"># Protobuf:        ~5µs/parse  →    500ms CPU per second per core</span>
+<span class="tok-comment">#</span>
+<span class="tok-comment"># 10x more capacity from the same hardware — not a rounding error</span>
+<span class="tok-keyword">import</span> timeit
+
+json_time    = timeit.<span class="tok-func">timeit</span>(<span class="tok-keyword">lambda</span>: json.<span class="tok-func">loads</span>(large_json_str), number=<span class="tok-number">10000</span>)
+proto_time   = timeit.<span class="tok-func">timeit</span>(<span class="tok-keyword">lambda</span>: Msg.<span class="tok-func">FromString</span>(proto_bytes),    number=<span class="tok-number">10000</span>)
+<span class="tok-func">print</span>(<span class="tok-func">f</span><span class="tok-string">"JSON: {json_time*100:.1f}µs avg | Protobuf: {proto_time*100:.1f}µs avg"</span>)</code></pre>
+
+<h4>Schema Enforcement and Evolution</h4>
+
+<p>Schema enforcement is a <strong>reliability feature</strong>. In a Kafka pipeline without schemas, a producer team can rename a field, and consumers may silently corrupt data or crash. With Avro and a Schema Registry, backward/forward compatibility rules are enforced at publish time — breaking changes are caught before they reach production.</p>
+
+<span class="code-label">Confluent Schema Registry — compatibility check</span>
+<pre><code><span class="tok-comment"># Check if a new schema is backward-compatible before publishing</span>
+curl -X POST -H <span class="tok-string">"Content-Type: application/vnd.schemaregistry.v1+json"</span> \
+  --data <span class="tok-string">'{"schema": "{\"type\":\"record\", ...}"}'</span> \
+  http://schema-registry:<span class="tok-number">8081</span>/compatibility/subjects/fraud-predictions-value/versions/latest
+
+<span class="tok-comment"># If incompatible:</span>
+{<span class="tok-string">"is_compatible"</span>: <span class="tok-keyword">false</span>}   <span class="tok-comment"># ← pipeline is protected before bad schema ships</span></code></pre>
+
+<!-- ─── Security ───────────────────────────────────────────── -->
+<h3 id="ser-security">Security: When Deserialization Becomes a Weapon</h3>
+
+<p>Serialization is a boring infrastructure concern until it becomes a catastrophic security failure. <strong>Insecure deserialization</strong> is consistently listed in the OWASP Top 10, and for good reason.</p>
+
+<h4>Deserialization Attacks and Remote Code Execution</h4>
+
+<p>Many serialization libraries — particularly those that deserialize arbitrary object graphs — reconstruct objects by executing code. If an attacker can supply the serialized payload, they can trigger arbitrary code execution.</p>
+
+<div class="callout danger">
+  <div class="callout-title">🚨 Never Pickle Untrusted Input</div>
+  Python's <code>pickle</code>, Java's <code>ObjectInputStream</code>, and Ruby's <code>Marshal</code> can all execute arbitrary code during deserialization. Treat them as internal-only. For any data that crosses a trust boundary, use JSON or a schema-validated format.
+</div>
+
+<span class="code-label">The dangerous pattern — and the fix</span>
+<pre><code><span class="tok-comment"># ❌ DANGEROUS: pickle executes code during deserialization</span>
+<span class="tok-keyword">import</span> pickle
+user_session = pickle.<span class="tok-func">loads</span>(request.cookies[<span class="tok-string">'session'</span>])  <span class="tok-comment"># RCE vector</span>
+
+<span class="tok-comment"># ✅ SAFE: JSON with explicit schema validation</span>
+<span class="tok-keyword">import</span> json
+<span class="tok-keyword">from</span> pydantic <span class="tok-keyword">import</span> BaseModel
+
+<span class="tok-keyword">class</span> <span class="tok-type">SessionData</span>(BaseModel):
+    user_id: <span class="tok-type">int</span>
+    role: <span class="tok-type">str</span>
+
+raw = json.<span class="tok-func">loads</span>(request.cookies[<span class="tok-string">'session'</span>])  <span class="tok-comment"># parse only — no code execution</span>
+session = SessionData.<span class="tok-func">model_validate</span>(raw)         <span class="tok-comment"># validate against schema</span></code></pre>
+
+<h4>Data Tampering</h4>
+
+<p>Even without code execution, unsigned serialized data can be tampered with. A shopping cart serialized as Base64-encoded JSON in a cookie can have its <code>"price"</code> field modified by anyone with developer tools. Any serialized payload that carries security-relevant state must include an HMAC or digital signature that the server verifies before acting on the contents.</p>
+
+<hr />
+
+<!-- ═══════ PART III ══════════════════════════════════════════ -->
+<span class="part-label">Part III</span>
+<h2 id="part3">CORS &amp; Web Security — The Browser's Border Control</h2>
+
+<h3 id="sop">The Same-Origin Policy: Security Through Isolation</h3>
+
+<p>Modern browsers hold enormous power on your behalf: they carry your session cookies, your authentication tokens, your localStorage credentials. They can fire HTTP requests to any server in the world. Without any security model, a malicious webpage could make requests to your bank's API with your cookies attached and read the responses.</p>
+
+<p>The <strong>Same-Origin Policy (SOP)</strong> prevents this by enforcing a hard boundary: JavaScript on one origin cannot read data from a different origin. An origin is the tuple <code>(scheme, host, port)</code>. Change any one component and you have a different origin:</p>
+
+<span class="code-label">Origin definition — what counts as a different origin</span>
+<pre><code><span class="tok-comment"># Base origin:  https://app.mycompany.com</span>
+
+http://app.mycompany.com     <span class="tok-comment"># ❌ Different scheme</span>
+https://api.mycompany.com    <span class="tok-comment"># ❌ Different host</span>
+https://app.mycompany.com:8080  <span class="tok-comment"># ❌ Different port</span>
+https://app.mycompany.com/other <span class="tok-comment"># ✅ Same origin (path doesn't count)</span></code></pre>
+
+<!-- Figure 6 -->
+<figure class="reveal">
+  <img
+    src="images/same-origin-policy.png"
+    alt="Same-Origin Policy Blocked vs Allowed diagram"
+    class="figure-image"
+  />
+
+  <!-- <div class="fig-placeholder">
+    <div class="fig-placeholder-inner">
+      <span class="fig-placeholder-icon">🛡️</span>
+      <div class="fig-placeholder-title">
+        Figure 6 — The Same-Origin Policy: Blocked vs. Allowed
+      </div>
+      <div class="fig-placeholder-desc">
+        Browser mockup with two tabs (myapp.com and evil.com). Green
+        arrows show allowed same-origin requests. Red X arrows show SOP
+        blocking cross-origin response reads. An inset origin comparison
+        table shows which URL changes constitute a different origin.
+      </div>
+    </div>
+  </div> -->
+
+  <figcaption>
+    <strong>Figure 6.</strong>
+    SOP doesn't prevent cross-origin <em>requests</em> from being sent —
+    it prevents the browser from exposing cross-origin
+    <em>responses</em> to JavaScript. That's a subtle but critical
+    distinction for understanding what CORS actually does.
+  </figcaption>
+</figure>
+
+<p>This means that JavaScript on <code>https://myapp.com</code> cannot use <code>fetch()</code> to read the response from <code>https://api.myapp.com</code> — even though both are "your" services — unless the API server explicitly permits it. That permission mechanism is CORS.</p>
+
+<!-- ─── CORS Mechanism ─────────────────────────────────────── -->
+<h3 id="cors-mechanism">The CORS Handshake</h3>
+
+<p><strong>Cross-Origin Resource Sharing (CORS)</strong> is the mechanism by which servers declare: "I trust this other origin; allow its JavaScript to read my responses." The server opts in; the browser enforces it.</p>
+
+<h4>Simple Requests (No Preflight)</h4>
+
+<p>Some cross-origin requests are classified as "simple" and bypass the preflight step — typically <code>GET</code>, <code>POST</code>, or <code>HEAD</code> with standard browser-generated headers.</p>
+
+<div class="ascii-diagram" aria-label="Simple CORS request flow">Browser (https://myapp.com)        API (https://api.myapp.com)
+
+GET /data HTTP/1.1 ──────────────────────────────────────────►
+Origin: https://myapp.com
+
+◄─────────────────────────── HTTP/1.1 200 OK ──────────────────
+                              Access-Control-Allow-Origin: https://myapp.com
+                              Content-Type: application/json
+
+Browser checks: "Is my origin allowed?" → YES → Response exposed to JS</div>
+
+<h4>Preflight Requests (OPTIONS)</h4>
+
+<p>For requests with custom headers (like <code>Authorization</code>), <code>PUT</code>/<code>DELETE</code>/<code>PATCH</code> methods, or <code>POST</code> with JSON body, the browser sends a preflight <code>OPTIONS</code> check first. This is an extra network hop — but it's the browser ensuring the server consciously allows the operation before committing.</p>
+
+<span class="code-label">Preflight exchange — full HTTP flow</span>
+<pre><code><span class="tok-comment">─── 1. PREFLIGHT ────────────────────────────────────────────────</span>
+<span class="tok-http">OPTIONS</span> /api/predictions HTTP/1.1
+<span class="tok-header">Origin:</span>                          <span class="tok-value">https://myapp.com</span>
+<span class="tok-header">Access-Control-Request-Method:</span>   <span class="tok-value">POST</span>
+<span class="tok-header">Access-Control-Request-Headers:</span>  <span class="tok-value">Authorization, Content-Type</span>
+
+<span class="tok-comment">← Server responds:</span>
+<span class="tok-http">HTTP/1.1</span> 204 No Content
+<span class="tok-header">Access-Control-Allow-Origin:</span>     <span class="tok-value">https://myapp.com</span>
+<span class="tok-header">Access-Control-Allow-Methods:</span>    <span class="tok-value">GET, POST, PUT, DELETE, OPTIONS</span>
+<span class="tok-header">Access-Control-Allow-Headers:</span>    <span class="tok-value">Authorization, Content-Type</span>
+<span class="tok-header">Access-Control-Max-Age:</span>          <span class="tok-value">3600</span>    <span class="tok-comment">← cache for 1 hour; avoids repeat round trips</span>
+
+<span class="tok-comment">─── 2. ACTUAL REQUEST (now permitted) ───────────────────────────</span>
+<span class="tok-http">POST</span> /api/predictions HTTP/1.1
+<span class="tok-header">Authorization:</span>  <span class="tok-value">Bearer eyJhbGciOiJSUzI1NiJ9...</span>
+<span class="tok-header">Content-Type:</span>   <span class="tok-value">application/json</span>
+
+<span class="tok-comment">← HTTP/1.1 200 OK  { "label": "suspicious", "confidence": 0.94 }</span></code></pre>
+
+<!-- Figure 7 -->
+<figure class="reveal">
+  <img
+    src="images/cors-preflight-options.png"
+    alt="CORS Preflight OPTIONS Handshake diagram"
+    class="figure-image"
+  />
+
+  <!-- <div class="fig-placeholder">
+    <div class="fig-placeholder-inner">
+      <span class="fig-placeholder-icon">🤝</span>
+      <div class="fig-placeholder-title">
+        Figure 7 — CORS Preflight: The OPTIONS Handshake
+      </div>
+      <div class="fig-placeholder-desc">
+        Three-phase sequence diagram: (1) preflight OPTIONS request and
+        policy-header response, (2) actual POST request with auth header,
+        (3) same POST with OPTIONS step crossed out showing the
+        Max-Age cache win. Timeline axis at bottom shows latency impact.
+      </div>
+    </div>
+  </div> -->
+
+  <figcaption>
+    <strong>Figure 7.</strong>
+    The preflight adds one network round trip, but
+    <code>Access-Control-Max-Age</code> caches the result so subsequent
+    requests to the same endpoint skip it entirely. For high-throughput
+    APIs, tuning Max-Age is a genuine latency optimization.
+  </figcaption>
+</figure>
+
+<!-- ─── CORS Headers ───────────────────────────────────────── -->
+<h3 id="cors-headers">The CORS Response Headers</h3>
+
+<p>Three headers form the core CORS contract. They are the server's policy declaration, checked by the browser before exposing any response to JavaScript.</p>
+
+<span class="code-label">Core CORS response headers</span>
+<pre><code><span class="tok-comment"># Allow only one specific trusted origin (correct for credentialed requests)</span>
+<span class="tok-header">Access-Control-Allow-Origin:</span>     <span class="tok-value">https://myapp.com</span>
+
+<span class="tok-comment"># List the HTTP methods permitted for cross-origin requests</span>
+<span class="tok-header">Access-Control-Allow-Methods:</span>    <span class="tok-value">GET, POST, PUT, DELETE, OPTIONS</span>
+
+<span class="tok-comment"># List which non-safelisted headers the browser may include</span>
+<span class="tok-header">Access-Control-Allow-Headers:</span>    <span class="tok-value">Authorization, Content-Type, X-Request-ID</span>
+
+<span class="tok-comment"># Required when dynamically reflecting the origin (tells CDNs to vary cache by origin)</span>
+<span class="tok-header">Vary:</span>                            <span class="tok-value">Origin</span>
+
+<span class="tok-comment"># For credentialed requests (cookies/auth headers in cross-origin requests)</span>
+<span class="tok-header">Access-Control-Allow-Credentials:</span> <span class="tok-value">true</span>
+<span class="tok-comment"># ↑ ONLY combine this with a specific origin, NEVER with wildcard (*)</span></code></pre>
+
+<!-- ─── Implementation Alternatives ──────────────────────── -->
+<h3 id="implementation">Implementation Alternatives</h3>
+
+<p>In real systems, CORS is a cross-cutting concern that belongs at the infrastructure layer — not hand-coded in every service.</p>
+
+<h4>Reverse Proxy (Nginx)</h4>
+
+<span class="code-label">nginx.conf — centralized CORS handling</span>
+<pre><code>server {
+    listen 80;
+    server_name api.myapp.com;
+
+    location / {
+        <span class="tok-keyword">if</span> ($request_method = <span class="tok-string">'OPTIONS'</span>) {
+            <span class="tok-func">add_header</span> <span class="tok-string">'Access-Control-Allow-Origin'</span>  <span class="tok-string">'https://myapp.com'</span>;
+            <span class="tok-func">add_header</span> <span class="tok-string">'Access-Control-Allow-Methods'</span> <span class="tok-string">'GET, POST, PUT, DELETE, OPTIONS'</span>;
+            <span class="tok-func">add_header</span> <span class="tok-string">'Access-Control-Allow-Headers'</span> <span class="tok-string">'Authorization, Content-Type'</span>;
+            <span class="tok-func">add_header</span> <span class="tok-string">'Access-Control-Max-Age'</span>       <span class="tok-number">3600</span>;
+            <span class="tok-func">add_header</span> <span class="tok-string">'Content-Length'</span>              <span class="tok-number">0</span>;
+            <span class="tok-keyword">return</span> <span class="tok-number">204</span>;
+        }
+        <span class="tok-func">add_header</span> <span class="tok-string">'Access-Control-Allow-Origin'</span> <span class="tok-string">'https://myapp.com'</span>;
+        proxy_pass http://backend:8000;
+    }
+}</code></pre>
+
+<h4>API Gateways (AWS API Gateway)</h4>
+
+<p>Cloud-managed API gateways offer CORS as a first-class configuration option. The gateway handles OPTIONS preflight automatically and adds the appropriate headers to all responses — no application code required.</p>
+
+<span class="code-label">AWS SAM / CloudFormation — enabling CORS</span>
+<pre><code>MyApi:
+  <span class="tok-type">Type:</span> AWS::Serverless::Api
+  <span class="tok-type">Properties:</span>
+    <span class="tok-type">Cors:</span>
+      <span class="tok-type">AllowMethods:</span> <span class="tok-string">"'GET,POST,PUT,DELETE,OPTIONS'"</span>
+      <span class="tok-type">AllowHeaders:</span> <span class="tok-string">"'Authorization,Content-Type'"</span>
+      <span class="tok-type">AllowOrigin:</span>  <span class="tok-string">"'https://myapp.com'"</span>
+      <span class="tok-type">MaxAge:</span>       <span class="tok-string">"'3600'"</span></code></pre>
+
+<h4>JSONP: A Relic Worth Understanding</h4>
+
+<p>Before CORS existed, cross-origin data loading was achieved via JSONP — exploiting the fact that <code>&lt;script&gt;</code> tags can load from any domain. The server would respond with JavaScript that called your function with the data as an argument. It was clever, but also fundamentally insecure — you're executing arbitrary code from a remote server with no validation. CORS replaced it entirely; JSONP should not appear in any new system.</p>
+
+<!-- ─── Common Mistakes ────────────────────────────────────── -->
+<h3 id="cors-mistakes">Common CORS Mistakes and How to Fix Them</h3>
+
+<h4>Wildcard Origins with Credentials</h4>
+
+<p>The most dangerous configuration error combines <code>Access-Control-Allow-Origin: *</code> with <code>Access-Control-Allow-Credentials: true</code>. Browsers reject this combination precisely because it would allow any website to make credentialed requests on behalf of your users.</p>
+
+<span class="code-label">The wrong way — and the right way</span>
+<pre><code><span class="tok-comment"># ❌ INVALID — browsers reject this for credentialed requests</span>
+<span class="tok-header">Access-Control-Allow-Origin:</span>      <span class="tok-value">*</span>
+<span class="tok-header">Access-Control-Allow-Credentials:</span> <span class="tok-value">true</span>
+
+<span class="tok-comment"># ✅ CORRECT — allowlist-based origin validation in Python</span>
+ALLOWED_ORIGINS = {<span class="tok-string">"https://myapp.com"</span>, <span class="tok-string">"https://admin.myapp.com"</span>}
+
+<span class="tok-keyword">def</span> <span class="tok-func">set_cors_headers</span>(request, response):
+    origin = request.headers.<span class="tok-func">get</span>(<span class="tok-string">'Origin'</span>)
+    <span class="tok-keyword">if</span> origin <span class="tok-keyword">in</span> ALLOWED_ORIGINS:
+        response.headers[<span class="tok-string">'Access-Control-Allow-Origin'</span>]      = origin
+        response.headers[<span class="tok-string">'Access-Control-Allow-Credentials'</span>] = <span class="tok-string">'true'</span>
+        response.headers[<span class="tok-string">'Vary'</span>]                            = <span class="tok-string">'Origin'</span>  <span class="tok-comment"># ← critical for CDN correctness</span>
+    <span class="tok-keyword">return</span> response</code></pre>
+
+<h4>Overly Broad Origin Reflection</h4>
+
+<p>A common shortcut is to reflect back whatever <code>Origin</code> header the request sends, without validating against a whitelist. This is functionally equivalent to <code>*</code> — any site can request data on behalf of an authenticated user. Always validate against an explicit allowlist before reflecting.</p>
+
+<!-- Figure 8 -->
+<figure class="reveal">
+  <img
+    src="images/cors-security-configurations.png"
+    alt="CORS Security Right vs Wrong Configurations diagram"
+    class="figure-image"
+  />
+
+  <!-- <div class="fig-placeholder">
+    <div class="fig-placeholder-inner">
+      <span class="fig-placeholder-icon">⚠️</span>
+      <div class="fig-placeholder-title">
+        Figure 8 — CORS Security: Right vs. Wrong Configurations
+      </div>
+      <div class="fig-placeholder-desc">
+        Two-panel security contrast diagram. Left panel (dangerous):
+        wildcard origin + credentials config, with evil.com successfully
+        receiving user data. Right panel (correct): explicit allowlisted
+        origin, evil.com blocked with CORS policy violation. Center:
+        Vary: Origin header and CDN cache-key importance.
+      </div>
+    </div>
+  </div> -->
+
+  <figcaption>
+    <strong>Figure 8.</strong>
+    Wildcard origins and credential sharing are individually safe but
+    lethal in combination. The <code>Vary: Origin</code> header is
+    frequently forgotten but essential — without it, a CDN may cache a
+    response permitted for one origin and serve it to another.
+  </figcaption>
+</figure>
+
+<hr />
+
+<!-- ═══════ UNIFIED MODEL ═══════════════════════════════════ -->
+<h2 id="unified">Bringing It All Together: A Unified Mental Model</h2>
+
+<p>These three topics — sessions, serialization, and CORS — aren't random trivia. They are the three mechanisms through which a web system manages <strong>identity</strong>, <strong>data</strong>, and <strong>access</strong> across trust boundaries.</p>
+
+<div class="ascii-diagram" aria-label="Unified architecture model">                    ┌──────────────────────────────────────────────────────┐
+                    │           TRUST BOUNDARIES IN WEB SYSTEMS           │
+                    │                                                      │
+                    │  Browser ←──── CORS ─────► Server ◄── Sessions ──► DB │
+                    │     │                         │                      │
+                    │  Client-Side State        Serialized                 │
+                    │  (localStorage)           Payloads                   │
+                    │                          (JSON/Protobuf/Avro)        │
+                    │                                                      │
+                    │  • CORS          Who can access my API?              │
+                    │  • Sessions      Who is making this request?         │
+                    │  • Serialization How does data cross layers?         │
+                    └──────────────────────────────────────────────────────┘</div>
+
+<p>Each concept is a layer of the same problem: <strong>state and data must cross boundaries safely</strong>. The browser-to-server boundary is governed by CORS. The client's identity across requests is maintained by session management. The payload format for any boundary crossing is defined by serialization.</p>
+
+<p>For a data scientist or ML engineer building production systems, the practical implications are immediate:</p>
+
+<ul style="font-family: var(--font-sans); font-size: 0.95rem; padding-left: 1.5rem; line-height: 1.9; color: var(--text); margin-bottom: 1.5rem;">
+  <li>Your feature store API needs <strong>CORS configured</strong> if it serves a browser-based notebook UI</li>
+  <li>Your model-serving endpoint needs <strong>stateless JWT auth</strong> to scale horizontally across replicas</li>
+  <li>Your Kafka feature pipeline should use <strong>Avro + Schema Registry</strong> to survive schema evolution</li>
+  <li>Your internal gRPC service mesh should use <strong>Protobuf</strong> for performance</li>
+  <li>Your session cookies need <strong>Secure, HttpOnly, and SameSite</strong> — every time, no exceptions</li>
+</ul>
+
+<p>These are not abstract concerns. They are the failure modes you'll encounter within your first year of production system work, guaranteed.</p>
+
+<hr />
+
+<!-- ═══════ CONCLUSION ════════════════════════════════════════ -->
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The web is, at its core, a collection of beautifully constrained protocols stacked on top of each other. HTTP's statelessness is a feature that sessions overcome. Binary formats' illegibility is a cost that Protobuf accepts in exchange for speed. The Same-Origin Policy's rigidity is a security guarantee that CORS selectively relaxes.</p>
+
+<p>Understanding <em>why</em> each constraint exists — and therefore <em>when</em> to override it — is what separates reactive debugging from proactive design. You don't need to memorize every CORS header or every Avro schema keyword. You need to know that a browser will block your cross-origin request not to annoy you, but because the alternative is a world where malicious sites can freely impersonate your users. That intuition is worth more than any reference document.</p>
+
+<p>The next time your authentication breaks under a new load balancer, or your Kafka consumer silently starts corrupting data, or your API calls mysteriously fail in the browser console — you'll know exactly where to look.</p>
+
+<!-- ═══════ REFERENCES ════════════════════════════════════════ -->
+<div class="references">
+  <h2>References &amp; Further Reading</h2>
+  <ul>
+    <li><a href="https://datatracker.ietf.org/doc/html/rfc7235" target="_blank">RFC 7235 — HTTP Authentication</a></li>
+    <li><a href="https://datatracker.ietf.org/doc/html/rfc7519" target="_blank">RFC 7519 — JSON Web Token (JWT)</a></li>
+    <li><a href="https://www.w3.org/TR/cors/" target="_blank">W3C CORS Specification</a></li>
+    <li><a href="https://owasp.org/www-project-top-ten/2017/A8_2017-Insecure_Deserialization" target="_blank">OWASP: Insecure Deserialization</a></li>
+    <li><a href="https://protobuf.dev/programming-guides/proto3/" target="_blank">Google Protocol Buffers Language Guide (proto3)</a></li>
+    <li><a href="https://avro.apache.org/docs/current/spec.html" target="_blank">Apache Avro Specification</a></li>
+    <li><a href="https://docs.confluent.io/platform/current/schema-registry/index.html" target="_blank">Confluent Schema Registry Documentation</a></li>
+    <li><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies" target="_blank">MDN: HTTP Cookies</a></li>
+    <li><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS" target="_blank">MDN: Cross-Origin Resource Sharing (CORS)</a></li>
+  </ul>
+</div>
+
+</article>
+
+<footer>
+  <p>Web Concepts in System Design Series &nbsp;·&nbsp; Sessions · Serialization · CORS</p>
+</footer>
+
+</div><!-- .site-wrap -->
+
+<script>
+  // Progress bar
+  const bar = document.getElementById('progress-bar');
+  window.addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+    bar.style.width = Math.min(pct, 100) + '%';
+  }, { passive: true });
+
+  // Scroll-reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+  }, { threshold: 0.08 });
+  reveals.forEach(el => io.observe(el));
+</script>
+
+</body>
+</html>

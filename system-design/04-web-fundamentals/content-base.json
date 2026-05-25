@@ -1,0 +1,287 @@
+{
+  "node_name": "Web Concepts in System Design",
+  "description": "This map organizes three core web-system topics: how web apps keep user state, how data is serialized between services, and how browsers enforce cross-origin security boundaries. Together they cover the practical trade-offs behind scalable and safe web architectures. :contentReference[oaicite:0]{index=0}",
+  "children": [
+    {
+      "node_name": "Web Sessions",
+      "description": "This branch explains how systems layer session state on top of HTTP’s stateless request model, then secure and scale that state across browsers, servers, and load balancers. The design choice affects login handling, token strategy, and horizontal scaling. :contentReference[oaicite:1]{index=1}",
+      "children": [
+        {
+          "node_name": "HTTP Statelessness",
+          "description": "HTTP is defined as a stateless application-level protocol, so each request stands on its own unless the application adds state outside the protocol. That is the starting point for understanding sessions, cookies, and tokens in web design. :contentReference[oaicite:2]{index=2}",
+          "children": [
+            {
+              "node_name": "Independent requests",
+              "description": "Because HTTP requests are independent, any backend instance can handle a request as long as the needed context travels with it or is available in shared storage. This property is what makes load balancing and failover practical. :contentReference[oaicite:3]{index=3}",
+              "children": []
+            },
+            {
+              "node_name": "No server memory",
+              "description": "The protocol itself does not remember prior interactions, so the server cannot rely on a built-in conversation history. Any remembered login, cart, or preference must be stored in cookies, tokens, caches, or a database. :contentReference[oaicite:4]{index=4}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Management Techniques",
+          "description": "These are the main ways web systems reintroduce state into an otherwise stateless HTTP flow: server-side sessions, token-based authentication, and browser storage. Each approach changes where identity lives and how much the server must remember. :contentReference[oaicite:5]{index=5}",
+          "children": [
+            {
+              "node_name": "Session-Based (Cookies + Server storage)",
+              "description": "A session-based design usually gives the browser a session ID in a cookie while the actual user state stays on the server. This centralizes control and revocation, but it also means the server or a shared store must keep that session data available. :contentReference[oaicite:6]{index=6}",
+              "children": []
+            },
+            {
+              "node_name": "Token-Based (JWT, OAuth)",
+              "description": "Token-based flows move identity or authorization claims into signed tokens such as JWTs, often issued through OAuth 2.0. The server can stay lighter because it does not keep per-user session state, but token protection and expiry become critical. :contentReference[oaicite:7]{index=7}",
+              "children": []
+            },
+            {
+              "node_name": "Client-side (LocalStorage, SessionStorage)",
+              "description": "Browser storage can keep small key-value state in localStorage or sessionStorage. localStorage persists across browser sessions for an origin, while sessionStorage lasts only for the page session and is scoped more narrowly to the tab context. :contentReference[oaicite:8]{index=8}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Security Concerns",
+          "description": "Session state introduces attack surfaces such as stolen session IDs, cross-site request forgery, and weak cookie settings. The security controls in this branch are about limiting how a browser sends credentials and how an attacker could reuse them. :contentReference[oaicite:9]{index=9}",
+          "children": [
+            {
+              "node_name": "Session Hijacking",
+              "description": "Session hijacking happens when an attacker steals, predicts, or fixes a valid session identifier and then impersonates the user. In a web system, that usually means the attacker can act as the victim until the session is revoked or expires. :contentReference[oaicite:10]{index=10}",
+              "children": []
+            },
+            {
+              "node_name": "CSRF",
+              "description": "CSRF is an attack where a malicious site tricks an authenticated browser into sending an unwanted request to a trusted site. It matters because browsers may automatically attach credentials, so the server must verify intent, not just identity. :contentReference[oaicite:11]{index=11}",
+              "children": []
+            },
+            {
+              "node_name": "Cookie Flags (Secure, HttpOnly, SameSite)",
+              "description": "These cookie attributes tighten browser handling of session cookies. Secure limits transmission to HTTPS, HttpOnly blocks JavaScript access to the cookie value, and SameSite restricts cross-site sending to reduce CSRF and related leakage risks. :contentReference[oaicite:12]{index=12}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Scaling Strategies",
+          "description": "Scaling session-backed web systems usually means deciding whether to keep users pinned to one instance, move session data into shared cache storage, or remove server-side session state altogether. Each option trades operational simplicity against flexibility and resilience. :contentReference[oaicite:13]{index=13}",
+          "children": [
+            {
+              "node_name": "Sticky Sessions",
+              "description": "Sticky sessions, also called session affinity, route repeated requests from the same client to the same backend instance. This can reduce the need for shared session storage, but it also couples the user to one target and can complicate balancing. :contentReference[oaicite:14]{index=14}",
+              "children": []
+            },
+            {
+              "node_name": "Distributed Stores (Redis, Memcached)",
+              "description": "A distributed store keeps session data in shared cache infrastructure instead of on one application node. Memcached is explicitly designed as a distributed in-memory key-value cache to speed dynamic web applications by offloading repeated reads from primary storage. :contentReference[oaicite:15]{index=15}",
+              "children": []
+            },
+            {
+              "node_name": "Stateless JWTs",
+              "description": "Stateless JWTs remove the need for server-side session lookup by carrying signed claims in the token itself. That makes horizontal scaling easier, but it also means revocation, leakage prevention, and token lifetime management become the main control points. :contentReference[oaicite:16]{index=16}",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "Serialization",
+      "description": "This branch covers how structured data is turned into a transferable or storable representation and then rebuilt later. In system design, serialization affects interoperability, payload size, schema safety, and the security of anything that must be deserialized again. :contentReference[oaicite:17]{index=17}",
+      "children": [
+        {
+          "node_name": "Core Purpose",
+          "description": "Serialization exists so one system can write structured data once and another can read it later, whether across a network or from storage. The main design goals are data exchange, compact storage, and consistent interpretation across languages. :contentReference[oaicite:18]{index=18}",
+          "children": [
+            {
+              "node_name": "Data exchange",
+              "description": "In web systems, serialized payloads let services exchange structured records over APIs and message buses without sharing in-memory objects. That is why formats like JSON, Protobuf, and Avro are so central to service integration. :contentReference[oaicite:19]{index=19}",
+              "children": []
+            },
+            {
+              "node_name": "Storage efficiency",
+              "description": "Serialization also matters when data must be stored compactly. Binary encodings such as Protobuf, Avro, and BSON trade human readability for smaller payloads and less overhead, which is useful when storage or bandwidth is tight. :contentReference[oaicite:20]{index=20}",
+              "children": []
+            },
+            {
+              "node_name": "Interoperability",
+              "description": "A good serialized format lets different languages and platforms agree on the same data shape. That is why standards and schema rules matter: they reduce ambiguity when data moves between browsers, services, queues, and databases. :contentReference[oaicite:21]{index=21}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Common Formats",
+          "description": "These are the formats most often compared in backend and web architecture discussions. The choice usually depends on readability, tooling, compactness, schema evolution, and the surrounding platform such as APIs, Kafka, or MongoDB. :contentReference[oaicite:22]{index=22}",
+          "children": [
+            {
+              "node_name": "JSON (Readable, Web APIs)",
+              "description": "JSON is a lightweight, text-based, language-independent interchange format and is the default choice for many web APIs because humans can read it easily. Its simplicity makes debugging and browser-based development straightforward. :contentReference[oaicite:23]{index=23}",
+              "children": []
+            },
+            {
+              "node_name": "XML (Verbose, Legacy)",
+              "description": "XML is a flexible text format with a much more verbose syntax than JSON, which is why it often appears in older enterprise or legacy systems. In system design, it is frequently chosen when existing tooling or historical contracts already depend on it. :contentReference[oaicite:24]{index=24}",
+              "children": []
+            },
+            {
+              "node_name": "Protobuf (Binary, gRPC, Fast)",
+              "description": "Protocol Buffers are a language-neutral, platform-neutral serialization mechanism that uses compact binary encoding. In practice they are a common fit for gRPC and other internal service contracts where speed and payload size matter more than readability. :contentReference[oaicite:25]{index=25}",
+              "children": []
+            },
+            {
+              "node_name": "Avro (Big Data, Kafka)",
+              "description": "Avro is schema-driven and supports both binary and JSON encodings, with binary favored for smaller and faster serialization. That schema reliance makes it a natural fit for event streams and data pipelines where producers and consumers need strong agreement. :contentReference[oaicite:26]{index=26}",
+              "children": []
+            },
+            {
+              "node_name": "BSON (MongoDB storage)",
+              "description": "BSON is MongoDB’s binary-encoded representation of JSON-like documents, designed for efficient storage and traversal. It preserves machine-friendly type information, which helps document databases store data compactly while keeping richer types than plain JSON. :contentReference[oaicite:27]{index=27}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Trade-offs",
+          "description": "Choosing a serialization format is mostly about balancing developer ergonomics against runtime cost and schema control. Readable formats are easier to inspect, while compact binary formats typically reduce CPU, memory, and network overhead. :contentReference[oaicite:28]{index=28}",
+          "children": [
+            {
+              "node_name": "Readability vs Efficiency",
+              "description": "Human-readable formats help with debugging and manual inspection, but they usually cost more bytes and parsing work. Binary formats do the opposite, so teams often pick different formats for public APIs, internal RPC, and storage. :contentReference[oaicite:29]{index=29}",
+              "children": []
+            },
+            {
+              "node_name": "CPU/Memory usage",
+              "description": "Serialization can consume meaningful CPU and memory when objects are large or frequent. Binary encodings often reduce payload size and parsing overhead, which matters in high-throughput services and streaming pipelines. :contentReference[oaicite:30]{index=30}",
+              "children": []
+            },
+            {
+              "node_name": "Schema enforcement",
+              "description": "Schema-backed formats help producers and consumers agree on structure and evolution rules. That reduces accidental incompatibility, but it also means teams must manage schemas carefully as data models change. :contentReference[oaicite:31]{index=31}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Security Risks",
+          "description": "Serialization is not just a data-format choice; it is also a security boundary. If a system deserializes untrusted input, attackers may exploit the parser or object model to trigger code execution or tamper with stored data. :contentReference[oaicite:32]{index=32}",
+          "children": [
+            {
+              "node_name": "Deserialization attacks (RCE)",
+              "description": "Unsafe deserialization of attacker-controlled data can lead to remote code execution, denial of service, or access-control bypass. In system design terms, this means deserializers must never be treated as harmless plumbing. :contentReference[oaicite:33]{index=33}",
+              "children": []
+            },
+            {
+              "node_name": "Data tampering",
+              "description": "If serialized data is not signed, validated, or otherwise integrity-protected, an attacker may alter fields before they are read back. The risk is especially important when serialized objects represent permissions, pricing, or workflow state. :contentReference[oaicite:34]{index=34}",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "CORS & Web Security",
+      "description": "This branch explains the browser security model that limits cross-origin data access and the mechanisms that selectively relax it. In system design, CORS is how web apps safely expose APIs to another origin without abandoning the same-origin boundary. :contentReference[oaicite:35]{index=35}",
+      "children": [
+        {
+          "node_name": "Same-Origin Policy (SOP)",
+          "description": "The same-origin policy is the browser’s base protection model for separating one origin from another. In practice, it blocks one site’s script from freely reading or manipulating another site’s resources unless a controlled exception such as CORS exists. :contentReference[oaicite:36]{index=36}",
+          "children": [
+            {
+              "node_name": "Restricts Protocol-Domain-Port",
+              "description": "An origin is defined by the scheme, host, and port, so changing any one of those components creates a different origin. That strict boundary is what makes cross-origin access a deliberate design choice rather than a default. :contentReference[oaicite:37]{index=37}",
+              "children": []
+            },
+            {
+              "node_name": "Prevents unauthorized data access",
+              "description": "SOP helps isolate potentially malicious documents by preventing one origin from reading another origin’s sensitive data. In system design, that means an API or page must explicitly opt in before another site can consume its responses. :contentReference[oaicite:38]{index=38}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "CORS Mechanism",
+          "description": "CORS is the browser and server handshake that allows selected cross-origin requests to succeed. The server uses HTTP response headers to say which origins, methods, and headers are allowed, and browsers may send a preflight check first. :contentReference[oaicite:39]{index=39}",
+          "children": [
+            {
+              "node_name": "Simple Requests (GET/POST)",
+              "description": "Some cross-origin requests are treated as simple requests and can be sent without a preflight round trip. In system design, those are the low-friction cases, usually when the method and headers stay within browser safelists. :contentReference[oaicite:40]{index=40}",
+              "children": []
+            },
+            {
+              "node_name": "Preflight (OPTIONS request)",
+              "description": "A preflight request is an OPTIONS check that asks the server whether the real cross-origin request is permitted. Browsers use it to verify methods and headers before sending the actual request, which adds safety and one extra network hop. :contentReference[oaicite:41]{index=41}",
+              "children": []
+            },
+            {
+              "node_name": "HTTP Response Headers",
+              "description": "CORS is enforced through response headers that tell the browser what the server allows. In practice, these headers are the contract between API owners and browsers, and they control whether the response can be shared with client code. :contentReference[oaicite:42]{index=42}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "CORS Headers",
+          "description": "These headers are the concrete policy knobs that make CORS work. They are typically sent by the server in response to a preflight request or a normal cross-origin response, and the browser checks them before exposing the data. :contentReference[oaicite:43]{index=43}",
+          "children": [
+            {
+              "node_name": "Access-Control-Allow-Origin",
+              "description": "This header tells the browser which origin may read the response. It is the most visible CORS control, and overly broad values can accidentally expose data to sites that should not receive it. :contentReference[oaicite:44]{index=44}",
+              "children": []
+            },
+            {
+              "node_name": "Access-Control-Allow-Methods",
+              "description": "This header lists the HTTP methods permitted for the cross-origin resource after preflight. It is part of the browser’s decision about whether a requested action, such as POST or PUT, is allowed. :contentReference[oaicite:45]{index=45}",
+              "children": []
+            },
+            {
+              "node_name": "Access-Control-Allow-Headers",
+              "description": "This header tells the browser which non-safelisted request headers it may use in the actual cross-origin request. It matters whenever a client needs to send custom headers such as authorization or app-specific metadata. :contentReference[oaicite:46]{index=46}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Implementation Alternatives",
+          "description": "Teams often implement CORS behavior indirectly through infrastructure rather than by hand in every service. Reverse proxies and API gateways can centralize the policy, while legacy JSONP remains only as a compatibility pattern. :contentReference[oaicite:47]{index=47}",
+          "children": [
+            {
+              "node_name": "Reverse Proxy (Nginx)",
+              "description": "A reverse proxy such as nginx can forward requests to upstream servers and centralize cross-origin handling at the edge. This is useful when one layer should manage routing, headers, and load distribution for many backends. :contentReference[oaicite:48]{index=48}",
+              "children": []
+            },
+            {
+              "node_name": "API Gateways (AWS Gateway)",
+              "description": "An API gateway can expose managed REST or HTTP endpoints and enable CORS for clients hosted on a different origin. In system design, that makes the gateway the place where cross-origin policy and request routing are coordinated. :contentReference[oaicite:49]{index=49}",
+              "children": []
+            },
+            {
+              "node_name": "JSONP (Deprecated)",
+              "description": "JSONP is a legacy pattern for cross-origin data loading and is no longer a recommended modern approach. It persists mainly as a compatibility technique, but CORS is the preferred mechanism for current browser-based systems. :contentReference[oaicite:50]{index=50}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Common Risks",
+          "description": "The most common CORS mistakes are being too permissive or combining permissive origins with credentials. Those errors can weaken the browser boundary and let a site read responses that were meant for a different origin. :contentReference[oaicite:51]{index=51}",
+          "children": [
+            {
+              "node_name": "Wildcard origins (*)",
+              "description": "Using a wildcard origin is convenient, but it can be unsafe when the response contains sensitive data or credentials are involved. Good practice is to allow only the exact origins that truly need access. :contentReference[oaicite:52]{index=52}",
+              "children": []
+            },
+            {
+              "node_name": "Insecure credential sharing",
+              "description": "Credentialed cross-origin requests must be handled carefully because browsers can include cookies or other credentials when the server explicitly allows it. If the origin policy is loose, a trusted user’s session data may be exposed to the wrong site. :contentReference[oaicite:53]{index=53}",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
