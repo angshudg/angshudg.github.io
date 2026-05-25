@@ -46,7 +46,7 @@ Every mechanism for making web applications feel stateful is, at bottom, a worka
 Two-panel diagram titled "HTTP: Stateless vs. Stateful (via Sessions)".
 LEFT PANEL (Stateless): Shows a client and server. Three sequential HTTP requests go from client to server — GET /profile, GET /cart, POST /order. Each request arrow is labeled "Anonymous Request." The server node for each request has a question mark icon, labeled "No prior knowledge." The connections between requests are shown as broken/disconnected.
 RIGHT PANEL (Stateful via Cookies): Same three requests, but now each request header includes a small badge showing "Cookie: session_id=abc123". The server side now shows a session store (cylinder/database icon) with a lookup arrow. A green checkmark labeled "Recognized User" sits on each server. The three requests are shown with a dotted line connecting them to a user profile.
-Style: Clean technical illustration, dark navy on light background, accent in teal. Use monospace font for request labels. Educational objective: contrast the stateless HTTP default with the cookie-based workaround that creates "memory."
+Style: Clean whiteboard style sketch, technical illustration, dark navy on white background, accent in teal. Use monospace font for request labels. Educational objective: contrast the stateless HTTP default with the cookie-based workaround that creates "memory."
 [ILLUSTRATION_PROMPT_END]
 
 ---
@@ -115,7 +115,7 @@ Side-by-side comparison diagram titled "Session-Based vs. Token-Based Authentica
 LEFT SIDE (Session-Based): Shows Browser → Server → Session Store (Redis/DB). The arrow from browser to server is labeled "Cookie: session_id=xyz". The arrow from Server to Session Store is labeled "lookup(xyz)". The Session Store returns user data. Label the store with a "State lives HERE" annotation.
 RIGHT SIDE (Token-Based/JWT): Shows Browser → Server only. The arrow is labeled "Authorization: Bearer eyJ...". Inside the server box, show a "Verify Signature (public key)" step. Label with "State lives in TOKEN". Show a key icon for signature verification. No database lookup arrow present.
 Below both, show a comparison table: Revocation (Easy vs. Hard), Scalability (Needs shared store vs. Stateless), State Location (Server/Store vs. Client Token), Token Size (Small ID vs. Larger token).
-Style: Two-column layout, clean lines, icons for browser/server/database, accent in amber and blue. Educational objective: make the architectural tradeoff between centralized state and token-carried state immediately legible.
+Style: Clean whiteboard style sketch, Two-column layout, clean lines, icons for browser/server/database, accent in amber and blue. Educational objective: make the architectural tradeoff between centralized state and token-carried state immediately legible.
 [ILLUSTRATION_PROMPT_END]
 
 The tradeoff is subtle but consequential: **revocation is hard with JWTs**. Because the server doesn't remember issuing a token, it can't "forget" it on demand. A stolen JWT remains valid until its expiry timestamp (`exp`). The standard mitigations — short-lived tokens (15 minutes), refresh token rotation, token blocklists (which partially reintroduce state) — all add operational complexity. This is not a reason to avoid JWTs, but it is a reason to set their expiry aggressively short.
@@ -200,7 +200,7 @@ Step 3: Malicious site's HTML shows a hidden form or img tag targeting bank.com.
 Step 4: Arrow from User's Browser to Bank Server — "Browser automatically sends: GET /transfer?to=attacker with Cookie: session_id=abc123." Label this "Cookie auto-attached (no user action required)."
 Step 5: Bank Server responds with "Transfer complete ✓" — thinking it's the legitimate user.
 Below: Show the countermeasure — SameSite=Strict cookie blocks Step 4 with a red X.
-Style: Step-numbered flow, red for the attack path, green for the countermeasure. Clear arrows, monospace font for cookie/header text. Educational objective: make the invisible automatic nature of cookie attachment viscerally clear.
+Style: Clean whiteboard style sketch, Step-numbered flow, red for the attack path, green for the countermeasure. Clear arrows, monospace font for cookie/header text. Educational objective: make the invisible automatic nature of cookie attachment viscerally clear.
 [ILLUSTRATION_PROMPT_END]
 
 ---
@@ -293,7 +293,7 @@ The serialization step shows an arrow from the dict to a byte stream: `{"user_id
 The byte stream travels across the network arrow.
 Inside Process B: The deserialization step shows the byte stream being reconstructed into a Go struct { UserID: 42, Features: []float64{...} }.
 Below, show three diverging arrows labeled "Format Choice" pointing to: "JSON (readable)", "Protobuf (fast/compact)", "Avro (schema-first)".
-Style: Clean data-flow diagram, monospace for byte representations, use blue→purple gradient for the network transmission arrow. Educational objective: make the concept of crossing memory/process boundaries concrete and the role of format choice clear.
+Style: Clean whiteboard style sketch, data-flow diagram, monospace for byte representations, use blue→purple gradient for the network transmission arrow. Educational objective: make the concept of crossing memory/process boundaries concrete and the role of format choice clear.
 [ILLUSTRATION_PROMPT_END]
 
 ---
@@ -417,7 +417,7 @@ Protobuf: red (binary), binary, yes, gRPC/microservices, small, very high
 Avro: red (binary), binary, yes, Kafka/pipelines, small, high
 BSON: red (binary), binary, no, MongoDB, medium, high
 Below the table, add a "When to use" decision tree: starting with "Is human readability important?" → yes → JSON; → no → "Is schema evolution critical?" → yes → Avro; → no → "Is it gRPC?" → yes → Protobuf; → no → "Is it MongoDB?" → yes → BSON.
-Style: Clean data table, dark header row, alternating row colors, clear legend for the color-coding. Educational objective: let engineers make format decisions quickly based on their constraints.
+Style: Clean whiteboard style sketch, data table, dark header row, alternating row colors, clear legend for the color-coding. Educational objective: let engineers make format decisions quickly based on their constraints.
 [ILLUSTRATION_PROMPT_END]
 
 ---
@@ -538,7 +538,7 @@ Show a browser containing two iframes/tabs. Tab A is "https://myapp.com" and Tab
 From Tab A (myapp.com): Draw green arrows labeled "Allowed" to requests going to https://myapp.com/api (same origin). Draw a red X arrow labeled "Blocked by SOP" from Tab A trying to READ the response of https://api.other.com.
 From Tab B (evil.com): Draw a red X arrow labeled "BLOCKED: SOP prevents this" attempting to read a response from https://myapp.com with user's session cookies.
 Include an inset origin comparison table: show https://myapp.com:443 vs. http://myapp.com (different scheme - DIFFERENT ORIGIN), vs. https://api.myapp.com (different host - DIFFERENT ORIGIN), vs. https://myapp.com:8080 (different port - DIFFERENT ORIGIN), vs. https://myapp.com/other-path (same origin - SAME).
-Style: Browser chrome mockup, red X icons for blocked requests, green checkmarks for allowed, clear origin labels. Educational objective: make the origin definition precise and illustrate why SOP matters for browser security.
+Style: clean Whiteboard style sketch, Browser chrome mockup, red X icons for blocked requests, green checkmarks for allowed, clear origin labels. Educational objective: make the origin definition precise and illustrate why SOP matters for browser security.
 [ILLUSTRATION_PROMPT_END]
 
 ---
@@ -604,7 +604,7 @@ Phase 1 (Preflight): Browser sends OPTIONS request with "Origin", "Access-Contro
 Phase 2 (Actual Request): Browser sends POST with actual Authorization header and JSON body. Server processes and responds with data. Browser JS receives the response. Label this phase "Actual Request (permitted)."
 Phase 3 (Cached subsequent requests): Show the same POST flow but the OPTIONS step is crossed out with "Skipped (within Max-Age cache window)."
 Use a timeline axis at the bottom showing the latency cost of preflight vs. cached flow.
-Style: Professional sequence diagram, blue request arrows, green response arrows, amber for cache indicator. Educational objective: show the preflight mechanism and motivate the Max-Age optimization.
+Style: Clean Whiteboard style sketch, Professional sequence diagram, blue request arrows, green response arrows, amber for cache indicator. Educational objective: show the preflight mechanism and motivate the Max-Age optimization.
 [ILLUSTRATION_PROMPT_END]
 
 ---
@@ -765,7 +765,7 @@ Side-by-side warning diagram titled "CORS Security: Right vs. Wrong Configuratio
 LEFT PANEL (DANGEROUS): Shows server config with "Access-Control-Allow-Origin: *" and "Access-Control-Allow-Credentials: true". Show a malicious site (evil.com) successfully making a credentialed request and receiving user data. Red warning icons throughout.
 RIGHT PANEL (CORRECT): Shows server config with "Access-Control-Allow-Origin: https://myapp.com" (explicit, from allowlist). Show the same malicious site getting blocked with a "403 CORS Policy Violation" error. The legitimate site (myapp.com) succeeds with a green checkmark.
 Center panel: Show the "Vary: Origin" header importance — a CDN caching diagram showing correct vs. incorrect cache key without the Vary header.
-Style: Red/green contrast, warning triangle icons, clean server config code blocks, browser icons for the client side. Educational objective: make the difference between safe and unsafe CORS configuration viscerally obvious.
+Style: Whiteboard style sketch, white background. Red/green contrast, warning triangle icons, clean server config code blocks, browser icons for the client side. Educational objective: make the difference between safe and unsafe CORS configuration viscerally obvious.
 [ILLUSTRATION_PROMPT_END]
 
 ---
