@@ -702,23 +702,12 @@ model = <span class="fn">load_model</span>(<span class="st">"s3://models/recomme
         <p>The most primitive separation. A client — a web browser, a Python script, Jupyter — communicates directly with a database server. Business logic lives in the client or as stored procedures. Still common in data engineering: notebooks querying warehouses, Metabase running direct SQL. Works well when the "application" is a read layer on well-governed data.</p>
 
         <h4>3-Tier: Presentation → Business Logic → Data</h4>
-        <p>The canonical web architecture. A <strong>Presentation Tier</strong> (browser, mobile app) displays data and captures user intent. A <strong>Business Logic Tier</strong> (your FastAPI/Django/Node server) processes requests and orchestrates data access. A <strong>Data Tier</strong> (Postgres, BigQuery) persists state. For data engineers, the logic tier maps directly to your transformation layer — your dbt project, your Airflow DAGs, your Feature Store API.</p>
+        <p>The canonical web architecture. A <strong>Presentation Tier</strong> (browser, mobile app) displays data and captures user intent. An <strong>Application/Logic Tier</strong> (FastAPI/Django/Node server) processes requests and orchestrates data access. A <strong>Data Tier</strong> (Postgres, BigQuery) persists state. For data engineers, the logic tier maps directly to your transformation layer — your dbt project, your Airflow DAGs, your Feature Store API.</p>
 
-        <h4>N-Tier: The Grown-Up Version</h4>
-        <p>Real production systems grow beyond three tiers, adding: a <strong>caching tier</strong> (Redis between app and database), an <strong>API gateway tier</strong> (rate limiting and routing before requests reach servers), a <strong>CDN tier</strong> (static assets distributed globally), and a <strong>message queue tier</strong> (async decoupling between services). N-tier simply means "more than three layers, each with a specialized role."</p>
+        <h3>Tier 1: The Presentation (or Web) Tier</h3>
 
-        <figure class="illustration" id="fig-tiers">
-          <img src="images/multi-tier-architecture.png" alt="Diagram showing the evolution from 2-Tier to 3-Tier to N-Tier architecture, with labeled components at each layer." />
-          <figcaption><strong>Figure 2:</strong> Multi-Tier Architecture Evolution. Left: 2-Tier client-to-database. Center: 3-Tier with application logic as an independent layer. Right: N-Tier with caching, API Gateway, CDN, and message queues added as specialized infrastructure tiers.</figcaption>
-        </figure>
+        <p>This tier faces the public internet, accepts incoming web requests from users, and securely routes that traffic to the internal systems, managing the flow of communication.</p>
 
-        <h3>The Tradeoffs Are Real</h3>
-
-        <p>What you gain is real: separation of concerns improves maintainability, the database is never directly exposed to the internet, you can scale the tiers that need it independently. What you pay is also real: every tier boundary is a network hop. A 3-tier system with naive implementation might add 5–10ms to every request. Deployment complexity rises — three codebases, three pipelines, three failure surfaces.</p>
-
-        <h3>Key Concepts: Scaling Within Tiers</h3>
-
-        <p><strong>Horizontal scaling</strong> means adding more instances behind a load balancer. Traffic distributes across them; any single server can fail without dropping requests. <strong>Vertical scaling</strong> means making a single instance bigger — simpler, but with hard physical limits. The load balancer is the mechanism that makes horizontal scaling work.</p>
 
         <pre>
 <span class="code-label">nginx · load balancer config</span><code><span class="cm"># nginx upstream for a 3-tier ML API</span>
@@ -736,6 +725,201 @@ server {
         proxy_next_upstream error timeout http_503;
     }
 }</code></pre>
+
+        <p><strong>Code Explanation</strong></p>
+        
+    <p>
+      This is a configuration script for <strong>Nginx</strong> (web server software).
+      In this specific snippet, it is being set up to act as a
+      <strong>load balancer</strong> and a
+      <strong>reverse proxy</strong> for a Machine Learning (ML) API.
+    </p>
+
+    <p><strong>1. The <code>upstream</code> Block (The Server Pool)</strong></p>
+
+    <ul>
+      <li>
+        <code>upstream app_servers</code>:
+        This creates a group or "pool" of backend servers and names it
+        <code>app_servers</code>.
+      </li>
+
+      <li>
+        <code>least_conn;</code>:
+        This is the routing strategy. Instead of just handing out requests
+        in a strict rotation (round-robin), it tells Nginx to send the next
+        incoming request to whichever server currently has the
+        <em>fewest active connections</em>.
+        This is great for ML APIs where some requests might take longer to
+        process than others.
+      </li>
+
+      <li>
+        <code>server ... weight=X;</code>:
+        These lines define the actual machines doing the work.
+      </li>
+
+      <li>
+        <code>app1</code> and <code>app2</code> have a
+        <code>weight=3</code>.
+      </li>
+
+      <li>
+        <code>app3</code> has a <code>weight=1</code>.
+      </li>
+
+      <li>
+        Because of the weights, <code>app1</code> and <code>app2</code>
+        will be assigned roughly 3 times as much traffic as
+        <code>app3</code>.
+        The comment mentions <code>app3</code> is a "new server," so they
+        are likely keeping its weight low to test it safely without
+        overwhelming it.
+      </li>
+    </ul>
+<br>
+    <p><strong>2. The <code>server</code> Block (The Traffic Cop)</strong></p>
+
+    <ul>
+      <li>
+        <code>listen 80;</code>:
+        This tells Nginx to listen for incoming web traffic on port 80,
+        which is the standard port for regular HTTP traffic.
+      </li>
+
+      <li>
+        <code>location /api/ { ... }</code>:
+        This rule applies to any web request that starts with
+        <code>/api/</code>
+        (e.g.,
+        <code>http://yourwebsite.com/api/predict</code>).
+      </li>
+
+      <li>
+        <code>proxy_pass http://app_servers;</code>:
+        This is the actual hand-off. When a request comes in for the API,
+        Nginx intercepts it and passes it back to the
+        <code>app_servers</code> pool we defined at the top.
+      </li>
+
+      <li>
+        <code>proxy_next_upstream ...;</code>:
+        This is a fallback/safety net. If Nginx tries to send a request to
+        one of the backend servers and that server crashes
+        (<code>error</code>), takes too long
+        (<code>timeout</code>), or is temporarily overloaded
+        (<code>http_503</code>), Nginx will automatically try sending the
+        request to the <em>next</em> server in the pool so the user doesn't
+        see an error.
+      </li>
+    </ul>
+<br>
+
+        <h3>Tier 2: The Application (or Logic) Tier</h3>
+
+        <p>Represented by the destinations <code>app1.internal</code>, <code>app2.internal</code>, and <code>app3.internal</code> in the code, this is the "brain" of the application. This is where your actual Machine Learning API code runs (often written in Python using frameworks like FastAPI or Flask). Nginx (in Tier 1) passes the baton to these internal servers so they can execute the ML models, process the data, and generate a prediction.</p>
+
+        <p>A simple example of a <code>main.py</code> script running on <code>app1.internal</code> might look like this:</p>
+        <pre>
+<span class="code-label">Python · FastAPI ML API</span><code><span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI, HTTPException
+<span class="kw">import</span> psycopg2
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+app = <span class="fn">FastAPI</span>()
+
+<span class="cm"># 1. Load the Machine Learning Model (Simulated)</span>
+<span class="kw">class</span> <span class="tp">GraphRecommender</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        <span class="cm"># In reality, this would load heavy model weights into memory</span>
+        self.is_warm = <span class="kw">True</span>
+
+    <span class="kw">def</span> <span class="fn">predict</span>(self, user_features):
+        <span class="cm"># Simulate a graph-based recommendation calculation</span>
+        <span class="kw">return</span> {
+            <span class="st">"recommended_nodes"</span>: [<span class="nu">1042</span>, <span class="nu">831</span>, <span class="nu">992</span>],
+            <span class="st">"confidence"</span>: <span class="nu">0.87</span>
+        }
+
+model = <span class="fn">GraphRecommender</span>()
+
+<span class="cm"># 2. Establish a connection to Tier 3 (The Database)</span>
+<span class="kw">def</span> <span class="fn">get_db_connection</span>():
+    <span class="kw">try</span>:
+        <span class="cm"># Connecting to the internal database server</span>
+        conn = psycopg2.<span class="fn">connect</span>(
+            host=<span class="st">"db.internal"</span>,
+            database=<span class="st">"ml_features"</span>,
+            user=<span class="st">"admin"</span>,
+            password=<span class="st">"securepassword"</span>
+        )
+        <span class="kw">return</span> conn
+
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        <span class="kw">raise</span> <span class="fn">HTTPException</span>(
+            status_code=<span class="nu">503</span>,
+            detail=<span class="st">"Database connection failed"</span>
+        )
+
+<span class="cm"># 3. The API Endpoint (What Nginx routes the traffic to)</span>
+<span class="at">@app.get</span>(<span class="st">"/api/predict/{user_id}"</span>)
+<span class="kw">def</span> <span class="fn">get_recommendations</span>(user_id: <span class="tp">int</span>):
+
+    <span class="cm"># Step A: Fetch historical user data from Tier 3</span>
+    conn = <span class="fn">get_db_connection</span>()
+    cursor = conn.<span class="fn">cursor</span>()
+
+    cursor.<span class="fn">execute</span>(
+        <span class="st">"SELECT feature_vector FROM users WHERE id = %s"</span>,
+        (user_id,)
+    )
+
+    data = cursor.<span class="fn">fetchone</span>()
+
+    <span class="kw">if not</span> data:
+        <span class="kw">raise</span> <span class="fn">HTTPException</span>(
+            status_code=<span class="nu">404</span>,
+            detail=<span class="st">"User not found"</span>
+        )
+
+    user_features = data[<span class="nu">0</span>]
+
+    <span class="cm"># Step B: Run the ML prediction in Tier 2</span>
+    prediction = model.<span class="fn">predict</span>(user_features)
+
+    <span class="cm"># Step C: Return the result back to the user (via Nginx)</span>
+    <span class="kw">return</span> {
+        <span class="st">"user_id"</span>: user_id,
+        <span class="st">"recommendations"</span>: prediction
+    }</code></pre>
+    <p>When deploying an ML API, the incoming network connections are managed by a specialized ASGI (Asynchronous Server Gateway Interface) server such as <strong>Uvicorn</strong>, which handles the heavy lifting of network traffic, concurrency, and keeping the application alive.</p>
+
+    <p>The application is started by running the following from the command line:</p>
+    <pre><code>uvicorn main:app --host 0.0.0.0 --port 8000</code></pre>
+
+    <p>In Tier 1, Nginx passes traffic to <code>app1.internal:8000</code>. Uvicorn running on port 8000, receives the request, translates it, and hands it off to your FastAPI <code>app</code> object in <code>main.py</code> to run the machine learning prediction.</p>
+
+        <p>Notice how this tier has to do two things: it receives the routed request from Tier 1, and then reaches out to Tier 3 to get the data it needs to run its predictions.</p>
+
+        <h3>Tier 3: The Data Tier</h3>
+        <p>This tier holds the historical data, feature vectors, or user profiles that the ML model relies on to make accurate predictions. It;s main job is to efficiently store and retrieve data when queried. It typically consists of a database (e.g., PostgreSQL, MySQL) or a data warehouse (e.g., Amazon Redshift). The application tier (Tier 2) communicates with this tier to retrieve and update data.</p>
+
+        <h4>N-Tier: The Grown-Up Version</h4>
+        <p>Real production systems grow beyond three tiers, adding: a <strong>caching tier</strong> (Redis between app and database), an <strong>API gateway tier</strong> (rate limiting and routing before requests reach servers), a <strong>CDN tier</strong> (static assets distributed globally), and a <strong>message queue tier</strong> (async decoupling between services). N-tier simply means "more than three layers, each with a specialized role."</p>
+
+        <figure class="illustration" id="fig-tiers">
+          <img src="images/multi-tier-architecture.png" alt="Diagram showing the evolution from 2-Tier to 3-Tier to N-Tier architecture, with labeled components at each layer." />
+          <figcaption><strong>Figure 2:</strong> Multi-Tier Architecture Evolution. Left: 2-Tier client-to-database. Center: 3-Tier with application logic as an independent layer. Right: N-Tier with caching, API Gateway, CDN, and message queues added as specialized infrastructure tiers.</figcaption>
+        </figure>
+
+        <h3>The Tradeoffs Are Real</h3>
+
+        <p>What you gain is real: separation of concerns improves maintainability, the database is never directly exposed to the internet, you can scale the tiers that need it independently. What you pay is also real: every tier boundary is a network hop. A 3-tier system with naive implementation might add 5–10ms to every request. Deployment complexity rises — three codebases, three pipelines, three failure surfaces.</p>
+
+        <h3>Key Concepts: Scaling Within Tiers</h3>
+
+        <p><strong>Horizontal scaling</strong> means adding more instances behind a load balancer. Traffic distributes across them; any single server can fail without dropping requests. <strong>Vertical scaling</strong> means making a single instance bigger — simpler, but with hard physical limits. The load balancer is the mechanism that makes horizontal scaling work.</p>
+
+
 
         <div class="callout info">
           <span class="callout-icon">📐</span>
@@ -767,7 +951,7 @@ kind: Deployment
 metadata:
   name: inference-service
 spec:
-  replicas: <span class="nm">20</span>    <span class="cm"># scale this independently</span>
+  replicas: <span class="nm">50</span>    <span class="cm"># scale this independently</span>
   template:
     spec:
       containers:
@@ -784,6 +968,9 @@ metadata:
 spec:
   replicas: <span class="nm">2</span>     <span class="cm"># this one barely needs anything</span>
   ...</code></pre>
+
+  <p>The above Kubernetes Deployment manifest code tells Kubernetes to maintain a stable set of 50 identical pods (containers running your app) for the inference engine. If a container crashes, Kubernetes will automatically spin up a new one to replace it. </p>
+  <p>The <code>resources</code> scetion lays a guaranteed baseline and hard ceiling on resource usage. Each of the 50 pods is guaranteed 2 CPU cores and 4 Gibibytes (Gi) of RAM. But if a pod tries to use more than 4 CPUs or 8Gi of RAM, Kubernetes will throttle or terminate it to prevent it from starving other services on the server.</p>
 
         <p><strong>Fault isolation</strong> is equally valuable. When the <code>NotificationService</code> goes down in a well-designed system, users stop receiving emails — but they can still use the product. A monolith would fall entirely. The key phrase is <em>well-designed</em>: fault isolation requires deliberate engineering — circuit breakers, bulkheads, graceful degradation.</p>
 
