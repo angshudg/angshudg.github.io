@@ -1,0 +1,355 @@
+{
+  "node_name": "Storage and Databases in System Design",
+  "description": "This topic covers the foundational principles, architectures, and trade-offs involved in designing scalable storage and database systems for modern distributed applications. It includes relational and non-relational databases, replication, sharding, object storage, distributed file systems, and big data processing models that collectively enable reliable, fault-tolerant, and high-performance systems.",
+  "children": [
+    {
+      "node_name": "Storage Fundamentals",
+      "description": "Storage fundamentals define the core principles behind how applications persist, organize, retrieve, and protect data in system design. These concepts establish the basis for reliability, consistency, scalability, and efficient querying across modern databases and distributed storage platforms.",
+      "children": [
+        {
+          "node_name": "Persistence & Reliability",
+          "description": "Persistence ensures that application data survives crashes, reboots, or infrastructure failures, while reliability focuses on maintaining data integrity and continuous accessibility. Together, they form the backbone of dependable storage systems used in production-scale architectures.",
+          "children": []
+        },
+        {
+          "node_name": "Data Types",
+          "description": "Storage systems are designed differently depending on the structure and format of the data being stored. System architects choose appropriate storage models based on query patterns, schema rigidity, scalability needs, and application requirements.",
+          "children": [
+            {
+              "node_name": "Structured (SQL, Schema-based)",
+              "description": "Structured data follows predefined schemas with fixed tables, relationships, and constraints. In system design, structured databases are commonly used for transactional workloads requiring strong consistency, normalized data models, and predictable query performance.",
+              "children": []
+            },
+            {
+              "node_name": "Unstructured (Blobs, Files, No-schema)",
+              "description": "Unstructured data includes media files, logs, documents, binaries, and other formats without rigid schemas. Modern storage architectures use object stores and distributed file systems to manage this data efficiently at massive scale.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Storage Properties",
+          "description": "Storage properties describe the guarantees and operational characteristics offered by a database or storage engine. These properties directly influence system reliability, consistency behavior, user experience, and fault recovery strategies.",
+          "children": [
+            {
+              "node_name": "Durability",
+              "description": "Durability guarantees that committed data remains permanently stored even after crashes or power failures. Databases achieve this using techniques such as write-ahead logging, replication, snapshots, and persistent disk storage.",
+              "children": []
+            },
+            {
+              "node_name": "Availability",
+              "description": "Availability measures whether a storage system can continue serving requests despite failures or heavy traffic. Highly available architectures rely on replication, failover mechanisms, redundancy, and distributed deployments across multiple nodes or regions.",
+              "children": []
+            },
+            {
+              "node_name": "Consistency",
+              "description": "Consistency defines whether all clients observe the same data state across replicas and distributed nodes. System designers often balance consistency against latency and availability depending on workload requirements and failure tolerance.",
+              "children": []
+            },
+            {
+              "node_name": "Atomicity (ACID)",
+              "description": "Atomicity ensures that a transaction either completes fully or not at all, preventing partial updates and corrupted state. It is one of the key ACID guarantees provided by transactional database systems.",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "Database Models",
+      "description": "Database models define how data is organized, queried, related, and scaled within a storage system. Choosing the correct model significantly impacts scalability, performance, operational complexity, and consistency guarantees in distributed architectures.",
+      "children": [
+        {
+          "node_name": "SQL (Relational)",
+          "description": "Relational databases organize data into structured tables connected through relationships and constraints. They are widely used for transactional systems requiring strong consistency, complex joins, schema enforcement, and reliable ACID guarantees.",
+          "children": [
+            {
+              "node_name": "ACID Compliance",
+              "description": "Relational databases prioritize ACID guarantees to maintain transactional integrity and correctness. These guarantees are essential in banking systems, financial platforms, inventory management, and applications where data correctness is critical.",
+              "children": []
+            },
+            {
+              "node_name": "Vertical Scaling",
+              "description": "Traditional SQL systems often scale vertically by upgrading CPU, RAM, or storage capacity on a single machine. While simple operationally, vertical scaling eventually encounters hardware and cost limitations.",
+              "children": []
+            },
+            {
+              "node_name": "Strict Schema",
+              "description": "Relational databases require predefined schemas specifying columns, data types, constraints, and relationships. Strict schemas improve validation, consistency, and query optimization but reduce flexibility for rapidly evolving data structures.",
+              "children": []
+            },
+            {
+              "node_name": "Examples: MySQL, PostgreSQL",
+              "description": "MySQL and PostgreSQL are widely adopted relational databases used in web platforms, enterprise applications, and transactional systems. PostgreSQL emphasizes extensibility and advanced querying, while MySQL is popular for simplicity and performance.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "NoSQL (Non-Relational)",
+          "description": "NoSQL databases are designed for flexible schemas, distributed scaling, and high-throughput workloads. They are commonly used in large-scale internet systems handling semi-structured or rapidly changing data across many nodes.",
+          "children": [
+            {
+              "node_name": "BASE Properties",
+              "description": "Many NoSQL systems follow BASE principles, prioritizing availability and eventual consistency over strict transactional guarantees. This approach enables higher scalability and resilience in globally distributed architectures.",
+              "children": []
+            },
+            {
+              "node_name": "Horizontal Scaling",
+              "description": "NoSQL systems are commonly built for horizontal scaling, where capacity increases by adding more machines instead of upgrading a single server. This approach improves elasticity, fault tolerance, and large-scale distribution.",
+              "children": []
+            },
+            {
+              "node_name": "Flexible Schema",
+              "description": "Flexible schemas allow records to vary in structure without requiring expensive migrations. This enables faster iteration, easier evolution of application models, and better support for heterogeneous datasets.",
+              "children": []
+            },
+            {
+              "node_name": "Types",
+              "description": "NoSQL databases are categorized based on how they model and access data. Each type is optimized for different workloads, access patterns, scalability requirements, and relationships between stored entities.",
+              "children": [
+                {
+                  "node_name": "Document (MongoDB)",
+                  "description": "Document databases store data as flexible JSON-like objects, making them ideal for evolving schemas and nested structures. MongoDB is commonly used in content platforms, user profiles, and modern web applications.",
+                  "children": []
+                },
+                {
+                  "node_name": "Key-Value (Redis, DynamoDB)",
+                  "description": "Key-value stores retrieve data using unique keys and are optimized for extremely fast lookups. They are frequently used for caching, sessions, leaderboards, and highly scalable low-latency workloads.",
+                  "children": []
+                },
+                {
+                  "node_name": "Columnar (Cassandra, HBase)",
+                  "description": "Column-family databases organize data by columns rather than rows, enabling efficient writes and large-scale distributed storage. They are commonly used in telemetry, analytics, and time-series applications.",
+                  "children": []
+                },
+                {
+                  "node_name": "Graph (Neo4j)",
+                  "description": "Graph databases model relationships directly using nodes and edges, making them ideal for highly connected datasets such as social networks, fraud detection systems, recommendation engines, and knowledge graphs.",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "Distributed System Concepts",
+      "description": "Distributed storage systems spread computation and data across multiple machines to improve scalability, fault tolerance, and performance. These concepts address the complexities introduced by network failures, replication, and coordination across nodes.",
+      "children": [
+        {
+          "node_name": "CAP Theorem",
+          "description": "The CAP theorem states that a distributed system can guarantee only two out of consistency, availability, and partition tolerance during network partitions. System architects choose trade-offs based on application priorities and operational requirements.",
+          "children": [
+            {
+              "node_name": "Consistency",
+              "description": "Consistency in CAP means all nodes return the same latest data after an update. Strong consistency simplifies correctness but may increase latency or reduce availability during network failures.",
+              "children": []
+            },
+            {
+              "node_name": "Availability",
+              "description": "Availability ensures every request receives a response even if some nodes fail. Highly available systems prioritize responsiveness, often accepting temporary inconsistencies during replication delays.",
+              "children": []
+            },
+            {
+              "node_name": "Partition Tolerance",
+              "description": "Partition tolerance allows a distributed system to continue operating despite communication failures between nodes or clusters. This property is essential because network partitions are unavoidable in large distributed infrastructures.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Scaling Strategies",
+          "description": "Scaling strategies determine how a storage system increases capacity and performance under growing demand. Architects balance cost, complexity, reliability, and operational overhead when selecting a scaling approach.",
+          "children": [
+            {
+              "node_name": "Vertical (Scale-Up)",
+              "description": "Vertical scaling improves performance by increasing resources such as CPU, RAM, or storage on a single machine. It simplifies management but is constrained by hardware limits and single-node bottlenecks.",
+              "children": []
+            },
+            {
+              "node_name": "Horizontal (Scale-Out)",
+              "description": "Horizontal scaling distributes workloads across multiple servers, improving elasticity and fault tolerance. Modern cloud-native architectures heavily rely on horizontal scaling for massive internet-scale systems.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Replication",
+          "description": "Replication creates copies of data across multiple machines or regions to improve durability, availability, disaster recovery, and read scalability within distributed systems.",
+          "children": [
+            {
+              "node_name": "Leader-Follower",
+              "description": "Leader-follower replication routes writes to a primary node while replicas synchronize updates asynchronously or synchronously. This model simplifies consistency management and supports scalable read traffic.",
+              "children": []
+            },
+            {
+              "node_name": "Read Replicas",
+              "description": "Read replicas distribute read-heavy workloads away from the primary database server. They improve query throughput and reduce latency for analytics, reporting, and geographically distributed applications.",
+              "children": []
+            },
+            {
+              "node_name": "Fault Tolerance",
+              "description": "Replication improves fault tolerance by ensuring data remains accessible even when servers fail. Systems use automated failover and redundancy to minimize downtime and data loss.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Sharding",
+          "description": "Sharding distributes data across multiple database partitions to improve scalability and performance. Each shard stores a subset of the total dataset, reducing storage and query pressure on individual nodes.",
+          "children": [
+            {
+              "node_name": "Range-Based",
+              "description": "Range-based sharding partitions data according to ordered value ranges such as user IDs or timestamps. It simplifies range queries but may create uneven traffic hotspots.",
+              "children": []
+            },
+            {
+              "node_name": "Hash-Based",
+              "description": "Hash-based sharding distributes records by hashing shard keys, producing more balanced data distribution. However, it makes range queries and resharding operations more complex.",
+              "children": []
+            },
+            {
+              "node_name": "Consistent Hashing",
+              "description": "Consistent hashing minimizes data movement when nodes are added or removed from a distributed cluster. It is commonly used in distributed caches, load balancers, and scalable storage systems.",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "Modern Storage Architectures",
+      "description": "Modern storage architectures combine distributed infrastructure, cloud-native design, and specialized storage models to handle massive scale, high availability, and diverse workloads efficiently.",
+      "children": [
+        {
+          "node_name": "Object Storage",
+          "description": "Object storage systems manage large volumes of unstructured data using scalable buckets and metadata-rich objects. They are foundational to cloud storage platforms, backups, archives, and media-serving systems.",
+          "children": [
+            {
+              "node_name": "Buckets & Objects",
+              "description": "Object storage organizes data into buckets containing uniquely addressable objects. Each object includes payload data, identifiers, and metadata for scalable distributed management.",
+              "children": []
+            },
+            {
+              "node_name": "Metadata Tagging",
+              "description": "Metadata tagging enables efficient categorization, search, lifecycle management, security control, and automation across large object storage environments.",
+              "children": []
+            },
+            {
+              "node_name": "Scalability & Low Cost",
+              "description": "Object storage platforms are optimized for massive scalability and cost efficiency by distributing data across commodity infrastructure and minimizing operational complexity.",
+              "children": []
+            },
+            {
+              "node_name": "Example: Amazon S3",
+              "description": "Amazon S3 is a widely used cloud object storage service supporting highly durable, scalable, and globally distributed storage for backups, analytics, media delivery, and data lakes.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Distributed File Systems",
+          "description": "Distributed file systems store files across multiple machines while presenting a unified namespace. They are designed for reliability, scalability, and high-throughput data processing in clustered environments.",
+          "children": [
+            {
+              "node_name": "NameNode (Metadata)",
+              "description": "The NameNode manages metadata such as file locations, permissions, and directory structures within distributed file systems. It coordinates access between clients and storage nodes.",
+              "children": []
+            },
+            {
+              "node_name": "DataNodes (Storage)",
+              "description": "DataNodes physically store blocks of file data and replicate them across the cluster. They handle read/write operations and communicate continuously with metadata services.",
+              "children": []
+            },
+            {
+              "node_name": "Replication for Reliability",
+              "description": "Distributed file systems replicate file blocks across multiple machines to protect against hardware failures and ensure continuous data availability.",
+              "children": []
+            },
+            {
+              "node_name": "Example: HDFS",
+              "description": "HDFS, the Hadoop Distributed File System, is optimized for storing and processing extremely large datasets across commodity clusters using block storage and replication.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Polyglot Persistence",
+          "description": "Polyglot persistence uses multiple database technologies within the same application architecture, selecting each storage system according to workload requirements and access patterns.",
+          "children": [
+            {
+              "node_name": "Mixed DB Technologies",
+              "description": "Applications may combine relational databases, graph stores, caches, search engines, and document databases to optimize different functional requirements.",
+              "children": []
+            },
+            {
+              "node_name": "Optimized for Use Case",
+              "description": "Polyglot persistence allows architects to choose the most suitable storage engine for each domain problem instead of forcing every workload into a single database model.",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "Big Data Fundamentals",
+      "description": "Big data systems are designed to ingest, store, process, and analyze extremely large and rapidly growing datasets that exceed the capabilities of traditional databases.",
+      "children": [
+        {
+          "node_name": "The 5 V's",
+          "description": "The five V's characterize the challenges associated with big data systems and help architects understand storage, processing, governance, and analytical requirements.",
+          "children": [
+            {
+              "node_name": "Volume",
+              "description": "Volume refers to the enormous quantity of data generated by applications, devices, logs, sensors, and digital interactions that must be stored and processed efficiently.",
+              "children": []
+            },
+            {
+              "node_name": "Velocity",
+              "description": "Velocity describes the speed at which data is generated, transmitted, and processed in real time or near-real time within modern distributed systems.",
+              "children": []
+            },
+            {
+              "node_name": "Variety",
+              "description": "Variety represents the diversity of structured, semi-structured, and unstructured data formats handled by big data platforms.",
+              "children": []
+            },
+            {
+              "node_name": "Veracity",
+              "description": "Veracity addresses the trustworthiness, quality, and reliability of incoming data, including inconsistencies, missing values, and noisy records.",
+              "children": []
+            },
+            {
+              "node_name": "Value",
+              "description": "Value focuses on extracting meaningful business insights, operational improvements, or predictive intelligence from massive datasets.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Processing Paradigms",
+          "description": "Big data architectures support different processing models depending on latency requirements, workload types, and analytical objectives.",
+          "children": [
+            {
+              "node_name": "Batch (Hadoop, Spark)",
+              "description": "Batch processing systems analyze large datasets over scheduled intervals, making them suitable for historical analytics, ETL pipelines, and large-scale reporting workloads.",
+              "children": []
+            },
+            {
+              "node_name": "Stream (Kafka, Flink)",
+              "description": "Stream processing handles continuously arriving data in near real time, enabling event-driven analytics, monitoring, fraud detection, and low-latency decision systems.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Delta Lake (ACID on Data Lakes)",
+          "description": "Delta Lake extends data lakes with transactional guarantees, schema enforcement, and versioning capabilities, allowing large-scale analytics systems to support reliable and consistent data engineering workflows.",
+          "children": []
+        }
+      ]
+    }
+  ]
+}

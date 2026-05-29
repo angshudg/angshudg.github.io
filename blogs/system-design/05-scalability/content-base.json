@@ -1,0 +1,296 @@
+{
+  "node_name": "Scalability in System Design",
+  "description": "A system-design map for understanding how applications absorb more traffic, keep latency and reliability under control, and choose the right mix of scaling, routing, and cost-saving tactics. :contentReference[oaicite:0]{index=0}",
+  "children": [
+    {
+      "node_name": "Core Concepts",
+      "description": "This branch defines scalability in practical system-design terms: the ability to handle rising load while preserving performance, availability, and reliability, using metrics that show whether the design still has headroom. :contentReference[oaicite:1]{index=1}",
+      "children": [
+        {
+          "node_name": "Definition: Handle increased load without performance loss",
+          "description": "Within this map, scalability means the system can take on more requests, users, or data volume without a visible drop in responsiveness or service quality. The idea is to grow capacity before the system becomes slow or unstable. :contentReference[oaicite:2]{index=2}",
+          "children": []
+        },
+        {
+          "node_name": "Importance: High availability and reliability",
+          "description": "In the context of this topic, scalability matters because a system that can grow safely is more likely to stay available during traffic spikes and remain reliable as demand changes. It supports continuity instead of forcing outages or emergency redesigns. :contentReference[oaicite:3]{index=3}",
+          "children": []
+        },
+        {
+          "node_name": "Metrics: CPU, memory, request rate, latency",
+          "description": "These metrics are the signals used to judge whether the system is nearing its limits. CPU and memory show resource pressure, request rate shows demand, and latency shows whether users are already feeling the strain of the current architecture. :contentReference[oaicite:4]{index=4}",
+          "children": []
+        }
+      ]
+    },
+    {
+      "node_name": "Scaling Strategies",
+      "description": "This branch groups the main ways a system grows capacity: by making one machine bigger, by adding more machines, or by combining both approaches over time depending on budget, traffic, and operational complexity. :contentReference[oaicite:5]{index=5}",
+      "children": [
+        {
+          "node_name": "Vertical Scaling (Scale Up)",
+          "description": "This describes increasing capacity by giving a single server more power, which is straightforward to adopt but eventually runs into physical and operational limits. It is often the simplest first step in a scalability plan. :contentReference[oaicite:6]{index=6}",
+          "children": [
+            {
+              "node_name": "Upgrade CPU/RAM/Disk",
+              "description": "In this branch, scaling means replacing or resizing the machine so it has more compute, memory, or storage. The goal is to keep the same basic architecture while temporarily extending how much work one node can absorb. :contentReference[oaicite:7]{index=7}",
+              "children": []
+            },
+            {
+              "node_name": "Simple implementation",
+              "description": "This node reflects why vertical scaling is attractive early on: it usually needs fewer architectural changes than distributing traffic across many machines, so teams can increase capacity quickly with less system redesign. :contentReference[oaicite:8]{index=8}",
+              "children": []
+            },
+            {
+              "node_name": "Hardware limits",
+              "description": "This reminder highlights the ceiling of scale-up design. A single machine can only be upgraded so far, so eventually the system must stop relying on bigger hardware and look for a distributed approach. :contentReference[oaicite:9]{index=9}",
+              "children": []
+            },
+            {
+              "node_name": "Single point of failure",
+              "description": "When one machine carries the workload, that machine becomes a critical dependency for the whole service. In this context, a failure on that host can take the application down even if demand is otherwise manageable. :contentReference[oaicite:10]{index=10}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Horizontal Scaling (Scale Out)",
+          "description": "This branch covers adding more machines and distributing traffic across them. It improves resilience and capacity, but it also requires statelessness, coordination, and more distributed-system thinking to keep the service manageable. :contentReference[oaicite:11]{index=11}",
+          "children": [
+            {
+              "node_name": "Add more machines",
+              "description": "In this context, the system grows by launching additional instances and spreading requests across them. This is the core idea behind scale-out design and most modern autoscaling setups. :contentReference[oaicite:12]{index=12}",
+              "children": []
+            },
+            {
+              "node_name": "Distributed system complexity",
+              "description": "Adding nodes shifts the challenge from raw capacity to coordination: traffic routing, state sharing, failure handling, and observability all become more complex once the workload is split across multiple machines. :contentReference[oaicite:13]{index=13}",
+              "children": []
+            },
+            {
+              "node_name": "Stateless design required",
+              "description": "This node emphasizes that scale-out works best when any request can be served by any instance. Keeping application state outside the node makes it easier to add or remove machines without breaking user sessions. :contentReference[oaicite:14]{index=14}",
+              "children": []
+            },
+            {
+              "node_name": "Enhanced fault tolerance",
+              "description": "With multiple machines in play, one failure does not necessarily remove the service from production. The architecture can continue serving traffic from healthy nodes, which is the practical fault-tolerance benefit of scale-out. :contentReference[oaicite:15]{index=15}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Diagonal Scaling",
+          "description": "This is the hybrid path: begin with the simplicity of scaling up, then move toward scaling out once the workload and budget justify the extra distribution overhead. It is a pragmatic middle ground for growing teams. :contentReference[oaicite:16]{index=16}",
+          "children": [
+            {
+              "node_name": "Hybrid approach",
+              "description": "Here, the system intentionally mixes vertical and horizontal scaling rather than treating them as competing ideas. The architecture changes gradually, which helps teams balance short-term simplicity with longer-term growth. :contentReference[oaicite:17]{index=17}",
+              "children": []
+            },
+            {
+              "node_name": "Start vertical, grow horizontal",
+              "description": "This node captures the common growth path shown in the map: optimize one node first, then add distributed capacity when single-machine scaling no longer makes sense. It matches how many systems evolve from startup to larger traffic levels. :contentReference[oaicite:18]{index=18}",
+              "children": []
+            },
+            {
+              "node_name": "Cost-effective for startups",
+              "description": "For this topic, diagonal scaling is attractive because it delays the operational complexity of a distributed fleet until the product actually needs it. That makes early infrastructure spending more controlled while still leaving room to expand later. :contentReference[oaicite:19]{index=19}",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "Load Balancing",
+      "description": "This branch explains how traffic is spread across servers so no single instance is overloaded. In system design, load balancing is the control layer that makes horizontal scaling usable in practice. :contentReference[oaicite:20]{index=20}",
+      "children": [
+        {
+          "node_name": "Types",
+          "description": "The type of load balancer determines where it operates in the request path and what it can inspect or optimize. The map separates transport-layer, application-layer, and deployment-style choices because they solve slightly different balancing problems. :contentReference[oaicite:21]{index=21}",
+          "children": [
+            {
+              "node_name": "Layer 4: Transport (TCP/UDP)",
+              "description": "This node refers to balancing at the transport layer, where routing decisions are made on connection-level information such as TCP or UDP flows. It is useful when the system needs fast, protocol-aware distribution without inspecting full application content. :contentReference[oaicite:22]{index=22}",
+              "children": []
+            },
+            {
+              "node_name": "Layer 7: Application (HTTP/HTTPS)",
+              "description": "This branch represents application-aware balancing, where the load balancer can use HTTP or HTTPS details to route requests. In practice, this is the layer that supports richer routing behavior and commonly handles web traffic. :contentReference[oaicite:23]{index=23}",
+              "children": []
+            },
+            {
+              "node_name": "Hardware vs Software vs Cloud",
+              "description": "This node frames the deployment choice: a dedicated appliance, a software balancer, or a managed cloud service. The tradeoff is usually between control, simplicity, and how much infrastructure the team wants to operate. :contentReference[oaicite:24]{index=24}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Algorithms",
+          "description": "These are the rules the balancer uses to choose a backend. Different algorithms work better depending on request size, connection length, backend capacity, and how evenly you need traffic distributed. :contentReference[oaicite:25]{index=25}",
+          "children": [
+            {
+              "node_name": "Round Robin",
+              "description": "In this context, requests are sent to backends in turn. It is a simple way to distribute work evenly when servers are similar and individual requests are not wildly different in cost. :contentReference[oaicite:26]{index=26}",
+              "children": []
+            },
+            {
+              "node_name": "Least Connections",
+              "description": "This strategy favors the backend that is currently handling the fewest active connections. It is useful when connection duration matters more than raw request count, because it tries to keep busy servers from becoming saturated. :contentReference[oaicite:27]{index=27}",
+              "children": []
+            },
+            {
+              "node_name": "IP Hashing",
+              "description": "Here, the client identity or address is used to consistently map traffic to the same backend. In system design, that approach is helpful when some form of sticky routing is needed without a separate session store. :contentReference[oaicite:28]{index=28}",
+              "children": []
+            },
+            {
+              "node_name": "Weighted Load Balancing",
+              "description": "This node means larger or stronger backends receive a bigger share of traffic. It lets the operator reflect unequal server capacity instead of pretending every node should be treated exactly the same. :contentReference[oaicite:29]{index=29}",
+              "children": []
+            },
+            {
+              "node_name": "Least Response Time",
+              "description": "This policy steers traffic toward the backend currently responding fastest. The intent in this topic is to adapt routing to real service behavior, especially when latency varies across nodes or zones. :contentReference[oaicite:30]{index=30}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Features",
+          "description": "These are the practical capabilities that make a load balancer more than a traffic splitter. They help with safety, observability, security offload, and state handling around the application fleet. :contentReference[oaicite:31]{index=31}",
+          "children": [
+            {
+              "node_name": "Health Checks",
+              "description": "Health checks let the load balancer avoid sending traffic to a failing backend. In this system-design context, they protect availability by removing unhealthy targets before users experience hard errors. :contentReference[oaicite:32]{index=32}",
+              "children": []
+            },
+            {
+              "node_name": "SSL Termination",
+              "description": "This node means the load balancer handles encryption and decryption instead of pushing that work to every backend. It reduces application overhead and centralizes certificate management at the traffic edge. :contentReference[oaicite:33]{index=33}",
+              "children": []
+            },
+            {
+              "node_name": "DDoS Protection",
+              "description": "In this map, the load balancer can act as part of the system’s defense surface by absorbing or filtering attack traffic before it reaches application servers. The goal is to preserve service availability under abusive request floods. :contentReference[oaicite:34]{index=34}",
+              "children": []
+            },
+            {
+              "node_name": "Session Persistence",
+              "description": "This feature keeps a client tied to the same backend for some period, which matters when the application still depends on node-local state. It is a workaround that helps stateful systems behave predictably behind a balancer. :contentReference[oaicite:35]{index=35}",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "Autoscaling",
+      "description": "This branch covers automatic capacity changes. Instead of scaling manually, the system watches demand or schedules and adds or removes capacity so cost and performance stay aligned. :contentReference[oaicite:36]{index=36}",
+      "children": [
+        {
+          "node_name": "Policies",
+          "description": "Autoscaling policies define the trigger logic for when to grow or shrink capacity. The map separates reactive, predictive, and scheduled behavior because each one matches a different kind of workload pattern. :contentReference[oaicite:37]{index=37}",
+          "children": [
+            {
+              "node_name": "Reactive: Threshold-based",
+              "description": "This policy reacts after a metric crosses a limit, such as high CPU or load. It is the most direct form of autoscaling and works well when you want the system to respond to current pressure. :contentReference[oaicite:38]{index=38}",
+              "children": []
+            },
+            {
+              "node_name": "Predictive: ML/Pattern-based",
+              "description": "This node represents scaling that anticipates future demand from observed patterns. Instead of waiting for overload, the system tries to add capacity before the expected spike arrives. :contentReference[oaicite:39]{index=39}",
+              "children": []
+            },
+            {
+              "node_name": "Scheduled: Known events",
+              "description": "This policy is for traffic that follows known timing, such as daily or weekly peaks. The capacity change is planned in advance so the system is ready when the event begins. :contentReference[oaicite:40]{index=40}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Cloud Providers",
+          "description": "This branch shows how the same autoscaling idea appears in major clouds, each with its own managed services and monitoring primitives. The point is not the brand names themselves but the pattern: metrics, policies, and managed capacity controls. :contentReference[oaicite:41]{index=41}",
+          "children": [
+            {
+              "node_name": "AWS: ASG, ELB, CloudWatch",
+              "description": "In this context, AWS combines Auto Scaling Groups for capacity management, Elastic Load Balancing for traffic distribution, and CloudWatch for alarms and metrics. Together they form the classic reactive and scheduled autoscaling toolchain. :contentReference[oaicite:42]{index=42}",
+              "children": []
+            },
+            {
+              "node_name": "Azure: Scale Sets, Monitor",
+              "description": "This node represents Azure’s pattern of managing load-balanced VM Scale Sets through Azure Monitor autoscale rules. The emphasis is on using monitored metrics to provision enough instances without over-allocating capacity. :contentReference[oaicite:43]{index=43}",
+              "children": []
+            },
+            {
+              "node_name": "GCP: MIGs, Cloud Run",
+              "description": "Here the map points to Google Cloud’s managed instance groups and Cloud Run as two autoscaling styles. MIGs add and remove VMs, while Cloud Run can scale containers up and down, even to zero when idle. :contentReference[oaicite:44]{index=44}",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "Challenges & Best Practices",
+      "description": "This branch collects the real-world issues that appear once a system starts growing: extra hops, database pressure, consistency tradeoffs, and the need to keep costs under control while still improving responsiveness. :contentReference[oaicite:45]{index=45}",
+      "children": [
+        {
+          "node_name": "Scaling Challenges",
+          "description": "These are the bottlenecks that often remain even after compute capacity is increased. In practice, scaling a service is not just about adding servers; it is about finding which layer still limits throughput or increases latency. :contentReference[oaicite:46]{index=46}",
+          "children": [
+            {
+              "node_name": "Latency and network hops",
+              "description": "As systems spread across more components, each request may cross more network boundaries. In this context, extra hops can add delay and make an otherwise scalable design feel slower to the user. :contentReference[oaicite:47]{index=47}",
+              "children": []
+            },
+            {
+              "node_name": "Database bottlenecks",
+              "description": "This node highlights that the database often becomes the limiting layer even when application servers scale out cleanly. More web capacity does not help much if reads, writes, or locks still concentrate on one datastore. :contentReference[oaicite:48]{index=48}",
+              "children": []
+            },
+            {
+              "node_name": "Consistency issues",
+              "description": "Once the system is distributed, different nodes may not see exactly the same state at exactly the same time. This branch captures the need to design around replication delay, stale reads, and coordination complexity. :contentReference[oaicite:49]{index=49}",
+              "children": []
+            },
+            {
+              "node_name": "Operational cost",
+              "description": "Scaling is not free: more machines, more managed services, and more operational coordination all increase cost. The map treats cost as a first-class constraint, not something to check only after the architecture is finished. :contentReference[oaicite:50]{index=50}",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Optimization",
+          "description": "This branch lists common techniques for getting more throughput or lower cost from the same architecture. The focus is on reducing repeated work, offloading slow tasks, and avoiding capacity spend when traffic is low. :contentReference[oaicite:51]{index=51}",
+          "children": [
+            {
+              "node_name": "Caching (Redis/CDN)",
+              "description": "In this context, caching keeps frequently used data closer to the user or application so the origin does less work. Redis and CDNs both serve the same high-level purpose here: lower latency and reduce pressure on primary systems. :contentReference[oaicite:52]{index=52}",
+              "children": []
+            },
+            {
+              "node_name": "Asynchronous processing",
+              "description": "This node means moving non-urgent work out of the request path so the user does not wait for every downstream action to finish. It is a common optimization when immediate response matters more than instant completion. :contentReference[oaicite:53]{index=53}",
+              "children": []
+            },
+            {
+              "node_name": "Spot instances for cost",
+              "description": "Here the map points to cheaper, interruption-prone capacity that can reduce infrastructure spend for workloads that tolerate disruption. The design idea is to trade some stability guarantees for lower cost where that tradeoff is acceptable. :contentReference[oaicite:54]{index=54}",
+              "children": []
+            },
+            {
+              "node_name": "Scale-to-zero for idle tasks",
+              "description": "This node captures systems that shrink to no active instances when nothing is happening, then start again on demand. It is a direct cost-saving pattern for bursty or idle-heavy workloads, especially in serverless-style services. :contentReference[oaicite:55]{index=55}",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
