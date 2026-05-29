@@ -1,0 +1,320 @@
+{
+  "node_name": "Networking & Communication in System Design",
+  "description": "This map groups the networking primitives that shape how distributed systems identify hosts, resolve names, move requests, and place traffic at the edge. The branches cover addressing, DNS lookup flow, client-server interaction styles, intermediary proxies, load balancer placement and algorithms, API entry control, and CDN edge delivery.",
+  "children": [
+    {
+      "node_name": "IP Addresses",
+      "description": "In system design, IP addresses are the numeric endpoints that DNS eventually resolves to and that routing uses to reach a host. The map splits them by version and by visibility, because the address family affects scale and formatting, while public versus private determines whether the address is internet-routable or only usable inside internal networks.",
+      "children": [
+        {
+          "node_name": "Versions",
+          "description": "This branch compares the two major IP generations. IPv4 remains widespread but constrained by a smaller address space, while IPv6 expands the field dramatically and changes deployment assumptions. In a system-design view, version choice affects capacity, compatibility, and how network paths, load balancers, and clients are addressed over time.",
+          "children": [
+            {
+              "node_name": "IPv4",
+              "description": "IPv4 is the older 32-bit Internet Protocol format. The map emphasizes that its key limitation is address scarcity, which is why public address management, NAT, and fragmentation concerns matter in real deployments. In practice, IPv4 still dominates many systems, so system design often has to support it even when newer infrastructure is IPv6-capable.",
+              "children": [
+                {
+                  "node_name": "32-bit format",
+                  "description": "IPv4 encodes addresses in 32 bits, which is why the notation is compact but the supply is limited. In system diagrams this usually means four dotted decimal octets, and it explains why IPv4 has remained easy to handle operationally even while its address pool became tight.",
+                  "children": []
+                },
+                {
+                  "node_name": "~4.3 billion addresses",
+                  "description": "A 32-bit space yields about 4.3 billion unique addresses, which was sufficient for early Internet growth but is no longer enough for universal one-device-one-public-IP deployment. That scarcity is the practical reason IPv4 networks depend so heavily on sharing, NAT, and careful address allocation.",
+                  "children": []
+                },
+                {
+                  "node_name": "Challenges: Limited IPs, Fragmentation",
+                  "description": "The main IPv4 pain points in system design are exhaustion of public addresses and fragmentation caused by layered workarounds like NAT, subnetting, and mixed routing policies. These constraints make large-scale expansion harder and complicate end-to-end connectivity, especially when services need clean peer-to-peer reachability.",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "node_name": "IPv6",
+              "description": "IPv6 is the newer 128-bit Internet Protocol format designed to relieve IPv4 exhaustion and support far larger addressing needs. In a system-design context, it is important not only because the space is much larger, but also because it changes how dual-stack rollout, routing, and security planning are handled across modern networks.",
+              "children": [
+                {
+                  "node_name": "128-bit format",
+                  "description": "IPv6 addresses use 128 bits, which expands the namespace far beyond IPv4. That extra width is the reason IPv6 can support more expansive deployment models, including massive cloud, mobile, and edge systems that need many routable endpoints.",
+                  "children": []
+                },
+                {
+                  "node_name": "Virtually unlimited",
+                  "description": "The map treats IPv6 as virtually unlimited because its address space is enormous relative to current Internet demand. For system design, this reduces pressure to conserve addresses and makes large-scale allocation, segmentation, and per-device addressing much simpler than in IPv4-centric networks.",
+                  "children": []
+                },
+                {
+                  "node_name": "Built-in security (IPSec)",
+                  "description": "This node captures the common design idea that IPv6 is associated with IPsec-based security at the IP layer. The standards picture is nuanced, because IPsec is the security architecture for IP and later guidance treats support as recommended rather than magically automatic; still, IPv6 is routinely discussed with stronger native security options in mind.",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node_name": "Categories",
+          "description": "This branch separates globally routable addresses from internal-only ones. In system design, that distinction decides whether a host can be reached directly from the Internet or only through controlled gateways, NAT, firewalls, or private routing. The choice affects exposure, scaling, and how much address management the network must perform.",
+          "children": [
+            {
+              "node_name": "Public (Unique worldwide, assigned by ISP)",
+              "description": "Public addresses are globally unique and reachable across the Internet, which makes them the simplest way to expose a service directly to outside users. In practice they are assigned by an ISP or cloud provider and must fit routing and registry constraints so they do not collide with any other public host.",
+              "children": []
+            },
+            {
+              "node_name": "Private (Local networks, NAT-enabled)",
+              "description": "Private addresses are intended for internal networks and are not meant to be publicly routable on the Internet. That makes them ideal for LANs, data centers, and cloud subnets where NAT or other translation layers can mediate outbound access while keeping internal hosts hidden from direct external reachability.",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "DNS (Domain Name System)",
+      "description": "DNS is the naming layer that turns human-readable hostnames into routable addresses. The map breaks it into the resolution path, the kinds of servers involved, and the performance and security trade-offs that come from caching and exposure to attacks.",
+      "children": [
+        {
+          "node_name": "Resolution Process",
+          "description": "This branch shows the step-by-step DNS lookup path that turns a name into an address. The process typically starts with local caches, then asks recursive resolvers, then walks from root servers to TLD servers and finally to authoritative servers. Each step exists to reduce repeated work and keep lookups fast.",
+          "children": [
+            {
+              "node_name": "Browser/OS Cache Check",
+              "description": "The first check is local caching in the browser or operating system. If a matching answer is still fresh under its TTL, the system can skip the network entirely, which improves response time and reduces load on downstream resolvers and authoritative servers.",
+              "children": []
+            },
+            {
+              "node_name": "Recursive Resolver",
+              "description": "The recursive resolver is the intermediary that takes an unresolved name and performs the lookup work on behalf of the client. It queries upstream DNS layers, caches what it learns, and returns a final answer so the browser does not need to know the full delegation chain itself.",
+              "children": []
+            },
+            {
+              "node_name": "Root Name Servers",
+              "description": "Root name servers are the starting point when a resolver has no cached data and needs to discover where a domain hierarchy begins. They do not give the final answer for the host name; instead they point the resolver toward the correct top-level domain infrastructure.",
+              "children": []
+            },
+            {
+              "node_name": "TLD Name Servers",
+              "description": "TLD name servers sit one level below the root and know where to find the authoritative servers for domains under a given top-level domain. In the lookup chain, they act as a referral step that narrows the search from the entire namespace to the specific domain’s zone.",
+              "children": []
+            },
+            {
+              "node_name": "Authoritative Name Servers",
+              "description": "Authoritative name servers hold the zone data that is treated as the definitive source for a domain. Once the resolver reaches them, it can return the final record, such as an A or AAAA answer, rather than just another referral.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Server Types",
+          "description": "This branch distinguishes the servers that do the searching from the servers that own the data. Recursive resolvers look up and cache answers for clients, while authoritative servers publish the definitive records for a zone. That separation is central to DNS scalability and to how troubleshooting is usually approached.",
+          "children": [
+            {
+              "node_name": "Recursive (Intermediary lookup)",
+              "description": "A recursive server takes responsibility for chasing referrals until it can produce a usable answer for the client. It is the practical intermediary in most user lookups, and it usually keeps a cache so repeated queries can be answered more quickly.",
+              "children": []
+            },
+            {
+              "node_name": "Authoritative (Definitive records)",
+              "description": "An authoritative server answers from the zone data it owns, so its responses are the canonical records for that domain. In system design, this is the trusted endpoint that recursive resolvers eventually need to reach when cache entries expire or no local data exists.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Performance & Security",
+          "description": "This branch combines DNS speed and DNS trust. Performance comes from TTL-based caching and fewer upstream lookups, while security concerns include spoofing, hijacking, denial of service, and other attacks against the lookup path. A good design balances freshness, latency, and resilience.",
+          "children": [
+            {
+              "node_name": "TTL (Time-To-Live)",
+              "description": "TTL is the timer that tells caches how long a DNS record may be reused before it must be refreshed. Short TTLs make updates propagate faster, while long TTLs reduce query load and improve caching efficiency, so the value is always a trade-off between freshness and scale.",
+              "children": []
+            },
+            {
+              "node_name": "Caching (Browser, OS, Resolver)",
+              "description": "Caching happens at several layers, including the browser, the operating system, and recursive resolvers. That layered cache stack is what makes DNS feel fast in practice, but it also means a stale answer can remain visible until the relevant TTL expires and the cache is refreshed.",
+              "children": []
+            },
+            {
+              "node_name": "Threats: Spoofing, DDoS, MITM",
+              "description": "DNS is exposed to spoofing, hijacking, on-path manipulation, and denial-of-service pressure. The map’s threat list matters because an attacker who interferes with lookup traffic can redirect users, overwhelm infrastructure, or make a valid domain appear unreachable even when the service itself is healthy.",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "Client-Server Model",
+      "description": "The client-server model is the basic request-response structure behind most web and distributed systems. A client sends a request, a server processes it, and the system can be designed to behave synchronously or asynchronously and to keep either stateless or stateful interaction context.",
+      "children": [
+        {
+          "node_name": "Communication Patterns",
+          "description": "This branch covers how requests move between clients and servers. Synchronous communication waits for each operation to finish, while asynchronous communication lets work continue. Stateless and stateful patterns describe whether the server keeps session context between requests, which strongly affects scalability and user experience.",
+          "children": [
+            {
+              "node_name": "Synchronous (Blocking)",
+              "description": "Synchronous communication blocks progress until the current request is completed. That simplicity can be useful for straightforward flows, but it can also make systems feel slow or unresponsive when network calls or other I/O take time to finish.",
+              "children": []
+            },
+            {
+              "node_name": "Asynchronous (Non-blocking)",
+              "description": "Asynchronous communication lets the caller continue while the request is still in flight. In system design, this is favored for responsiveness and concurrency because the thread or event loop does not sit idle waiting for a network round trip to finish.",
+              "children": []
+            },
+            {
+              "node_name": "Stateless (Independent requests)",
+              "description": "A stateless pattern means each request carries the information needed to process it, instead of relying on hidden server memory from earlier interactions. That independence improves scaling and simplifies retries, caching, and horizontal expansion across many servers.",
+              "children": []
+            },
+            {
+              "node_name": "Stateful (Session memory)",
+              "description": "A stateful pattern means the server keeps context from previous requests, such as session state or workflow progress. That can make multi-step interactions easier for the user, but it also creates coupling and makes balancing, failover, and scaling more complicated.",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "Proxies",
+      "description": "Proxies are intermediaries that stand between one side of a connection and the other. The map separates forward and reverse proxies because they sit on opposite sides of the client-server boundary and are used for different goals such as privacy, filtering, security, load balancing, and TLS handling.",
+      "children": [
+        {
+          "node_name": "Forward Proxy",
+          "description": "A forward proxy acts on behalf of clients and sits in front of user devices rather than in front of origin servers. In system design it is often used to control outbound access, hide client details, or filter traffic before it reaches the wider Internet.",
+          "children": [
+            {
+              "node_name": "Sits between client and internet",
+              "description": "This label describes the proxy’s location in the path: the client talks to the proxy first, and the proxy then talks to the destination on the client’s behalf. That placement makes it a natural control point for outbound traffic policies.",
+              "children": []
+            },
+            {
+              "node_name": "Anonymity and content filtering",
+              "description": "Forward proxies can hide a client’s identity from destination servers and can enforce outbound filtering rules. In practice they are used where organizations need privacy, policy enforcement, or monitoring for the traffic leaving a network.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Reverse Proxy",
+          "description": "A reverse proxy sits in front of web servers and acts on behalf of the server side. In modern system design it is commonly used to improve security, terminate TLS, spread traffic, and hide backend topology from external users.",
+          "children": [
+            {
+              "node_name": "Sits between users and backend servers",
+              "description": "This means requests from users hit the proxy first, and the proxy forwards them to one or more backend servers. That arrangement creates a clean perimeter for controlling ingress traffic without exposing origin servers directly.",
+              "children": []
+            },
+            {
+              "node_name": "Load balancing and SSL termination",
+              "description": "Reverse proxies often distribute traffic across backends and terminate SSL or TLS before forwarding traffic inward. That design centralizes certificate handling, reduces backend work, and makes it easier to add health checks and routing policy at the edge. [ User Browser ] ===== Encrypted (HTTPS) =====> [ Reverse Proxy ] ----- Unencrypted (HTTP) -----> [ Backend Server ]",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "Load Balancing",
+      "description": "Load balancing spreads incoming traffic across multiple targets so no single server becomes a bottleneck. The map shows both the layer at which balancing happens and the algorithm used to choose the next destination, because those choices shape performance, stickiness, and resilience.",
+      "children": [
+        {
+          "node_name": "Layers",
+          "description": "This branch distinguishes where balancing happens in the stack. Layer 4 balancing works at the transport level, while Layer 7 balancing understands application-layer details such as HTTP. The choice affects how much routing intelligence the load balancer has and how much protocol context it can use.",
+          "children": [
+            {
+              "node_name": "Layer 4 (Transport/TCP)",
+              "description": "Layer 4 balancing operates at the transport layer and forwards connections based on TCP or other transport details rather than HTTP content. It is useful when the system wants a faster, simpler decision path and does not need to inspect application payloads.",
+              "children": []
+            },
+            {
+              "node_name": "Layer 7 (Application/HTTP)",
+              "description": "Layer 7 balancing understands application traffic such as HTTP and can route by request content, headers, or other app-level signals. That makes it better for microservices and web applications that need smarter routing decisions than raw connection forwarding can provide.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Strategies",
+          "description": "This branch lists the common algorithms used to spread traffic across targets. Some strategies are simple and predictable, while others optimize by connection count, client identity, or server capacity. The right choice depends on fairness, stickiness, capacity differences, and operational goals.",
+          "children": [
+            {
+              "node_name": "Round Robin",
+              "description": "Round robin sends requests to targets in turn. It is easy to reason about and widely used as a default, especially when all backend servers are similarly sized and the traffic pattern is fairly uniform.",
+              "children": []
+            },
+            {
+              "node_name": "Least Connections",
+              "description": "Least connections prefers the backend with the fewest active or outstanding connections, which helps avoid overloading a server that is already busy. This works especially well when requests vary in duration and some connections stay open longer than others.",
+              "children": []
+            },
+            {
+              "node_name": "IP Hashing",
+              "description": "IP hashing maps a client address through a hash function so the same client often lands on the same backend. That makes it useful when you need a degree of session affinity, though it can create uneven distribution if traffic comes from large NAT pools.",
+              "children": []
+            },
+            {
+              "node_name": "Weighted Balancing",
+              "description": "Weighted balancing gives stronger servers a larger share of incoming traffic. In system design it is the most direct way to reflect unequal capacity, because the algorithm can deliberately favor bigger or faster nodes instead of treating every target as identical.",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "API Gateway",
+      "description": "An API gateway is the centralized front door for APIs. It receives client calls, applies shared controls, and then routes or reshapes traffic toward backend services. This makes it useful in microservice systems where you want one place for policy, transformation, and request management.",
+      "children": [
+        {
+          "node_name": "Centralised entry point",
+          "description": "This is the single access layer through which clients reach backend services. Centralizing the entry point makes routing, authentication, versioning, observability, and policy enforcement easier than spreading those responsibilities across many services.",
+          "children": []
+        },
+        {
+          "node_name": "Rate limiting & Throttling",
+          "description": "Rate limiting and throttling protect backends by capping how fast requests can arrive. In the API gateway context this helps preserve availability, blunt abuse, and keep a noisy client from consuming disproportionate capacity.",
+          "children": []
+        },
+        {
+          "node_name": "Request Transformation",
+          "description": "Request transformation changes headers, paths, query parameters, or payload structure before a backend sees the call. That allows the gateway to translate client-facing shapes into backend-friendly formats without forcing each service to understand every external contract.",
+          "children": []
+        },
+        {
+          "node_name": "Composition & Aggregation",
+          "description": "Composition and aggregation mean the gateway layer can present one API while coordinating multiple backend calls or response shapes behind the scenes. The design goal is to reduce client complexity by collecting several service interactions into a single outward-facing result.",
+          "children": []
+        }
+      ]
+    },
+    {
+      "node_name": "Content Delivery Networks (CDN)",
+      "description": "A CDN is a distributed network of edge servers placed close to users so content can be delivered with lower latency and higher reliability. In system design, CDNs reduce origin load, improve cache behavior, and often add routing intelligence and security at the network edge.",
+      "children": [
+        {
+          "node_name": "Edge Servers (PoPs)",
+          "description": "Edge servers, often organized as points of presence, are the geographically distributed nodes that sit near users. They let the CDN answer requests locally instead of forcing every request to travel back to a distant origin.",
+          "children": []
+        },
+        {
+          "node_name": "Reduces Latency",
+          "description": "Latency drops when content is served from a nearby edge rather than from a faraway origin. That is the core performance argument for CDNs: shorter network distance and fewer origin round trips translate into faster page loads and a better user experience.",
+          "children": []
+        },
+        {
+          "node_name": "Cache Hit vs Cache Miss",
+          "description": "A cache hit means the CDN can serve content immediately from edge storage, while a cache miss means it must fetch from origin or another tier first. This distinction matters because hit rate directly affects speed, origin traffic, and the economics of the delivery layer.",
+          "children": []
+        },
+        {
+          "node_name": "Geo-based routing",
+          "description": "Geo-based routing sends users toward endpoints tied to a region or nearby data center. In practice it helps keep users close to the fastest or most appropriate location, which improves performance and can also support resilience or data residency goals.",
+          "children": []
+        }
+      ]
+    }
+  ]
+}
