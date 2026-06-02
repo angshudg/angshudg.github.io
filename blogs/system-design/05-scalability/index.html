@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scalability in System Design: A Deep Dive from First Principles</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── CSS Variables ──────────────────────────────────────── */
+    :root {
+      --bg:            #F7F5F0;
+      --surface:       #FFFFFF;
+      --border:        #E4E0D8;
+      --text-primary:  #1C1917;
+      --text-secondary:#57534E;
+      --text-muted:    #A8A29E;
+      --accent:        #0F766E;
+      --accent-light:  #CCFBF1;
+      --accent-dark:   #134E4A;
+      --warn:          #B45309;
+      --warn-light:    #FEF3C7;
+      --code-bg:       #1C1917;
+      --code-text:     #E7E5E4;
+      --code-comment:  #78716C;
+      --code-keyword:  #5EEAD4;
+      --code-string:   #BEF264;
+      --inline-code-bg:#EDE9E3;
+      --font-serif:    'Lora', Georgia, serif;
+      --font-sans:     'DM Sans', system-ui, sans-serif;
+      --font-mono:     'JetBrains Mono', 'Fira Code', monospace;
+      --max-prose:     680px;
+      --max-wide:      900px;
+      --radius:        8px;
+    }
+
+    /* ─── Reset & Base ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 18px; scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font-serif);
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Layout Wrapper ─────────────────────────────────────── */
+    .article-wrapper {
+      max-width: var(--max-wide);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .prose {
+      max-width: var(--max-prose);
+      margin: 0 auto;
+    }
+
+    /* ─── Header / Hero ──────────────────────────────────────── */
+    .article-hero {
+      border-bottom: 1px solid var(--border);
+      padding: 72px 0 56px;
+      margin-bottom: 56px;
+    }
+
+    .article-tag {
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    .article-title {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 5vw, 2.9rem);
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      max-width: 760px;
+      margin-bottom: 24px;
+    }
+
+    .article-subtitle {
+      font-family: var(--font-serif);
+      font-size: 1.2rem;
+      font-style: italic;
+      color: var(--text-secondary);
+      max-width: 600px;
+      line-height: 1.6;
+      margin-bottom: 36px;
+    }
+
+    .article-meta {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .meta-item {
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .meta-dot {
+      width: 3px; height: 3px;
+      background: var(--text-muted);
+      border-radius: 50%;
+    }
+
+    /* ─── Intro paragraphs ───────────────────────────────────── */
+    .article-intro {
+      max-width: var(--max-prose);
+      margin: 0 auto 48px;
+    }
+
+    .article-intro p {
+      font-size: 1.1rem;
+      line-height: 1.85;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    .article-intro p:first-child {
+      font-size: 1.2rem;
+      color: var(--text-primary);
+    }
+
+    /* ─── Table of Contents ──────────────────────────────────── */
+    .toc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin: 0 auto 56px;
+      max-width: var(--max-prose);
+    }
+
+    .toc-title {
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .toc ol {
+      padding-left: 20px;
+      margin: 0;
+    }
+
+    .toc li {
+      margin-bottom: 8px;
+    }
+
+    .toc a {
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+
+    .toc a:hover { color: var(--accent); }
+
+    /* ─── Section Dividers ───────────────────────────────────── */
+    .section-divider {
+      max-width: var(--max-prose);
+      margin: 64px auto;
+      border: none;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ─── Section & Headings ─────────────────────────────────── */
+    .article-section {
+      margin-bottom: 64px;
+    }
+
+    .section-number {
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    h2.section-title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 3.5vw, 2rem);
+      font-weight: 700;
+      line-height: 1.25;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      margin-bottom: 28px;
+      max-width: var(--max-prose);
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    h3 {
+      font-family: var(--font-serif);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 40px auto 16px;
+      max-width: var(--max-prose);
+      line-height: 1.35;
+    }
+
+    /* ─── Prose Typography ───────────────────────────────────── */
+    .prose p {
+      margin-bottom: 22px;
+      font-size: 1rem;
+      color: var(--text-primary);
+    }
+
+    .prose p em {
+      font-style: italic;
+      color: var(--text-secondary);
+    }
+
+    .prose p strong {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .prose a {
+      color: var(--accent);
+      text-decoration: underline;
+      text-decoration-color: var(--accent-light);
+      text-underline-offset: 3px;
+      transition: text-decoration-color 0.15s;
+    }
+
+    .prose a:hover { text-decoration-color: var(--accent); }
+
+    /* ─── Lists ──────────────────────────────────────────────── */
+    .prose ul, .prose ol {
+      padding-left: 24px;
+      margin-bottom: 24px;
+    }
+
+    .prose li {
+      margin-bottom: 10px;
+      line-height: 1.75;
+    }
+
+    .prose li strong { font-weight: 600; }
+
+    /* ─── Callout / Key Definition Box ───────────────────────── */
+    .callout {
+      background: var(--accent-light);
+      border-left: 4px solid var(--accent);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 20px 24px;
+      margin: 32px auto;
+      max-width: var(--max-prose);
+    }
+
+    .callout p {
+      margin: 0;
+      font-size: 1.05rem;
+      color: var(--accent-dark);
+      font-weight: 500;
+    }
+
+    .callout-warn {
+      background: var(--warn-light);
+      border-left-color: var(--warn);
+    }
+
+    .callout-warn p { color: var(--warn); }
+
+    /* ─── Key Insight Pill ───────────────────────────────────── */
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      max-width: var(--max-prose);
+      margin: 32px auto;
+    }
+
+    .insight-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .insight-card-title {
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .insight-card p {
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* ─── Code Blocks ────────────────────────────────────────── */
+    .code-block {
+      max-width: var(--max-wide);
+      margin: 28px auto;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    }
+
+    .code-block-header {
+      background: #2C2825;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .code-block-lang {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--code-comment);
+    }
+
+    .code-block-dots {
+      display: flex; gap: 6px;
+    }
+
+    .code-block-dots span {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+
+    .dot-red   { background: #FF5F57; }
+    .dot-yellow{ background: #FEBC2E; }
+    .dot-green { background: #28C840; }
+
+    .code-block pre {
+      background: var(--code-bg);
+      margin: 0;
+      padding: 22px 24px;
+      overflow-x: auto;
+    }
+
+    .code-block code {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: var(--code-text);
+      white-space: pre;
+    }
+
+    /* Inline code */
+    code:not(.code-block code) {
+      font-family: var(--font-mono);
+      font-size: 0.82em;
+      background: var(--inline-code-bg);
+      color: var(--accent-dark);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* ─── Images ─────────────────────────────────────────────── */
+    .illustration {
+      max-width: var(--max-wide);
+      margin: 40px auto;
+    }
+
+    .illustration img {
+      width: 100%;
+      height: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      display: block;
+    }
+
+    .illustration figcaption {
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+
+    /* ─── Principles / Summary Section ──────────────────────── */
+    .principles-list {
+      max-width: var(--max-prose);
+      margin: 32px auto;
+      list-style: none;
+      padding: 0;
+    }
+
+    .principles-list li {
+      display: flex;
+      gap: 16px;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .principles-list li:last-child { border-bottom: none; }
+
+    .principle-icon {
+      flex-shrink: 0;
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-family: var(--font-sans);
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .principle-text strong {
+      display: block;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .principle-text span {
+      font-family: var(--font-sans);
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* ─── Tags Footer ────────────────────────────────────────── */
+    .article-tags {
+      max-width: var(--max-prose);
+      margin: 0 auto 80px;
+      padding-top: 48px;
+      border-top: 1px solid var(--border);
+    }
+
+    .tags-label {
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .tags-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 4px 14px;
+    }
+
+    /* ─── Footer note ────────────────────────────────────────── */
+    .article-footnote {
+      max-width: var(--max-prose);
+      margin: 0 auto 48px;
+    }
+
+    .article-footnote p {
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-style: italic;
+      line-height: 1.65;
+    }
+
+    /* ─── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      html { font-size: 16px; }
+      .article-wrapper { padding: 0 16px; }
+      .article-hero { padding: 40px 0 36px; }
+      .toc { padding: 20px; }
+      .code-block pre { padding: 16px; }
+      .insight-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="article-wrapper">
+
+    <!-- ══════════════════ HERO ══════════════════ -->
+    <header class="article-hero prose">
+      <p class="article-tag">System Design · Scalability · Infrastructure</p>
+      <h1 class="article-title">Scalability in System Design: A Deep Dive from First Principles</h1>
+      <p class="article-subtitle">How do systems survive their own success — and what separates the ones that do from the ones that fall over?</p>
+      <div class="article-meta">
+        <span class="meta-item">Deep Dive</span>
+        <span class="meta-dot"></span>
+        <span class="meta-item">~30 min read</span>
+        <span class="meta-dot"></span>
+        <span class="meta-item">For Data & ML Engineers</span>
+      </div>
+    </header>
+
+    <!-- ══════════════════ INTRO ══════════════════ -->
+    <div class="article-intro">
+      <p>Every system works beautifully at small scale. A Flask app returning JSON to a handful of users is elegant, fast, and easy to reason about. Then the product takes off. Traffic doubles in a week. The database connection pool exhausts itself at 2 AM. Response times climb from 50ms to 800ms to timeouts. Engineers scramble, add a bigger server, exhale — and then it happens again.</p>
+      <p>Scalability is the discipline of designing systems that grow <em>with</em> demand rather than <em>against</em> it. It is not about brute-forcing more hardware at a problem. It is about building architectures where capacity can be extended deliberately, where failure in one place does not cascade everywhere, and where the system's behavior under load is understood before load arrives.</p>
+      <p>For data scientists, ML engineers, and analytics engineers, scalability is often an afterthought — until a batch inference job dies with an OOM error at 95% completion, or a feature pipeline stalls under Friday's event surge, or a model-serving endpoint hits 100% CPU under a modest A/B test. The patterns in this article apply just as directly to ML systems as to web APIs.</p>
+      <p>This is a long read. By the end, you will understand not just the vocabulary of scalability, but the <em>reasoning</em> behind every major design choice.</p>
+    </div>
+
+    <!-- ══════════════════ TABLE OF CONTENTS ══════════════════ -->
+    <nav class="toc">
+      <p class="toc-title">Table of Contents</p>
+      <ol>
+        <li><a href="#section-1">What Scalability Actually Means</a></li>
+        <li><a href="#section-2">Measuring Headroom: The Metrics That Matter</a></li>
+        <li><a href="#section-3">Scaling Strategies: Up, Out, and In Between</a></li>
+        <li><a href="#section-4">Load Balancing: The Conductor of the Orchestra</a></li>
+        <li><a href="#section-5">Autoscaling: Teaching Systems to Manage Themselves</a></li>
+        <li><a href="#section-6">Challenges Nobody Warns You About</a></li>
+        <li><a href="#section-7">Optimization: Getting More from What You Already Have</a></li>
+        <li><a href="#section-8">Putting It All Together</a></li>
+      </ol>
+    </nav>
+
+    <hr class="section-divider" />
+
+    <!-- ══════════════════ SECTION 1 ══════════════════ -->
+    <section class="article-section" id="section-1">
+      <div class="prose">
+        <span class="section-number">Section 01</span>
+        <h2 class="section-title">What Scalability Actually Means</h2>
+
+        <p>The word "scalable" is used casually — a system is scalable if it handles more traffic, and that's about where most conversations end. But that framing obscures the tradeoffs that make system design interesting.</p>
+      </div>
+
+      <div class="callout">
+        <p><strong>Scalability</strong> is a system's ability to absorb increasing load while preserving performance, availability, and reliability — without requiring a complete architectural redesign.</p>
+      </div>
+
+      <div class="prose">
+        <p>Break that definition apart:</p>
+        <ul>
+          <li><em>Increasing load</em> could be more users, larger data volumes, more concurrent API calls, or higher message throughput.</li>
+          <li><em>Preserving performance</em> means response times stay within acceptable bounds — not that they stay constant, but that degradation is graceful and bounded.</li>
+          <li><em>Without complete redesign</em> is the crucial qualifier. Any system can handle 100× traffic if you're willing to rewrite it from scratch. Scalability is about building in enough flexibility that growth is an operational problem, not an engineering crisis.</li>
+        </ul>
+      </div>
+
+      <figure class="illustration">
+        <img src="images/scalability-overview.png" alt="Two-panel diagram comparing an unscalable single-server system (overwhelmed with requests and 503 errors) to a scalable system using a load balancer distributing traffic evenly across multiple servers with stable latency." />
+        <figcaption>Scalability is an architecture choice, not a hardware choice. A single server under load degrades exponentially; a load-balanced fleet degrades gracefully.</figcaption>
+      </figure>
+
+      <div class="prose">
+        <h3>Why High Availability and Scalability Are Siblings</h3>
+
+        <p>There is a tendency to treat availability and scalability as separate concerns — availability is about uptime, scalability is about capacity. In practice, they are deeply entangled.</p>
+
+        <p>A system that cannot scale is a system that will eventually go down. When a single-server application receives traffic beyond its capacity, it does not simply slow down gracefully. Under extreme load, connection queues fill, garbage collectors thrash, database locks pile up, and eventually the process crashes or becomes unresponsive. The failure mode of an unscalable system under sustained load is <em>unavailability</em>.</p>
+
+        <p>Conversely, many high-availability techniques — redundant instances, failover, replicated data — are also exactly what makes a system scalable horizontally. Design for one and you often get the other as a side effect.</p>
+
+        <p>For ML practitioners, consider a model-serving fleet: if your inference service runs on a single GPU instance, it is simultaneously unscalable and a single point of failure. Adding a second instance behind a load balancer improves both capacity and resilience. The fix is the same.</p>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ══════════════════ SECTION 2 ══════════════════ -->
+    <section class="article-section" id="section-2">
+      <div class="prose">
+        <span class="section-number">Section 02</span>
+        <h2 class="section-title">Measuring Headroom: The Metrics That Matter</h2>
+
+        <p>You cannot scale what you cannot measure. Before choosing a scaling strategy, you need to understand where your system currently lives on its performance curve — and how far it is from its limits.</p>
+
+        <p>Four signals dominate scalability monitoring:</p>
+
+        <h3>CPU Utilization</h3>
+
+        <p>CPU tells you how hard your compute is working. But the number to watch is not <em>peak</em> CPU — it is <em>sustained</em> CPU. A system sitting at 90% CPU can still handle a brief spike. A system <em>averaging</em> 80% CPU has almost no headroom for any burst and will saturate under any traffic increase.</p>
+
+        <p>A useful rule of thumb: if your service's average CPU crosses 60–70% under normal load, it is time to plan a scaling intervention. Waiting until 90% means you are already in trouble.</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-lang">bash</span>
+          <div class="code-block-dots">
+            <span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span>
+          </div>
+        </div>
+        <pre><code><span style="color:var(--code-comment)"># Quick CPU headroom check across a fleet (Linux)</span>
+$ mpstat -P ALL 1 5 | awk <span style="color:var(--code-string)">'/Average.*all/ {print "CPU idle: " $NF "%"}'</span>
+
+<span style="color:var(--code-comment)"># Time-series query in Prometheus</span>
+rate(container_cpu_usage_seconds_total[5m]) / container_spec_cpu_quota * 100</code></pre>
+      </div>
+
+      <div class="prose">
+        <h3>Memory Pressure</h3>
+
+        <p>Memory is trickier than CPU because exhaustion tends to be <em>sudden</em> rather than gradual. A process may run fine at 70% memory and then hit a code path that allocates a large buffer, pushing it past 100% and triggering OOM-killer on Linux — which will unceremoniously terminate your process with no warning to users.</p>
+
+        <p>Memory monitoring is especially critical for ML workloads. A model loading a 4GB checkpoint into RAM while also processing a batch will exhaust memory in ways that are invisible during normal single-request testing.</p>
+
+        <h3>Request Rate (Throughput)</h3>
+
+        <p>Request rate, measured in requests per second (RPS) or queries per second (QPS), tells you the volume of work arriving at your system. The ratio of request rate to your known capacity ceiling gives you utilization — and utilization above 70–80% is typically where latency starts climbing nonlinearly. This is a consequence of queueing theory: as a server approaches saturation, queue lengths grow exponentially.</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-lang">python</span>
+          <div class="code-block-dots">
+            <span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span>
+          </div>
+        </div>
+        <pre><code><span style="color:var(--code-comment)"># Throughput monitoring with Prometheus client in Python</span>
+<span style="color:var(--code-keyword)">from</span> prometheus_client <span style="color:var(--code-keyword)">import</span> Counter, Gauge, start_http_server
+
+REQUEST_COUNT = Counter(
+    <span style="color:var(--code-string)">'http_requests_total'</span>,
+    <span style="color:var(--code-string)">'Total HTTP requests'</span>,
+    [<span style="color:var(--code-string)">'method'</span>, <span style="color:var(--code-string)">'endpoint'</span>]
+)
+REQUEST_LATENCY = Gauge(
+    <span style="color:var(--code-string)">'http_request_latency_seconds'</span>,
+    <span style="color:var(--code-string)">'HTTP request latency'</span>
+)
+
+<span style="color:var(--code-keyword)">def</span> <span style="color:var(--code-keyword)">handle_request</span>(method, endpoint, duration):
+    REQUEST_COUNT.labels(method=method, endpoint=endpoint).inc()
+    REQUEST_LATENCY.set(duration)</code></pre>
+      </div>
+
+      <div class="prose">
+        <h3>Latency (p50, p95, p99)</h3>
+
+        <p>Average latency is almost meaningless for production systems. The metric that matters is <strong>tail latency</strong> — specifically p95 and p99. The 99th percentile latency is what your slowest 1% of users experience, and in systems with millions of daily requests, "1%" is not a rounding error.</p>
+
+        <p>High tail latency while average latency looks fine is a classic signature of resource contention: garbage collection pauses, lock contention, or cold-start effects on specific request types.</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-lang">text — latency targets</span>
+          <div class="code-block-dots">
+            <span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span>
+          </div>
+        </div>
+        <pre><code><span style="color:var(--code-comment)"># Typical latency SLOs for web-scale APIs</span>
+p50 (median)  &lt; 50ms    ← most users experience this
+p95           &lt; 200ms   ← the "reasonable worst case"
+p99           &lt; 500ms   ← 1 in 100 requests; still matters
+p99.9         &lt; 2s      ← monitor, but less actionable day-to-day</code></pre>
+      </div>
+
+      <div class="prose">
+        <p>Together, these four metrics paint a picture of where the system is, where it is going, and which layer to address first.</p>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ══════════════════ SECTION 3 ══════════════════ -->
+    <section class="article-section" id="section-3">
+      <div class="prose">
+        <span class="section-number">Section 03</span>
+        <h2 class="section-title">Scaling Strategies: Up, Out, and In Between</h2>
+
+        <p>Every scaling decision is ultimately a choice along two axes: <strong>how</strong> you add capacity (bigger machines vs. more machines) and <strong>when</strong> you make each transition. There are three strategies, and they are not mutually exclusive.</p>
+      </div>
+
+      <figure class="illustration">
+        <img src="images/scaling-strategies.png" alt="Three-column diagram comparing Vertical Scaling (a single server growing larger, capped at hardware limits), Horizontal Scaling (multiple identical servers behind a load balancer with fault tolerance), and Diagonal Scaling (a timeline showing vertical growth in Phase 1 transitioning to horizontal growth in Phase 2)." />
+        <figcaption>The three scaling archetypes. Real systems almost always move through all three over time — starting vertical for simplicity, graduating to horizontal for resilience and capacity.</figcaption>
+      </figure>
+
+      <div class="prose">
+        <h3>Vertical Scaling (Scale Up)</h3>
+
+        <p>The oldest scaling strategy: take one machine and make it bigger. Add more CPU cores, more RAM, faster storage. This is vertical scaling — also called "scaling up."</p>
+
+        <p><strong>Why it is appealing:</strong> vertical scaling requires almost no changes to your application. A process that runs on a 4-core machine will automatically use more cores on a 32-core machine (assuming your runtime uses threading or multiprocessing). There is no distributed coordination to design, no sharding to implement, no network hops to worry about. You pay for more cloud instance size, redeploy, done.</p>
+
+        <p><strong>Why it eventually fails:</strong> no single machine can grow forever. Cloud providers offer increasingly large instance types, but each tier jump costs disproportionately more. And critically — a single machine is a single point of failure (SPOF).</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-lang">text — AWS EC2 cost curve</span>
+          <div class="code-block-dots">
+            <span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span>
+          </div>
+        </div>
+        <pre><code>AWS EC2 instance progression (illustrative):
+m5.large     (2 vCPU,  8GB)   ~$0.096/hr  ← baseline
+m5.4xlarge   (16 vCPU, 64GB)  ~$0.768/hr  ← 4× RAM,  8× cost
+m5.24xlarge  (96 vCPU, 384GB) ~$4.608/hr  ← 48× RAM, 48× cost
+
+<span style="color:var(--code-comment)"># Cost scales super-linearly; capacity scales sub-linearly</span></code></pre>
+      </div>
+
+      <div class="prose">
+        <p>Vertical scaling is the right first move for most early-stage systems. But every vertical scaling plan needs an answer to the question: <em>what happens when this machine dies?</em></p>
+
+        <h3>Horizontal Scaling (Scale Out)</h3>
+
+        <p>Rather than making one machine bigger, horizontal scaling adds more machines and distributes work across them. This is the foundation of modern cloud-native architecture.</p>
+
+        <p><strong>The core idea:</strong> if a single instance can handle X requests per second, N instances can handle (approximately) N × X requests per second. The "approximately" is doing a lot of work — as we will discuss — but the rough linear scaling relationship is what makes horizontal scaling powerful.</p>
+
+        <p><strong>What it requires:</strong> for horizontal scaling to work, <em>the application must be stateless at the instance level</em>. If user session data, in-memory caches, or lock state lives inside one instance, routing a subsequent request to a different instance breaks things. This is why modern application architectures push state out to external systems — Redis for sessions, S3 for files, PostgreSQL for persistent data — while keeping application servers stateless and interchangeable.</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-lang">python — stateful vs stateless</span>
+          <div class="code-block-dots">
+            <span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span>
+          </div>
+        </div>
+        <pre><code><span style="color:var(--code-comment)"># ❌ Stateful approach — breaks horizontal scaling</span>
+<span style="color:var(--code-keyword)">class</span> StatefulSessionHandler:
+    <span style="color:var(--code-keyword)">def</span> __init__(self):
+        self.sessions = {}  <span style="color:var(--code-comment)"># lives in-memory on ONE instance!</span>
+
+    <span style="color:var(--code-keyword)">def</span> get_user(self, session_id):
+        <span style="color:var(--code-keyword)">return</span> self.sessions.get(session_id)
+
+
+<span style="color:var(--code-comment)"># ✅ Stateless alternative — any instance can serve any request</span>
+<span style="color:var(--code-keyword)">class</span> StatelessSessionHandler:
+    <span style="color:var(--code-keyword)">def</span> __init__(self, redis_client):
+        self.redis = redis_client  <span style="color:var(--code-comment)"># external, shared state</span>
+
+    <span style="color:var(--code-keyword)">def</span> get_user(self, session_id):
+        <span style="color:var(--code-keyword)">return</span> self.redis.get(<span style="color:var(--code-string)">f"session:{session_id}"</span>)</code></pre>
+      </div>
+
+      <div class="prose">
+        <p><strong>What it delivers:</strong> fault tolerance is the immediate benefit. With five instances behind a load balancer, one instance failing drops you to 80% capacity, not zero. The load balancer detects the failure via health checks and stops routing to the failed node. Users experience slightly higher latency, not an outage.</p>
+
+        <p>For ML serving specifically, the statelessness requirement is usually already satisfied: a model inference server is naturally stateless — model weights are loaded at startup and shared across requests; per-request state is ephemeral. Horizontal scaling of inference is often surprisingly easy compared to scaling stateful services.</p>
+
+        <h3>Diagonal Scaling: The Pragmatic Path</h3>
+
+        <p>Most real systems do not choose pure vertical or pure horizontal scaling — they evolve through both over time. This hybrid is sometimes called "diagonal scaling."</p>
+
+        <p>The typical trajectory: a new product starts on a moderately-sized single instance (vertical). As traffic grows, the instance is periodically resized upward. At some threshold — when resizing starts requiring downtime, when cost efficiency falls, or when SPOF risk becomes unacceptable — the architecture shifts to multiple smaller instances behind a load balancer (horizontal).</p>
+
+        <p>This phased approach is pragmatic for several reasons:</p>
+        <ol>
+          <li><strong>Deferred complexity:</strong> distributed systems require more engineering investment. A startup team of three does not have bandwidth to implement Kubernetes-native autoscaling, stateless session management, and distributed tracing on day one. Vertical scaling buys time.</li>
+          <li><strong>Cost efficiency:</strong> on most cloud platforms, a single large instance is often more cost-effective per unit of compute than many small instances, once you factor in licensing, overhead, and management complexity.</li>
+          <li><strong>Optimization opportunity:</strong> the bottleneck on one large vertical instance is usually obvious — you can see it in metrics. A prematurely distributed architecture can scatter bottlenecks across subsystems, making them harder to diagnose.</li>
+        </ol>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-lang">text — diagonal scaling timeline</span>
+          <div class="code-block-dots">
+            <span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span>
+          </div>
+        </div>
+        <pre><code>Month 1:   Single m5.large (2 vCPU)           → ~100 req/s
+Month 3:   Resize to m5.2xlarge (8 vCPU)      → ~400 req/s
+Month 6:   2× m5.xlarge + load balancer        → ~600 req/s + fault tolerance
+Month 12:  Auto-scaling group (4–12 instances) → elastic capacity</code></pre>
+      </div>
+
+      <div class="prose">
+        <p>The art is knowing <em>when</em> to transition — before the next tier's cost becomes unjustifiable, and before the lack of redundancy causes an outage that erodes user trust.</p>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ══════════════════ SECTION 4 ══════════════════ -->
+    <section class="article-section" id="section-4">
+      <div class="prose">
+        <span class="section-number">Section 04</span>
+        <h2 class="section-title">Load Balancing: The Conductor of the Orchestra</h2>
+
+        <p>Horizontal scaling creates a fleet of servers. But having multiple servers is only half the solution — you also need something to decide which server handles which request. That is the job of a <strong>load balancer</strong>.</p>
+
+        <p>Think of a load balancer as the maître d' at a busy restaurant: they know which tables are occupied, which servers are available, and how to distribute incoming guests to keep service smooth. Without them, everyone would crowd toward the same table.</p>
+      </div>
+
+      <figure class="illustration">
+        <img src="images/load-balancer-architecture.png" alt="Layered network diagram showing HTTPS requests from clients arriving at a Load Balancer, which splits into L4 (TCP/UDP) and L7 (HTTP/HTTPS) modes, distributes to four backend servers using various algorithms, marks one backend as failed via health check, and handles SSL termination at the edge." />
+        <figcaption>A load balancer sits between clients and backends, handling SSL termination, routing decisions, and health-based traffic steering — all before a request touches your application code.</figcaption>
+      </figure>
+
+      <div class="prose">
+        <h3>Layer 4 vs. Layer 7: Where Does the Balancer Live?</h3>
+
+        <p><strong>Layer 4 (Transport Layer — TCP/UDP):</strong> A Layer 4 load balancer routes traffic based on connection-level information: source IP, destination port, TCP flags. It does not inspect HTTP bodies, URL paths, or headers. Because it operates on raw packet flows, it is extremely fast and adds minimal latency. Layer 4 balancers are common in high-throughput, low-latency scenarios — gaming servers, financial trading platforms, DNS infrastructure.</p>
+
+        <p><strong>Layer 7 (Application Layer — HTTP/HTTPS):</strong> A Layer 7 load balancer can read the entire HTTP request before deciding where to route it. Routing decisions can be based on URL path (<code>/api/v1/predict</code> goes to the ML cluster, <code>/static/</code> goes to the CDN offload pool), request headers, cookies, or even request body content. Layer 7 balancers are far more capable but do more work per request.</p>
+
+        <p>For most web applications and API services — including ML inference endpoints — Layer 7 is the right default. The routing flexibility it provides (path-based routing, canary deployments, A/B traffic splitting) is worth the marginal overhead.</p>
+
+        <p><strong>Hardware, Software, and Cloud:</strong></p>
+        <ul>
+          <li><strong>Hardware load balancers</strong> (F5, Citrix ADC): purpose-built appliances with dedicated ASICs. Extremely high throughput, but expensive, rigid, and hard to scale themselves.</li>
+          <li><strong>Software load balancers</strong> (HAProxy, NGINX, Envoy): run on commodity hardware or VMs. Flexible, configurable, and capable of serving millions of requests per second on modern hardware.</li>
+          <li><strong>Cloud-managed load balancers</strong> (AWS ALB/NLB, GCP Cloud Load Balancing, Azure Load Balancer): fully managed with built-in health checks, autoscaling integration, and DDoS protection. The right default for most teams.</li>
+        </ul>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-lang">nginx — upstream configuration</span>
+          <div class="code-block-dots">
+            <span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span>
+          </div>
+        </div>
+        <pre><code><span style="color:var(--code-comment)"># NGINX upstream config for ML inference load balancing</span>
+upstream ml_inference_backend {
+    least_conn;                      <span style="color:var(--code-comment)"># algorithm: least connections</span>
+    server 10.0.1.10:8080 weight=3;  <span style="color:var(--code-comment)"># higher-capacity GPU instance</span>
+    server 10.0.1.11:8080 weight=1;
+    server 10.0.1.12:8080 weight=1;
+
+    keepalive 32;                    <span style="color:var(--code-comment)"># connection pooling to backends</span>
+}
+
+server {
+    listen 443 ssl;
+    location /api/v1/predict {
+        proxy_pass http://ml_inference_backend;
+        proxy_read_timeout 30s;      <span style="color:var(--code-comment)"># long enough for inference</span>
+    }
+}</code></pre>
+      </div>
+
+      <div class="prose">
+        <h3>Load Balancing Algorithms: Not Just Round Robin</h3>
+
+        <p>The algorithm a load balancer uses to select a backend is often treated as an afterthought. It should not be.</p>
+
+        <p><strong>Round Robin</strong> is the default almost everywhere: request 1 goes to backend A, request 2 to backend B, request 3 to backend C, and repeat. Works well when all backends are equivalent and requests cost roughly the same amount of work.</p>
+
+        <p><strong>Least Connections</strong> is more sophisticated: new requests are sent to whichever backend currently has the fewest active connections. This outperforms round robin whenever request processing times vary significantly — if some API calls trigger expensive database queries while others hit cache, round robin can saturate slow-path backends while fast-path ones sit idle.</p>
+
+        <p><strong>IP Hashing</strong> derives the backend assignment from a hash of the client's IP address, making the mapping deterministic and sticky. Useful when backend affinity matters, such as when backends maintain a local cache that is warm for particular user segments.</p>
+
+        <p><strong>Weighted Load Balancing</strong> assigns different proportions of traffic to different backends based on explicit weights. Essential in heterogeneous fleets — if you have one 16-core GPU instance and two 4-core CPU instances, the GPU should receive proportionally more traffic.</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-lang">haproxy — weighted backend</span>
+          <div class="code-block-dots">
+            <span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span>
+          </div>
+        </div>
+        <pre><code>backend inference_pool
+    balance roundrobin
+    server gpu-node-01 10.0.1.10:8080 weight 8 check
+    server cpu-node-01 10.0.1.11:8080 weight 2 check
+    server cpu-node-02 10.0.1.12:8080 weight 2 check
+    <span style="color:var(--code-comment)"># GPU gets 8/12 = 67% of traffic</span></code></pre>
+      </div>
+
+      <div class="prose">
+        <p><strong>Least Response Time</strong> is the most adaptive: the balancer tracks the average response time of each backend and preferentially routes new requests to the fastest responder. Particularly powerful in geographically distributed deployments where network latency to individual backends varies.</p>
+
+        <h3>Production Features: What Makes a Load Balancer Earn Its Keep</h3>
+
+        <p><strong>Health Checks:</strong> The load balancer periodically sends probes to each backend — typically HTTP GET requests to a <code>/health</code> endpoint — and removes any backend that fails to respond within a timeout or returns a non-2xx status. This is the mechanism by which a crashed node is automatically removed from the pool without human intervention.</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-lang">python — FastAPI health endpoint</span>
+          <div class="code-block-dots">
+            <span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span>
+          </div>
+        </div>
+        <pre><code><span style="color:var(--code-comment)"># Minimal health check endpoint — ML serving pattern</span>
+<span style="color:var(--code-keyword)">from</span> fastapi <span style="color:var(--code-keyword)">import</span> FastAPI
+<span style="color:var(--code-keyword)">from</span> datetime <span style="color:var(--code-keyword)">import</span> datetime
+
+app = FastAPI()
+
+<span style="color:var(--code-keyword)">@app</span>.get(<span style="color:var(--code-string)">"/health"</span>)
+<span style="color:var(--code-keyword)">def</span> health_check():
+    <span style="color:var(--code-keyword)">return</span> {
+        <span style="color:var(--code-string)">"status"</span>:       <span style="color:var(--code-string)">"healthy"</span>,
+        <span style="color:var(--code-string)">"timestamp"</span>:    datetime.utcnow().isoformat(),
+        <span style="color:var(--code-string)">"model_loaded"</span>: model <span style="color:var(--code-keyword)">is not</span> None,
+        <span style="color:var(--code-string)">"device"</span>:       str(next(model.parameters()).device) <span style="color:var(--code-keyword)">if</span> model <span style="color:var(--code-keyword)">else</span> None
+    }</code></pre>
+      </div>
+
+      <div class="prose">
+        <p><strong>SSL Termination:</strong> Rather than requiring every backend to handle TLS encryption and certificate management, the load balancer accepts encrypted connections from clients, terminates the TLS session, and forwards plain HTTP to backends within the private network. This centralizes certificate renewal and reduces CPU load on backends.</p>
+
+        <p><strong>DDoS Protection:</strong> A load balancer positioned at the network edge can absorb and filter abusive traffic before it reaches your application servers. Modern cloud load balancers integrate with WAF services and rate-limiting rules that detect and block flood attacks at the infrastructure layer.</p>
+
+        <p><strong>Session Persistence (Sticky Sessions):</strong> Despite being an anti-pattern in fully stateless architectures, session persistence is often a necessary transitional feature. With sticky sessions enabled, requests from the same client are consistently routed to the same backend — a workaround that lets stateful applications behave predictably behind a multi-instance fleet.</p>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ══════════════════ SECTION 5 ══════════════════ -->
+    <section class="article-section" id="section-5">
+      <div class="prose">
+        <span class="section-number">Section 05</span>
+        <h2 class="section-title">Autoscaling: Teaching Systems to Manage Themselves</h2>
+
+        <p>Manual scaling — deciding to add or remove instances based on dashboards and intuition — is error-prone and reactive. By the time a human notices elevated CPU and provisions new capacity, the traffic spike has already caused degraded service. Autoscaling replaces manual judgment with automated policy.</p>
+      </div>
+
+      <div class="callout">
+        <p>The goal: <strong>match capacity to demand, continuously, without human intervention.</strong> In practice, this requires choosing a trigger mechanism, setting sensible thresholds, and handling the transition period between when capacity is needed and when newly launched instances are ready to serve traffic.</p>
+      </div>
+
+      <figure class="illustration">
+        <img src="images/autoscaling-timeseries.png" alt="Two synchronized panels: the top shows a request rate time-series with a sharp traffic spike, and the bottom shows instance count stepping up in response (with a 2-3 minute scale-out delay labeled) then gradually stepping back down during scale-in with a cooldown period. Vertical dashed lines indicate Scale-Out Trigger, New Instances Ready, and Scale-In Trigger moments." />
+        <figcaption>Autoscaling always has a lag between when load increases and when new capacity is ready. Design for this: set triggers early, and use predictive scaling for foreseeable spikes.</figcaption>
+      </figure>
+
+      <div class="prose">
+        <h3>Scaling Policies: Three Flavors of Automation</h3>
+
+        <p><strong>Reactive (Threshold-Based) Scaling</strong> is the most common and simplest policy: when a metric (CPU utilization, memory usage, request queue depth) crosses a defined threshold, add instances. When it drops below a different threshold, remove instances. Most cloud autoscaling systems implement this out of the box.</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-lang">yaml — AWS CloudFormation autoscaling policy</span>
+          <div class="code-block-dots">
+            <span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span>
+          </div>
+        </div>
+        <pre><code>ScaleOutPolicy:
+  Type: AWS::AutoScaling::ScalingPolicy
+  Properties:
+    AdjustmentType:    ChangeInCapacity
+    ScalingAdjustment: 2        <span style="color:var(--code-comment)"># add 2 instances</span>
+    Cooldown:          300      <span style="color:var(--code-comment)"># wait 5 minutes before next action</span>
+    PolicyType:        SimpleScaling
+
+ScaleOutAlarm:
+  Type: AWS::CloudWatch::Alarm
+  Properties:
+    MetricName:          CPUUtilization
+    Threshold:           70
+    ComparisonOperator:  GreaterThanThreshold
+    EvaluationPeriods:   2
+    DatapointsToAlarm:   2      <span style="color:var(--code-comment)"># breach 2 consecutive periods</span>
+    AlarmActions:        [!Ref ScaleOutPolicy]</code></pre>
+      </div>
+
+      <div class="prose">
+        <p>The weakness of reactive scaling is the <em>cold start delay</em>: from the moment a scale-out trigger fires to the moment new instances are healthy and serving traffic typically takes 2–5 minutes for VM-based infrastructure — longer if initialization includes loading large ML models.</p>
+
+        <p><strong>Predictive (ML/Pattern-Based) Scaling</strong> addresses this by learning from historical patterns and pre-scaling before demand arrives. AWS Predictive Scaling, for instance, uses machine learning on your metrics history to forecast future traffic and add instances proactively. If every Monday morning shows a consistent 09:00 traffic spike, predictive scaling begins adding instances at 08:45.</p>
+
+        <p>For ML workloads, this is particularly valuable: model serving cold starts — loading a 2GB model into GPU memory — can take 30–60 seconds or more. Predictive scaling ensures models are pre-loaded before the spike hits.</p>
+
+        <p><strong>Scheduled Scaling</strong> is the simplest form of predictive scaling: explicitly define "at 08:00 on weekdays, set minimum instances to 6; at 22:00, reduce to 2." Ideal for workloads with highly predictable, human-driven patterns.</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-lang">python — GCP scheduled autoscaling</span>
+          <div class="code-block-dots">
+            <span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span>
+          </div>
+        </div>
+        <pre><code><span style="color:var(--code-comment)"># GCP Managed Instance Group scheduled scaling (Python SDK)</span>
+autoscaling_policy = {
+    <span style="color:var(--code-string)">"scheduledScaling"</span>: {
+        <span style="color:var(--code-string)">"schedules"</span>: [
+            {
+                <span style="color:var(--code-string)">"name"</span>:                <span style="color:var(--code-string)">"business-hours-scale-up"</span>,
+                <span style="color:var(--code-string)">"schedule"</span>:            <span style="color:var(--code-string)">"0 8 * * MON-FRI"</span>,  <span style="color:var(--code-comment)"># 8 AM weekdays</span>
+                <span style="color:var(--code-string)">"timeZone"</span>:            <span style="color:var(--code-string)">"America/New_York"</span>,
+                <span style="color:var(--code-string)">"minRequiredReplicas"</span>: 8,
+                <span style="color:var(--code-string)">"durationSec"</span>:         36000   <span style="color:var(--code-comment)"># 10 hours</span>
+            },
+            {
+                <span style="color:var(--code-string)">"name"</span>:                <span style="color:var(--code-string)">"overnight-scale-down"</span>,
+                <span style="color:var(--code-string)">"schedule"</span>:            <span style="color:var(--code-string)">"0 20 * * MON-FRI"</span>, <span style="color:var(--code-comment)"># 8 PM</span>
+                <span style="color:var(--code-string)">"minRequiredReplicas"</span>: 2,
+                <span style="color:var(--code-string)">"durationSec"</span>:         43200   <span style="color:var(--code-comment)"># 12 hours</span>
+            }
+        ]
+    }
+}</code></pre>
+      </div>
+
+      <div class="prose">
+        <h3>Cloud Implementations: Same Pattern, Different Flavors</h3>
+
+        <p><strong>AWS: Auto Scaling Groups + ELB + CloudWatch.</strong> AWS's autoscaling ecosystem is mature and composable. Auto Scaling Groups (ASGs) manage a fleet of EC2 instances, handling launch, termination, and replacement according to defined policies. Elastic Load Balancing integrates with ASGs so new instances are automatically registered as load balancer targets when they pass health checks. CloudWatch provides the metrics and alarm infrastructure that triggers scaling actions.</p>
+
+        <p><strong>Azure: VM Scale Sets + Azure Monitor.</strong> Azure's VM Scale Sets are a first-class autoscaling primitive: a group of identical VMs managed as a unit, with Azure Monitor providing the autoscale rules engine. Scale Sets integrate natively with Azure Load Balancer and Application Gateway.</p>
+
+        <p><strong>GCP: Managed Instance Groups + Cloud Run.</strong> GCP offers two distinct autoscaling paradigms. Managed Instance Groups (MIGs) scale virtual machines, similar to AWS ASGs. Cloud Run offers container-level autoscaling with a critical feature: <strong>scale-to-zero</strong>. When a Cloud Run service has no traffic, it maintains zero running instances and incurs zero compute cost. When a request arrives, it cold-starts a container in milliseconds (for small containers). This is the canonical serverless autoscaling model and deserves special attention for intermittent ML workloads.</p>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ══════════════════ SECTION 6 ══════════════════ -->
+    <section class="article-section" id="section-6">
+      <div class="prose">
+        <span class="section-number">Section 06</span>
+        <h2 class="section-title">Challenges Nobody Warns You About</h2>
+
+        <p>Every architecture overview makes scaling sound clean: add instances, balance traffic, watch metrics. The actual experience is messier. Here are the real challenges that emerge as systems scale.</p>
+      </div>
+
+      <figure class="illustration">
+        <img src="images/scaling-challenges.png" alt="Four-quadrant diagram: top-left shows latency accumulating across a chain of network hops (Client → LB → App → Cache → DB); top-right shows many application servers funneling down to a single database bottleneck; bottom-left shows two servers with inconsistent state due to replication lag; bottom-right shows a bar chart where operational cost and management overhead grow faster than instance count." />
+        <figcaption>Scaling creates four distinct categories of challenges beyond simply adding more instances. The database bottleneck and consistency issues are the most common surprises for teams moving to horizontal scale for the first time.</figcaption>
+      </figure>
+
+      <div class="prose">
+        <h3>Latency and the Cost of Network Hops</h3>
+
+        <p>Every microservice or infrastructure component you add to a request path introduces latency. A monolithic application serving a request in 10ms may become a microservices architecture that takes 50ms for the same request — not because individual services are slow, but because the request now traverses five network hops, each adding 2–5ms of round-trip time.</p>
+
+        <p>This is not an argument against distributed architecture. It is an argument for <em>measuring</em> the latency contribution of each hop and making explicit tradeoffs. Distributed tracing tools like Jaeger, Zipkin, and AWS X-Ray make these hops visible:</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-lang">python — OpenTelemetry distributed tracing</span>
+          <div class="code-block-dots">
+            <span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span>
+          </div>
+        </div>
+        <pre><code><span style="color:var(--code-keyword)">from</span> opentelemetry <span style="color:var(--code-keyword)">import</span> trace
+
+tracer = trace.get_tracer(__name__)
+
+<span style="color:var(--code-keyword)">def</span> predict(features):
+    <span style="color:var(--code-keyword)">with</span> tracer.start_as_current_span(<span style="color:var(--code-string)">"predict"</span>) <span style="color:var(--code-keyword)">as</span> span:
+        span.set_attribute(<span style="color:var(--code-string)">"model.version"</span>, MODEL_VERSION)
+
+        <span style="color:var(--code-keyword)">with</span> tracer.start_as_current_span(<span style="color:var(--code-string)">"feature_validation"</span>):
+            validated = validate_features(features)  <span style="color:var(--code-comment)"># ← measure this</span>
+
+        <span style="color:var(--code-keyword)">with</span> tracer.start_as_current_span(<span style="color:var(--code-string)">"model_inference"</span>):
+            result = model.predict(validated)         <span style="color:var(--code-comment)"># ← and this</span>
+
+        <span style="color:var(--code-keyword)">with</span> tracer.start_as_current_span(<span style="color:var(--code-string)">"result_cache"</span>):
+            cache.set(hash(features), result)         <span style="color:var(--code-comment)"># ← and this</span>
+
+        <span style="color:var(--code-keyword)">return</span> result</code></pre>
+      </div>
+
+      <div class="prose">
+        <h3>Database Bottlenecks: The Layer That Refuses to Scale</h3>
+
+        <p>The most common failure mode in horizontal scaling is this: you add more application servers, and the database immediately becomes the bottleneck. Application servers scale horizontally almost trivially. Relational databases, traditionally, do not.</p>
+
+        <p>The standard mitigation toolkit:</p>
+        <ul>
+          <li><strong>Read replicas:</strong> scale read traffic across multiple replicas, with writes still going to the primary. Effective for read-heavy workloads, but replication lag can cause stale reads.</li>
+          <li><strong>Connection pooling</strong> (PgBouncer, ProxySQL): databases have a fixed limit on concurrent connections. Connection poolers multiplex many application connections onto fewer database connections, preventing connection exhaustion.</li>
+          <li><strong>Caching:</strong> serve frequent read queries from Redis or Memcached rather than hitting the database at all. Can reduce DB load by 70–90% for read-heavy patterns.</li>
+          <li><strong>Database sharding:</strong> partition data across multiple database instances based on a shard key. Scales write throughput but adds significant application complexity — a last resort.</li>
+        </ul>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-lang">text — database scaling progression</span>
+          <div class="code-block-dots">
+            <span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span>
+          </div>
+        </div>
+        <pre><code>Step 1: Add connection pooling (PgBouncer)   → +3–5× connection headroom
+Step 2: Add read replica(s)                   → offload read queries
+Step 3: Add caching layer (Redis)             → reduce DB queries for hot data by 70–90%
+Step 4: Shard writes                          → last resort; adds significant complexity</code></pre>
+      </div>
+
+      <div class="prose">
+        <h3>Consistency Issues in Distributed Systems</h3>
+
+        <p>When data exists on multiple machines, those machines may not agree on the current state at any given moment. This is the consistency problem of distributed systems — and it does not have a clean solution, only managed tradeoffs.</p>
+
+        <p>The CAP Theorem formalizes the fundamental constraint: a distributed system can guarantee at most two of three properties — Consistency, Availability, and Partition Tolerance. In practice, network partitions happen, so the real choice is between CP (prioritize consistency; may sacrifice availability during partitions) and AP (prioritize availability; may serve stale data).</p>
+
+        <p>For ML systems, consistency questions arise in specific ways:</p>
+        <ul>
+          <li>A feature store may serve different feature values from different replicas to different model replicas during a replication lag window — the model is predicting on inconsistent feature state.</li>
+          <li>An experiment configuration service that is eventually consistent may route some users to a deprecated model variant during a configuration update.</li>
+          <li>A distributed training job's gradient aggregation introduces its own consistency considerations around stale gradients and parameter synchronization.</li>
+        </ul>
+
+        <p>The honest answer is that most systems accept eventual consistency in exchange for availability and design the application layer to tolerate it — through idempotent operations, conflict-resolution logic, and careful ordering of reads and writes.</p>
+
+        <h3>Operational Cost: The Tax That Scales With You</h3>
+
+        <p>Scaling is not free. Each additional instance adds to your cloud bill. Each additional managed service adds fixed costs. And as fleet size grows, the engineering overhead of managing, monitoring, and debugging the infrastructure grows — often faster than the compute cost itself.</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-lang">python — cost-aware instance selection</span>
+          <div class="code-block-dots">
+            <span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span>
+          </div>
+        </div>
+        <pre><code><span style="color:var(--code-keyword)">def</span> choose_instance_strategy(workload_type, traffic_pattern):
+    <span style="color:var(--code-keyword)">if</span> workload_type == <span style="color:var(--code-string)">"real_time_inference"</span> <span style="color:var(--code-keyword)">and</span> traffic_pattern == <span style="color:var(--code-string)">"steady"</span>:
+        <span style="color:var(--code-keyword)">return</span> <span style="color:var(--code-string)">"reserved_instances"</span>       <span style="color:var(--code-comment)"># predictable, committed → 40–60% savings</span>
+    <span style="color:var(--code-keyword)">elif</span> workload_type == <span style="color:var(--code-string)">"batch_scoring"</span> <span style="color:var(--code-keyword)">and</span> traffic_pattern == <span style="color:var(--code-string)">"bursty"</span>:
+        <span style="color:var(--code-keyword)">return</span> <span style="color:var(--code-string)">"spot_instances"</span>             <span style="color:var(--code-comment)"># interruptible → 60–90% cheaper</span>
+    <span style="color:var(--code-keyword)">elif</span> workload_type == <span style="color:var(--code-string)">"event_driven"</span> <span style="color:var(--code-keyword)">and</span> traffic_pattern == <span style="color:var(--code-string)">"sporadic"</span>:
+        <span style="color:var(--code-keyword)">return</span> <span style="color:var(--code-string)">"serverless_scale_to_zero"</span>   <span style="color:var(--code-comment)"># zero cost when idle</span>
+    <span style="color:var(--code-keyword)">else</span>:
+        <span style="color:var(--code-keyword)">return</span> <span style="color:var(--code-string)">"on_demand"</span>                  <span style="color:var(--code-comment)"># flexible fallback</span></code></pre>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ══════════════════ SECTION 7 ══════════════════ -->
+    <section class="article-section" id="section-7">
+      <div class="prose">
+        <span class="section-number">Section 07</span>
+        <h2 class="section-title">Optimization: Getting More from What You Already Have</h2>
+
+        <p>Before reflexively scaling, it is worth asking a more fundamental question: are you getting maximum value from the resources you already have? Optimization — reducing waste, deferring work, and reusing results — is often cheaper and faster than scaling.</p>
+
+        <h3>Caching: The Single Best Return on Investment</h3>
+
+        <p>Caching is the highest-leverage optimization in distributed systems. The logic is simple: if the same data is requested multiple times, computing it once and storing the result nearby is far cheaper than recomputing it on every request.</p>
+
+        <p><strong>Redis</strong> is an in-memory data structure store typically used as an application-level cache. Common patterns include:</p>
+        <ul>
+          <li><strong>Cache-aside:</strong> the application checks Redis before querying the database; on a cache miss, it queries the DB and populates the cache.</li>
+          <li><strong>Write-through:</strong> writes go to both the DB and cache simultaneously, keeping them in sync.</li>
+          <li><strong>TTL-based expiry:</strong> cached data expires after a time-to-live, ensuring eventual freshness without explicit invalidation logic.</li>
+        </ul>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-lang">python — Redis prediction caching</span>
+          <div class="code-block-dots">
+            <span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span>
+          </div>
+        </div>
+        <pre><code><span style="color:var(--code-keyword)">import</span> redis, json
+<span style="color:var(--code-keyword)">from</span> functools <span style="color:var(--code-keyword)">import</span> wraps
+
+r = redis.Redis(host=<span style="color:var(--code-string)">'redis-cluster.internal'</span>, port=6379, db=0)
+
+<span style="color:var(--code-keyword)">def</span> cache_predictions(ttl_seconds=300):
+    <span style="color:var(--code-string)">"""Cache model predictions to avoid redundant inference."""</span>
+    <span style="color:var(--code-keyword)">def</span> decorator(func):
+        <span style="color:var(--code-keyword)">@wraps</span>(func)
+        <span style="color:var(--code-keyword)">def</span> wrapper(features):
+            cache_key = <span style="color:var(--code-string)">f"prediction:{hash(json.dumps(features, sort_keys=True))}"</span>
+            cached = r.get(cache_key)
+            <span style="color:var(--code-keyword)">if</span> cached:
+                <span style="color:var(--code-keyword)">return</span> json.loads(cached)          <span style="color:var(--code-comment)"># cache hit</span>
+
+            result = func(features)             <span style="color:var(--code-comment)"># cache miss → run inference</span>
+            r.setex(cache_key, ttl_seconds, json.dumps(result))
+            <span style="color:var(--code-keyword)">return</span> result
+        <span style="color:var(--code-keyword)">return</span> wrapper
+    <span style="color:var(--code-keyword)">return</span> decorator
+
+<span style="color:var(--code-keyword)">@cache_predictions</span>(ttl_seconds=600)
+<span style="color:var(--code-keyword)">def</span> predict(features: dict) -> dict:
+    <span style="color:var(--code-keyword)">return</span> model.run(features)</code></pre>
+      </div>
+
+      <div class="prose">
+        <p><strong>CDNs (Content Delivery Networks)</strong> cache static assets and increasingly dynamic API responses at geographically distributed edge nodes close to end users. For globally distributed applications, CDN caching can reduce latency from hundreds of milliseconds to under 10ms for cache-hit requests, while also dramatically reducing load on origin infrastructure.</p>
+
+        <h3>Asynchronous Processing: Decoupling Fast Paths from Slow Ones</h3>
+
+        <p>Not every operation needs to complete synchronously before the user gets a response. Moving non-urgent work to a background job reduces the user-perceived latency from "upload + analyze time" to just "upload time." This is the central benefit of asynchronous processing: it decouples the fast part (accepting work) from the slow part (doing work).</p>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-lang">text — sync vs async flow comparison</span>
+          <div class="code-block-dots">
+            <span class="dot-red"></span><span class="dot-yellow"></span><span class="dot-green"></span>
+          </div>
+        </div>
+        <pre><code><span style="color:var(--code-comment)"># Synchronous flow</span>
+User Request → [Upload] → [ML Processing: 5s] → [Store Results] → Response
+User waits: ~5.5 seconds
+
+<span style="color:var(--code-comment)"># Asynchronous flow</span>
+User Request → [Upload] → [Enqueue Job] → Response (immediate)
+                                ↓
+                  [Worker: ML Processing] → [Store Results]
+                  [Push notification / polling endpoint]
+User waits: ~0.1 seconds for confirmation; polls for results</code></pre>
+      </div>
+
+      <div class="prose">
+        <p>Message queues (Kafka, SQS, RabbitMQ) are the standard mechanism for implementing asynchronous architectures. Tasks are published to a queue by the frontend service and consumed by worker processes that can be scaled independently of the API layer.</p>
+
+        <p>For ML workflows, this pattern is nearly universal: batch inference, model training jobs, ETL pipelines, and report generation are all naturally asynchronous workloads that should not occupy synchronous request threads.</p>
+
+        <h3>Spot Instances: Trading Certainty for Cost</h3>
+
+        <p>Cloud providers sell excess capacity at steep discounts via spot instances (AWS), preemptible VMs (GCP), or spot VMs (Azure). The catch: the cloud provider can reclaim these instances with 30 seconds to 2 minutes notice. For the right workloads, this is an excellent deal.</p>
+
+        <p>A batch ML training job that runs for 4 hours and can checkpoint its progress can run on spot instances at 60–90% lower cost than on-demand. If a spot instance is reclaimed mid-run, the job resumes from the last checkpoint on a new instance. The architectural requirement: <strong>fault tolerance</strong>. Workloads on spot instances must handle sudden termination gracefully through checkpointing and idempotent tasks.</p>
+
+        <h3>Scale-to-Zero: Paying Only for What You Use</h3>
+
+        <p>The most aggressive cost optimization is scale-to-zero: a service maintains no running instances when idle and starts fresh when a request arrives. Cold start time is the cost — typically 1–10 seconds for container-based serverless functions, potentially longer for ML models with large weight files.</p>
+
+        <p>Scale-to-zero is ideal for:</p>
+        <ul>
+          <li><strong>Intermittent ML inference endpoints</strong> that serve fewer than 100 requests/day</li>
+          <li><strong>Event-driven data processing</strong> triggered by file uploads or schedules</li>
+          <li><strong>Internal tools and dashboards</strong> used only during business hours</li>
+          <li><strong>Batch scoring jobs</strong> that run on a schedule</li>
+        </ul>
+
+        <p>AWS Lambda, GCP Cloud Run, and Azure Container Apps all support scale-to-zero with sub-second billing granularity. An endpoint averaging 10 requests per day costs almost nothing on Cloud Run; on a permanently running VM, it costs the full instance price regardless of utilization.</p>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ══════════════════ SECTION 8 ══════════════════ -->
+    <section class="article-section" id="section-8">
+      <div class="prose">
+        <span class="section-number">Section 08</span>
+        <h2 class="section-title">Putting It All Together</h2>
+
+        <p>Scalability is not a feature you add after a system is built. It is an architectural disposition — a set of choices made throughout the design process that preserve the ability to grow without rebuilding.</p>
+      </div>
+
+      <figure class="illustration">
+        <img src="images/complete-architecture.png" alt="Comprehensive scalability architecture diagram showing: CDN edge nodes at the top connected to clients; a Global Load Balancer distributing to two geographic regions; within each region, a Layer 7 Load Balancer, an Auto Scaling Group of stateless app servers, a Redis cache cluster, a Kafka async queue with background workers, a Primary Database with a Read Replica, and cloud monitoring. Solid arrows show the synchronous path; dashed arrows show the async path. Annotations include Stateless App Servers, External Session State, Health Checks, and Autoscale Trigger." />
+        <figcaption>A production-grade scalable architecture assembles everything covered in this article: CDN caching at the edge, load-balanced stateless app servers with autoscaling, a caching layer to protect the database, async queues for non-urgent work, and read replicas for read-heavy workloads.</figcaption>
+      </figure>
+
+      <div class="prose">
+        <p>The principles from this article, synthesized:</p>
+      </div>
+
+      <ul class="principles-list">
+        <li>
+          <div class="principle-icon">1</div>
+          <div class="principle-text">
+            <strong>Start vertical, plan horizontal.</strong>
+            <span>The fastest path to a working system is often a well-provisioned single instance. But design it as if you will need to scale out: push session state to Redis, make services stateless, expose health endpoints. When vertical scaling hits its ceiling, the horizontal path is already clear.</span>
+          </div>
+        </li>
+        <li>
+          <div class="principle-icon">2</div>
+          <div class="principle-text">
+            <strong>The load balancer is not optional.</strong>
+            <span>Even two instances without a load balancer provide minimal benefit. A load balancer is the foundation of a scalable tier. Choose Layer 7 unless you have specific reasons for Layer 4. Invest in health checks and SSL termination from day one.</span>
+          </div>
+        </li>
+        <li>
+          <div class="principle-icon">3</div>
+          <div class="principle-text">
+            <strong>Autoscaling is a policy problem, not a technical problem.</strong>
+            <span>The tooling exists and works. The hard part is choosing the right metrics, setting sensible thresholds, and accounting for cold start lag in your capacity planning. Start with reactive scaling; add predictive or scheduled scaling once you have enough traffic history to calibrate it.</span>
+          </div>
+        </li>
+        <li>
+          <div class="principle-icon">4</div>
+          <div class="principle-text">
+            <strong>Cache before you scale.</strong>
+            <span>Before provisioning more compute, ask whether caching can solve the problem. A Redis cache that reduces database load by 80% is cheaper and faster to implement than doubling your database tier. Apply caching at every layer — application, database, CDN — and measure the hit rate.</span>
+          </div>
+        </li>
+        <li>
+          <div class="principle-icon">5</div>
+          <div class="principle-text">
+            <strong>Design for failure.</strong>
+            <span>Every instance will fail. Every availability zone will experience latency spikes. Every network link will drop packets. The systems that scale gracefully are the ones designed with this assumption: that no single component is reliable, but the aggregate is.</span>
+          </div>
+        </li>
+        <li>
+          <div class="principle-icon">6</div>
+          <div class="principle-text">
+            <strong>Monitor everything, trust nothing.</strong>
+            <span>Scalability without observability is an article of faith. Instrument your services — metrics, logs, distributed traces — and build runbooks for the failure modes that matter. The first time your autoscaling fires in anger, you want data, not guesses.</span>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ══════════════════ FINAL THOUGHTS ══════════════════ -->
+    <section class="article-section">
+      <div class="prose">
+        <h2 class="section-title" style="font-size:1.6rem;">Final Thoughts</h2>
+
+        <p>The discipline of scalability sits at the intersection of systems thinking, economics, and operational pragmatism. There is no single architecture that is universally correct — the right design depends on your traffic patterns, team size, cost constraints, and failure tolerance.</p>
+
+        <p>What the best-designed systems share is not a particular technology stack but a <em>philosophy</em>: treat load as a variable, not a constant. Invest in the ability to grow, and the system will continue to serve its users as the product succeeds.</p>
+
+        <p>For ML and data engineers, these concepts translate directly: a model that cannot scale is a model that cannot reach production users at the scale where it creates real value. Building robust, observable, scalable ML systems is not peripheral engineering work — it is the engineering work that separates research projects from products.</p>
+      </div>
+    </section>
+
+    <!-- ══════════════════ FOOTNOTE ══════════════════ -->
+    <div class="article-footnote">
+      <p><em>The architecture principles in this article are grounded in production systems engineering. Cloud service specifics (pricing, feature names) evolve rapidly — always verify against current provider documentation before making infrastructure decisions.</em></p>
+    </div>
+
+    <!-- ══════════════════ TAGS ══════════════════ -->
+    <footer class="article-tags">
+      <p class="tags-label">Topics Covered</p>
+      <div class="tags-list">
+        <span class="tag">Scalability Fundamentals</span>
+        <span class="tag">Vertical Scaling</span>
+        <span class="tag">Horizontal Scaling</span>
+        <span class="tag">Diagonal Scaling</span>
+        <span class="tag">Load Balancing</span>
+        <span class="tag">Layer 4 / Layer 7</span>
+        <span class="tag">Autoscaling Policies</span>
+        <span class="tag">AWS · GCP · Azure</span>
+        <span class="tag">Database Bottlenecks</span>
+        <span class="tag">Caching with Redis</span>
+        <span class="tag">Async Processing</span>
+        <span class="tag">Spot Instances</span>
+        <span class="tag">Scale-to-Zero</span>
+        <span class="tag">CAP Theorem</span>
+        <span class="tag">Distributed Systems</span>
+        <span class="tag">ML Infrastructure</span>
+      </div>
+    </footer>
+
+  </div><!-- /article-wrapper -->
+</body>
+</html>
