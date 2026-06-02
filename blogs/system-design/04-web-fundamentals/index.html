@@ -651,7 +651,9 @@ Client                    Server
 <!-- ─── Management Technique 1 ─────────────────────────────── -->
 <h3 id="session-based">Management Technique 1: Session-Based (Cookies + Server Storage)</h3>
 
-<p>The classical approach is deceptively simple: when a user authenticates, the server generates a random, high-entropy identifier — a <strong>session ID</strong> — stores it in a key-value store alongside the user's data, and sends that ID to the browser as a cookie. On every subsequent request, the browser automatically attaches the cookie, the server looks up the session ID, and retrieves the associated user state.</p>
+<p>The traditional approach works just like the <strong>hotel ledger</strong>. When a user logs in, the server generates a random, complex identifier (a <strong>session ID</strong>). It writes this ID down in its own internal database alongside the user's data, and hands a copy of that ID to the browser as a <strong>cookie</strong>.</p>
+
+<p>On every subsequent click or request, the browser automatically shows this cookie. The server must pause, look up that ID in its database, and retrieve the user's state.</p>
 
 <span class="code-label">Session lifecycle — Python/Redis pseudocode</span>
 <pre><code><span class="tok-comment"># 1. User logs in with credentials</span>
@@ -680,16 +682,20 @@ Client                    Server
 <span class="tok-keyword">def</span> <span class="tok-func">revoke_session</span>(session_id, redis_client):
     redis_client.<span class="tok-func">delete</span>(<span class="tok-func">f</span><span class="tok-string">"session:{session_id}"</span>)  <span class="tok-comment"># instant logout</span></code></pre>
 
-<p>The beauty of this approach is <strong>centralized control</strong>. Logging a user out means deleting the session record — instantly and irrevocably. The session ID itself is meaningless without the backing store, so an attacker who steals an ID can be cut off the moment the session is revoked.</p>
+<p>The advantage here is <strong>centralized control</strong>. Logging a user out is as simple as crossing their name out of the ledger by deleting the session record from the server's database. Because the cookie itself is a meaningless number without the database to back it up, if an attacker steals it, they can be cut off instantly and irrevocably.</p>
 
-<p>The tradeoff is <strong>coupling and storage</strong>. The server must now maintain state, which means every backend instance needs access to the same session store. This creates a dependency — your application is no longer fully stateless, and that shared session store becomes a potential bottleneck and single point of failure if not designed carefully.</p>
+<p>The tradeoff is <strong>coupling and storage</strong>. The server is forced to remember you, which is called being <em>stateful</em>. At a massive scale, every single backend server needs access to that same central database to verify users. This creates a massive dependency — that shared database can quickly become a bottleneck and a single point of failure.</p>
+
 
 <!-- ─── Management Technique 2 ─────────────────────────────── -->
 <h3 id="token-based">Management Technique 2: Token-Based (JWT + OAuth 2.0)</h3>
 
-<p>The frustration with server-side sessions at scale gave rise to a different idea: what if the server didn't need to <em>remember</em> anything? What if the identity information traveled <em>inside</em> the token, cryptographically signed so it couldn't be tampered with?</p>
+<p>To fix the database bottleneck, developers asked: <em>What if the server didn't need to remember anything? What if the user's identity traveled inside the token itself?</em></p>
 
-<p>This is the premise behind <strong>JSON Web Tokens (JWTs)</strong>. A JWT is not an opaque identifier — it is a self-contained packet of claims, encoded and signed by the server.</p>
+<p>This is the <strong>smart keycard</strong> approach, and it relies on <strong>JSON Web Tokens (JWTs)</strong>. Instead of a blank ID number, a JWT is a self-contained packet of information (claims) that is cryptographically signed by the server.</p>
+
+<p>When a request arrives carrying a JWT, the server simply checks the math on the cryptographic signature. If the math checks out, it instantly trusts the information inside without ever looking at a database. This is <strong>stateless</strong>. Zero database lookups, zero round trips. Any backend server can independently verify the token in milliseconds.</p>
+
 
 <span class="code-label">JWT structure — decoded</span>
 <pre><code><span class="tok-comment">// JWT = base64url(HEADER) + "." + base64url(PAYLOAD) + "." + SIGNATURE</span>
@@ -745,14 +751,16 @@ RS256(<span class="tok-func">base64url</span>(header) + <span class="tok-string"
   </figcaption>
 </figure>
 
+<p><strong>OAuth 2.0</strong> is an authorization framework designed specifically for delegation. It solves a critical security problem: allowing a third-party application to access a user's protected data hosted on a different server, without requiring the user to expose their login credentials to that third party.</p>
 
-<p>When a request arrives carrying this token, the server verifies the signature using its public key. If valid, it trusts the claims without any database lookup. Zero state. Zero round trips to a session store. Any backend instance can independently verify any token.</p>
+<p>It explicitly separates <em>authentication</em> (verifying identity) from <em>authorization</em> (granting specific access). OAuth 2.0 shifts the focus to the latter by utilizing <strong>scopes</strong>. When an external tool asks for permission to read messages or pull data from a database, it requests specific scopes (e.g., <code>read:messages</code> or <code>write:database</code>). This ensures the application is granted only the exact level of access necessary, rather than absolute control over the user's account.</p>
 
-<p><strong>OAuth 2.0</strong> is the delegation layer built on top of this idea — not "who are you?" but "what are you allowed to do on behalf of whom?" When a data pipeline needs to access a user's BigQuery tables, or when a third-party ML tool requests permissions to your Slack workspace, OAuth 2.0 is orchestrating that dance.</p>
+<p>The "orchestration" of this process relies on a secure, multi-step exchange rather than a direct credential handover. The user authenticates directly with the secure host server, which then issues a temporary authorization code to the third-party application. The application's backend server then exchanges this temporary code for an <strong>Access Token</strong> (which is often structured as a JWT). By forcing this exchange to happen via server-to-server communication, OAuth 2.0 ensures that the final, sensitive Access Token is never exposed to the user's web browser, establishing a secure chain of trust.</p>
+
 
 <div class="callout warn">
   <div class="callout-title">⚠ The Revocation Problem</div>
-  A stolen JWT remains valid until its <code>exp</code> timestamp elapses. The standard mitigations — short-lived access tokens (15 minutes), refresh token rotation, token blocklists — all add operational complexity. Set expiry aggressively short and rotate refresh tokens on every use.
+  The major catch with the "smart keycard" method is that a stolen JWT remains perfectly valid until its expiration timestamp runs out. Because the server isn't constantly checking a central ledger, it doesn't immediately know if a card was stolen. To mitigate this, developers have to set the tokens to expire very quickly (e.g., every 15 minutes) and build complex "refresh" systems to continuously issue new ones in the background.
 </div>
 
 <!-- ─── Management Technique 3 ─────────────────────────────── -->
