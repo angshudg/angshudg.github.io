@@ -768,6 +768,11 @@ RS256(<span class="tok-func">base64url</span>(header) + <span class="tok-string"
 
 <p>The browser also offers its own key-value stores for applications that need to persist small amounts of state client-side.</p>
 
+<ul>
+  <li><code>localStorage</code>: persists indefinitely across browser sessions and tab closes, scoped to the origin</li>
+  <li><code>sessionStorage</code>: lives only for the duration of the page session — close the tab, state is gone</li>  
+</ul>
+
 <span class="code-label">localStorage vs. sessionStorage</span>
 <pre><code><span class="tok-comment">// localStorage: persists across browser restarts, scoped to origin</span>
 localStorage.<span class="tok-func">setItem</span>(<span class="tok-string">'theme'</span>, <span class="tok-string">'dark'</span>);
@@ -781,25 +786,146 @@ sessionStorage.<span class="tok-func">setItem</span>(<span class="tok-string">'d
 <div class="callout danger">
   <div class="callout-title">🚨 Never Store Auth Tokens in localStorage</div>
   <code>localStorage</code> is accessible to any JavaScript running on the page. A single XSS vulnerability exposes everything stored there. Use <code>HttpOnly</code> cookies for session secrets — they are unreadable by JavaScript by design.
+  <br>
+  <code>localStorage</code> is appropriate for UI preferences, non-sensitive cached responses, and draft state that a user explicitly wants preserved.
 </div>
 
 <!-- ─── Security Concerns ──────────────────────────────────── -->
 <h3 id="security-concerns">Security Concerns: The Attack Surface of Sessions</h3>
 
-<p>Every mechanism that stores user identity creates a target. Three vulnerabilities deserve particular attention.</p>
+<p>Every mechanism that stores user identity creates a target. These vulnerabilities deserve particular attention.</p>
 
-<h4>Session Hijacking</h4>
+<h4>1. Session Hijacking</h4>
 
-<p>Session hijacking occurs when an attacker obtains a valid session identifier and impersonates the legitimate user. The mechanics vary: network interception (solved by HTTPS), cross-site scripting reading <code>document.cookie</code> (solved by <code>HttpOnly</code>), and session fixation (solved by regenerating the session ID upon login).</p>
+<p>
+Session hijacking is exactly what it sounds like: an attacker steals a valid session ID and uses it to impersonate the user. If the server sees the correct session ID, it assumes the request is legitimate.
+</p>
 
-<h4>Cross-Site Request Forgery (CSRF)</h4>
+<p>
+An attacker can obtain this ID in three primary ways, and each has a specific mitigation:
+</p>
 
-<p>CSRF exploits a subtle feature of browsers: they automatically attach cookies to requests, regardless of where the request originates. If you are logged into <code>bank.com</code> and you visit a malicious page containing:</p>
+<ul>
+  <li><strong>Vector A: Network Interception (Packet Sniffing)</strong></li>
+</ul>
 
-<pre><code><span class="tok-comment">&lt;!-- On evil.com — fires automatically when page loads --&gt;</span>
-<span class="tok-op">&lt;</span><span class="tok-type">img</span> src=<span class="tok-string">"https://bank.com/transfer?to=attacker&amp;amount=1000"</span> <span class="tok-op">/&gt;</span></code></pre>
+<p>
+<strong>The Attack:</strong> If a user connects to a website over an unencrypted Wi-Fi network (like a public cafe), an attacker can monitor the network traffic and read the session cookie in plain text as it travels between the browser and the server.
+</p>
 
-<p>Your browser fires a GET request to <code>bank.com</code> — with your session cookie attached — without any deliberate action on your part. The bank server sees a valid session and processes the transfer. CSRF doesn't steal your credentials. It <em>is</em> you, from the server's perspective.</p>
+<p>
+<strong>The Mitigation (HTTPS &amp; <code>Secure</code> flag):</strong> The server must enforce <strong>HTTPS</strong> (TLS/SSL encryption) for all traffic. To ensure the browser never accidentally sends the cookie over an unencrypted HTTP connection, the server sets the <strong><code>Secure</code></strong> flag on the cookie. This tells the browser: <em>"Only transmit this cookie if the connection is encrypted."</em>
+</p>
+
+<ul>
+  <li><strong>Vector B: Cross-Site Scripting (XSS) Cookie Theft</strong></li>
+</ul>
+
+<p>
+<strong>The Attack:</strong> An attacker injects malicious JavaScript into a vulnerable webpage (e.g., in a comment section). When you view that page, the script executes in your browser, reads your cookies using <code>document.cookie</code>, and sends them to the attacker's server.
+</p>
+
+<p>
+<strong>The Mitigation (<code>HttpOnly</code> flag):</strong> The server sets the <strong><code>HttpOnly</code></strong> flag when issuing the cookie. This is a directive to the browser that strictly prohibits client-side scripts (like JavaScript) from accessing the cookie. If an XSS attack occurs, <code>document.cookie</code> will simply return blank for that specific cookie.
+</p>
+
+<ul>
+  <li><strong>Vector C: Session Fixation</strong></li>
+</ul>
+
+<p>
+<strong>The Attack:</strong> The attacker visits a login page, gets a valid (but unauthenticated) session ID from the server, and tricks the victim into using it (e.g., sending a link like <code>http://bank.com/login?session_id=123</code>). The victim logs in, authenticating that specific session ID. The attacker, who already knows the ID, now has access to the victim's authenticated account.
+</p>
+
+<p>
+<strong>The Mitigation (Session Regeneration):</strong> Upon a successful login, the server must immediately invalidate the pre-login session ID and <strong>generate a brand new, highly random session ID</strong> for the authenticated state.
+</p>
+
+<h4>2. Cross-Site Request Forgery (CSRF)</h4>
+
+<p>
+CSRF is a more subtle attack. It doesn't attempt to steal your cookie; it exploits the fact that your browser automatically sends cookies to the domain they belong to, regardless of where the request started.
+</p>
+
+<p><strong>The Mechanics:</strong></p>
+
+<ul>
+  <li>You log into <code>bank.com</code>. Your browser stores the session cookie.</li>
+  <li>In another tab, you visit <code>evil.com</code>.</li>
+  <li><code>evil.com</code> contains a hidden form or an image tag pointing to <code>bank.com/transfer?amount=1000&amp;to=attacker</code>.</li>
+  <li>Your browser sees a request going to <code>bank.com</code>. It helpfully says, <em>"I have a cookie for bank.com!"</em> and attaches it.</li>
+  <li>The bank receives the request, sees your valid cookie, and executes the transfer.</li>
+</ul>
+
+<p><strong>The Mitigations:</strong></p>
+
+<ul>
+  <li><strong>Primary Mitigation: The <code>SameSite</code> Cookie Attribute</strong></li>
+</ul>
+
+<p>
+This is the modern, browser-level defense against CSRF. It allows the server to declare if the cookie should be restricted to first-party (same-site) context.
+</p>
+
+<ul>
+  <li>
+    <strong><code>SameSite=Strict</code></strong>: The browser will <em>never</em> send the cookie if the request originated from a different domain. If you click a link to <code>bank.com</code> from an email or another site, you will appear logged out until you navigate within <code>bank.com</code> itself. (Highly secure, but can harm user experience).
+  </li>
+  <li>
+    <strong><code>SameSite=Lax</code></strong>: The modern default. The browser will not send the cookie for cross-site background requests (like hidden forms, images, or AJAX calls—which block the CSRF attacks). However, it <em>will</em> send the cookie for top-level navigations (like a user clicking a standard <code>&lt;a href="..."&gt;</code> link).
+  </li>
+  <li>
+    <strong><code>SameSite=None</code></strong>: The browser always sends the cookie. This must be paired with the <code>Secure</code> flag and is generally only used for cross-site embeds (like a YouTube video player or a payment gateway iframe).
+  </li>
+</ul>
+<br>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>SameSite Value</th>
+        <th>Cross-Site Subresource</th>
+        <th>Top-Level Navigation</th>
+        <th>Recommendation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>Strict</code></td>
+        <td class="cell-good">Blocked ✓</td>
+        <td class="cell-good">Blocked ✓</td>
+        <td class="cell-neutral">Most secure; may break OAuth redirects</td>
+      </tr>
+      <tr>
+        <td><code>Lax</code></td>
+        <td class="cell-good">Blocked ✓</td>
+        <td class="cell-warn">Allowed (GET only)</td>
+        <td class="cell-good">Modern default; safe for most apps</td>
+      </tr>
+      <tr>
+        <td><code>None</code></td>
+        <td class="cell-warn">Allowed</td>
+        <td class="cell-warn">Allowed</td>
+        <td class="cell-neutral">Requires <code>Secure</code>; use for cross-site embeds</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<ul>
+  <li><strong>Secondary Mitigation: Anti-CSRF Tokens (Synchronizer Token Pattern)</strong></li>
+</ul>
+
+<p>
+Before <code>SameSite</code> existed, this was the primary defense, and it is still widely used alongside it for defense-in-depth.
+</p>
+
+<ul>
+  <li>When the server renders a form (like a money transfer form), it generates a unique, cryptographically random string (the Anti-CSRF Token).</li>
+  <li>It embeds this token in a hidden field within the form and also saves it in the user's session data on the server.</li>
+  <li>When the form is submitted, the server checks if the submitted token matches the token stored in the session.</li>
+  <li>Because an attacker on <code>evil.com</code> cannot read the data on <code>bank.com</code> (due to a browser security rule called the Same-Origin Policy), they cannot predict or read the Anti-CSRF token to include it in their forged request. The server rejects the request.</li>
+</ul>
 
 <!-- Figure 3 -->
 <figure class="reveal">
@@ -835,47 +961,14 @@ sessionStorage.<span class="tok-func">setItem</span>(<span class="tok-string">'d
 </figure>
 
 <h4>Cookie Flags: Your First Line of Defense</h4>
-
-<pre><code><span class="tok-comment"># These three flags together form a robust session cookie baseline</span>
+<p>These three flags together form a robust session cookie baseline.</p>
+<pre><code>
 Set-Cookie: session_id=abc123;
   Secure;           <span class="tok-comment"># Only transmit over HTTPS — blocks network interception</span>
   HttpOnly;         <span class="tok-comment"># Inaccessible to JavaScript — blocks XSS cookie theft</span>
   SameSite=Lax;     <span class="tok-comment"># No cross-site sending by default — primary CSRF defense</span>
   Path=/;
   Max-Age=3600</code></pre>
-
-<div class="table-wrap">
-  <table>
-    <thead>
-      <tr>
-        <th>SameSite Value</th>
-        <th>Cross-Site Subresource</th>
-        <th>Top-Level Navigation</th>
-        <th>Recommendation</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>Strict</code></td>
-        <td class="cell-good">Blocked ✓</td>
-        <td class="cell-good">Blocked ✓</td>
-        <td class="cell-neutral">Most secure; may break OAuth redirects</td>
-      </tr>
-      <tr>
-        <td><code>Lax</code></td>
-        <td class="cell-good">Blocked ✓</td>
-        <td class="cell-warn">Allowed (GET only)</td>
-        <td class="cell-good">Modern default; safe for most apps</td>
-      </tr>
-      <tr>
-        <td><code>None</code></td>
-        <td class="cell-warn">Allowed</td>
-        <td class="cell-warn">Allowed</td>
-        <td class="cell-neutral">Requires <code>Secure</code>; use for cross-site embeds</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
 
 <!-- ─── Scaling Sessions ───────────────────────────────────── -->
 <h3 id="scaling-sessions">Scaling Sessions: From One Server to Many</h3>
