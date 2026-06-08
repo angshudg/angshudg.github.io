@@ -1011,6 +1011,31 @@ app.config[<span class="tok-string">'SESSION_REDIS'</span>] = redis.<span class=
     session[<span class="tok-string">'role'</span>] = user.role
     <span class="tok-keyword">return</span> <span class="tok-func">redirect</span>(<span class="tok-string">'/dashboard'</span>)</code></pre>
 
+<p>
+  By default, Flask stores session data in a cryptographically signed cookie sent directly to the user's browser. These lines override that default behavior.
+</p>
+
+<ul>
+  <li>They tell the <code>Flask-Session</code> extension to use <strong>Redis</strong> as the storage backend.</li>
+  <li>They provide the connection URL for the Redis server.</li>
+  <li><code>Session(app)</code> applies this new configuration to your web app.</li>
+</ul>
+<br>
+<p>
+  When a user successfully logs in, you assign their <code>user_id</code> and <code>role</code> to the
+  <code>session</code> object. Because of the configuration above, Flask does something very specific behind the scenes here:
+</p>
+
+<ul>
+  <li>It generates a highly secure, random <strong>Session ID</strong>.</li>
+  <li>It saves the user's data (<code>user_id</code> and <code>role</code>) directly into the <strong>Redis database</strong>, using that Session ID as the lookup key.</li>
+  <li>It sends an HTTP response to the user's browser that includes a <code>Set-Cookie</code> header containing <em>only</em> that random Session ID (not their actual user data).</li>
+</ul>
+<br>
+<p>
+  If you store sessions in a server's local memory, a user must keep talking to that exact same server, or they will be logged out. By pushing the session data into a shared Redis database, you achieve <strong>horizontal scalability</strong>. You can spin up 50 identical Flask servers behind a load balancer. If a user logs in on Server A, and their next click routes them to Server B, Server B simply reads their Session ID from the cookie, checks the shared Redis database, and knows exactly who they are.
+</p>
+
 <h4>Stateless JWTs for Horizontal Scaling</h4>
 
 <p>The cleanest scaling solution architecturally: if every request carries a self-verifying JWT, your backend nodes need no shared state at all. Any of hundreds of nodes can verify the token independently using the same public key.</p>
@@ -1024,7 +1049,123 @@ app.config[<span class="tok-string">'SESSION_REDIS'</span>] = redis.<span class=
           Node 1          Node 2          Node 3
      (verifies JWT)  (verifies JWT)  (verifies JWT)
              │              │              │
-             └──── NO shared session store needed ────┘</div>
+             └──── NO shared session store needed ────┘
+</div>
+<p>
+  With Stateless JWTs, we replace that database lookup mentioned in distributed stores with cryptography.
+</p>
+
+<p>
+  This architecture relies on asymmetric cryptography (specifically, algorithms like RS256). This means you use two different keys:
+</p>
+
+<ol>
+  <li><strong>A Private Key:</strong> A highly guarded secret used <em>only</em> to sign and create the tokens.</li>
+  <li><strong>A Public Key:</strong> A widely shared key that can <em>only</em> be used to verify that a token was genuinely signed by the private key.</li>
+</ol>
+<br>
+<p><strong>Step 1: The Login (The Authentication Server)</strong></p>
+
+<p>
+  When the user logs in, their request goes to a dedicated Authentication Server. This is the only server that holds the <strong>Private Key</strong>. It verifies their password, creates the JWT, signs it, and hands it back to the user.
+</p>
+
+<span class="code-label">Authentication Server</span>
+<pre><code><span class="tok-keyword">import</span> jwt
+<span class="tok-keyword">import</span> datetime
+
+<span class="tok-comment"># The Auth Server holds the highly guarded PRIVATE key</span>
+PRIVATE_KEY = b<span class="tok-string">"""-----BEGIN RSA PRIVATE KEY-----
+... (secret key data) ...
+-----END RSA PRIVATE KEY-----"""</span>
+
+<span class="tok-keyword">def</span> <span class="tok-func">login</span>(username, password):
+    <span class="tok-comment"># 1. Verify credentials against the primary database</span>
+    user = <span class="tok-func">verify_user_credentials</span>(username, password)
+
+    <span class="tok-comment"># 2. Create the payload with user info and an expiration time</span>
+    payload = {
+        <span class="tok-string">"user_id"</span>: user.id,
+        <span class="tok-string">"role"</span>: user.role,
+        <span class="tok-string">"exp"</span>: datetime.datetime.<span class="tok-func">utcnow</span>() +
+               datetime.timedelta(minutes=<span class="tok-number">15</span>)
+    }
+
+    <span class="tok-comment"># 3. Cryptographically sign the token using the PRIVATE key</span>
+    token = jwt.<span class="tok-func">encode</span>(
+        payload,
+        PRIVATE_KEY,
+        algorithm=<span class="tok-string">"RS256"</span>
+    )
+
+    <span class="tok-comment"># Send the token back to the user's browser</span>
+    <span class="tok-keyword">return</span> {<span class="tok-string">"token"</span>: token}</code></pre>
+
+<p><strong>Step 2: The API Request (The Backend Nodes)</strong></p>
+
+<p>
+  Now the user wants to fetch some data from your API. The Load Balancer randomly routes their request to <strong>Node 2</strong>.
+</p>
+
+<p>
+  Node 2 knows absolutely nothing about this user. It isn't connected to a session database. However, Node 2 (along with Node 1 and Node 3) has a copy of the <strong>Public Key</strong>.
+</p>
+
+<span class="code-label">Backend API Node</span>
+<pre><code><span class="tok-keyword">import</span> jwt
+
+<span class="tok-comment"># ALL backend nodes are given the PUBLIC key.</span>
+<span class="tok-comment"># It cannot create tokens, it can only verify them.</span>
+PUBLIC_KEY = b<span class="tok-string">"""-----BEGIN PUBLIC KEY-----
+... (public key data) ...
+-----END PUBLIC KEY-----"""</span>
+
+<span class="tok-comment"># Node 2 receives an HTTP request with the token in the headers</span>
+<span class="tok-keyword">def</span> <span class="tok-func">handle_api_request</span>(request):
+    token = request.headers.<span class="tok-func">get</span>(
+        <span class="tok-string">"Authorization"</span>
+    ).<span class="tok-func">split</span>(<span class="tok-string">"Bearer "</span>)[<span class="tok-number">1</span>]
+
+    <span class="tok-keyword">try</span>:
+        <span class="tok-comment"># The node does the math locally to verify the signature.</span>
+        <span class="tok-comment"># Notice: NO database connection here! NO Redis lookup!</span>
+        decoded_payload = jwt.<span class="tok-func">decode</span>(
+            token,
+            PUBLIC_KEY,
+            algorithms=[<span class="tok-string">"RS256"</span>]
+        )
+
+        user_id = decoded_payload[<span class="tok-string">"user_id"</span>]
+        role = decoded_payload[<span class="tok-string">"role"</span>]
+
+        <span class="tok-comment"># If the math checks out, the node implicitly trusts the data.</span>
+        <span class="tok-keyword">return</span> <span class="tok-func">fetch_data_for_user</span>(user_id)
+
+    <span class="tok-keyword">except</span> jwt.ExpiredSignatureError:
+        <span class="tok-keyword">return</span> <span class="tok-string">"Token has expired. Please log in again."</span>, <span class="tok-number">401</span>
+
+    <span class="tok-keyword">except</span> jwt.InvalidTokenError:
+        <span class="tok-keyword">return</span> <span class="tok-string">"Nice try, hacker. Invalid signature."</span>, <span class="tok-number">401</span></code></pre>
+
+<ul>
+  <li>
+    <strong>Zero Network Overhead for Auth:</strong> The backend nodes (<code>Node 1</code>, <code>Node 2</code>, <code>Node 3</code>) do not have to make a secondary network call to a Redis cluster or a central database to figure out who the user is. <code>jwt.decode()</code> is just local CPU math. It executes in microseconds.
+  </li>
+  <li>
+    <strong>Infinite Horizontal Scaling:</strong> Because the nodes don't rely on a shared database for sessions, you don't have to worry about your Redis cluster becoming a bottleneck. You can scale from 3 nodes to 3,000 nodes behind your load balancer instantly. Each node is entirely self-sufficient at verifying who users are.
+  </li>
+</ul>
+<br>
+<p><strong>The Catch (There is always a catch)</strong></p>
+
+<p>
+  Because the backend nodes are verifying the tokens locally without checking a central database, <strong>you cannot easily log a user out or ban them instantly</strong>.
+</p>
+
+<p>
+  If a hacker steals that JWT, they can use it on Node 1, 2, or 3 until the <code>exp</code> (expiration time) runs out. The nodes will blindly trust the token because the cryptographic signature is mathematically valid. This is why JWTs must have very short lifespans (e.g., 15 minutes) to mitigate the damage if they are stolen.
+</p>
+
 
 <hr />
 
