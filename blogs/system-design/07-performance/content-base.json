@@ -1,0 +1,202 @@
+{
+  "node_name": "System Performance Optimization",
+  "description": "The central topic is how to make a system faster, more efficient, and more reliable under real workload pressure. It brings together measurement, storage design, caching, messaging, concurrency, and validation so performance is improved as an end-to-end property rather than as a single isolated tuning trick.",
+  "children": [
+    {
+      "node_name": "Core Performance Concepts",
+      "description": "This branch defines the basic vocabulary for discussing system performance. It focuses on what is being optimized, how success is measured, and how to interpret user-visible behavior under load. These ideas form the shared foundation for every later optimization choice in the map.",
+      "children": [
+        {
+          "node_name": "Latency vs Throughput",
+          "description": "This node contrasts how long one operation takes with how many operations a system can finish in a unit of time. In system performance optimization, the trade-off matters because improving one dimension can hurt the other, so tuning decisions need to match the actual workload goal.",
+          "children": []
+        },
+        {
+          "node_name": "Scalability vs Responsiveness",
+          "description": "This node separates the ability to handle more load from the ability to keep individual interactions feeling fast. A system can scale horizontally yet still feel sluggish, so the topic reminds you to evaluate both growth capacity and user experience at the same time.",
+          "children": []
+        },
+        {
+          "node_name": "Measurement (SLA, SLO, SLI)",
+          "description": "This node is about defining performance in measurable terms. Service-level indicators track what is observed, objectives express the target, and agreements describe the commitment. Within performance optimization, measurement turns vague speed concerns into concrete thresholds that engineering teams can monitor and improve.",
+          "children": []
+        },
+        {
+          "node_name": "Percentiles (P50, P95, P99)",
+          "description": "This node explains why average values are not enough for performance work. Percentiles show how the slowest portions of traffic behave, which is crucial when a few outlier requests dominate perceived slowness. They help reveal tail latency that normal averages can hide.",
+          "children": []
+        }
+      ]
+    },
+    {
+      "node_name": "Database Optimization",
+      "description": "This branch covers database-level choices that shape read speed, write speed, consistency, and operational cost. In a performance context, it is about reducing contention, limiting unnecessary work, and choosing the right storage structure so the database does not become the bottleneck for the whole system.",
+      "children": [
+        {
+          "node_name": "Replication",
+          "description": "This node represents copying data across multiple database nodes so reads, availability, and fault tolerance can improve. For system performance optimization, replication often helps absorb read traffic and keep service available, but it also introduces synchronization overhead and freshness trade-offs that must be managed.",
+          "children": []
+        },
+        {
+          "node_name": "Sharding vs Partitioning",
+          "description": "This node distinguishes splitting data across multiple storage units from dividing it within a storage strategy. In performance terms, the goal is to distribute load, reduce hot spots, and keep queries efficient. The choice affects query routing, operational complexity, and how easily the system can grow.",
+          "children": []
+        },
+        {
+          "node_name": "CAP Theorem",
+          "description": "This node captures the design tension among consistency, availability, and partition tolerance in distributed data systems. Within performance optimization, it matters because a database architecture often has to favor one property more strongly during failures or network splits, which changes both speed and correctness expectations.",
+          "children": []
+        },
+        {
+          "node_name": "Indexing (B-Tree, Hash, Bitmap)",
+          "description": "This node is about adding lookup structures that reduce how much data a database must scan. Different index types support different access patterns, so performance tuning depends on matching the index to the query shape. Good indexing can sharply reduce latency, while poor indexing can slow writes.",
+          "children": []
+        },
+        {
+          "node_name": "Normalization vs Denormalization",
+          "description": "This node compares keeping data highly structured and minimized against duplicating data for faster reads. For system performance optimization, the balance is between reducing redundancy and reducing query cost. The right choice depends on whether the workload is read-heavy, write-heavy, or frequently joins multiple tables.",
+          "children": []
+        },
+        {
+          "node_name": "Query Optimization",
+          "description": "This node focuses on making database queries do less work for the same result. That can mean changing predicates, join order, access paths, or execution plans. In performance optimization, query tuning is often one of the fastest ways to remove unnecessary latency and lower resource use.",
+          "children": []
+        },
+        {
+          "node_name": "Materialized Views",
+          "description": "This node represents precomputed query results stored for later reuse. In a system performance context, materialized views trade extra storage and refresh cost for faster reads on repeated or expensive aggregations. They are especially useful when the same derived data is requested frequently.",
+          "children": []
+        },
+        {
+          "node_name": "Connection Pooling",
+          "description": "This node is about reusing database connections instead of creating a new one for every request. That reduces handshake overhead and prevents connection storms from overwhelming the database. In performance optimization, pooling is a practical way to protect throughput and stabilize latency under concurrent traffic.",
+          "children": []
+        }
+      ]
+    },
+    {
+      "node_name": "Caching Strategies",
+      "description": "This branch explains how storing frequently used data closer to the application reduces repeated computation and slow backend access. In performance optimization, caching is one of the main ways to cut latency, lower database pressure, and smooth traffic spikes while still keeping data reasonably fresh.",
+      "children": [
+        {
+          "node_name": "Levels (Client, CDN, Server, DB)",
+          "description": "This node shows that caching can exist at multiple layers of the stack. Client, CDN, server, and database caches each serve a different distance from the user and backend. For performance optimization, layering caches helps reduce repeated work at the most expensive level possible.",
+          "children": []
+        },
+        {
+          "node_name": "Write-through vs Write-back",
+          "description": "This node contrasts two ways of keeping cached data and persistent data aligned. Write-through updates the backing store immediately, while write-back delays persistence for speed. In system performance work, the choice is a balance between durability, latency, and the risk of stale or lost updates.",
+          "children": []
+        },
+        {
+          "node_name": "Lazy Loading (Cache-aside)",
+          "description": "This node describes a pattern where the application checks cache first and falls back to the data source on a miss. It is a common optimization because only requested data is loaded into cache. The pattern helps reduce unnecessary caching work while keeping the hot path fast.",
+          "children": []
+        },
+        {
+          "node_name": "Eviction Policies (LRU, LFU, FIFO, TTL)",
+          "description": "This node is about deciding what to remove when cache capacity is full. Eviction policy affects hit rate, fairness, and how well the cache matches real usage patterns. In performance optimization, the wrong policy can waste memory on stale or rarely used entries and reduce the benefit of caching.",
+          "children": []
+        },
+        {
+          "node_name": "Redis In-memory Store",
+          "description": "This node represents using an in-memory data store as a fast cache or lightweight data layer. Within system performance optimization, it is valued for quick reads, atomic operations, and flexible cache patterns. It is commonly used to reduce pressure on slower persistent systems.",
+          "children": []
+        }
+      ]
+    },
+    {
+      "node_name": "Messaging & Queues",
+      "description": "This branch covers how systems exchange work asynchronously instead of forcing every component to wait in line. For performance optimization, queues and messaging help smooth bursts, isolate failures, and let producers and consumers scale independently while preserving the right delivery behavior.",
+      "children": [
+        {
+          "node_name": "Asynchronous Messaging Benefits",
+          "description": "This node explains why handing off work instead of processing it inline can improve performance. Async messaging reduces request blocking, absorbs bursts, and lets slow downstream tasks run without freezing the caller. It is a key technique for increasing resilience and overall system throughput.",
+          "children": []
+        },
+        {
+          "node_name": "RabbitMQ (Push-based)",
+          "description": "This node refers to a broker style where messages are delivered to consumers in a push-oriented way. In system performance optimization, that means the broker actively dispatches work, which can help smooth task distribution and coordinate background processing when application flow must remain responsive.",
+          "children": []
+        },
+        {
+          "node_name": "Kafka (Pull-based streaming)",
+          "description": "This node describes a log-oriented streaming system where consumers read data at their own pace. That pull model is useful for performance because it supports high throughput, replayability, and independent scaling. It suits workloads where ordered event processing and durable streams matter.",
+          "children": []
+        },
+        {
+          "node_name": "Delivery Guarantees (At-least-once, Exactly-once)",
+          "description": "This node concerns how reliably a message reaches its destination and how duplicates are handled. For performance optimization, stronger guarantees often add coordination overhead, while weaker guarantees simplify speed but increase application responsibility. The right guarantee depends on how costly retries or duplication would be.",
+          "children": []
+        },
+        {
+          "node_name": "Decoupling & Fault Tolerance",
+          "description": "This node shows how queues separate producers from consumers so one slow part does not block the rest. That decoupling improves fault tolerance and makes capacity easier to manage under changing load. In performance optimization, it helps the system stay usable when some components lag or fail.",
+          "children": []
+        },
+        {
+          "node_name": "Consumer Idempotency",
+          "description": "This node is about making repeated message handling safe. In asynchronous performance design, retries and duplicate deliveries are common, so consumers must process an event more than once without causing incorrect side effects. Idempotency protects correctness while allowing aggressive recovery strategies.",
+          "children": []
+        }
+      ]
+    },
+    {
+      "node_name": "Concurrency & Parallelism",
+      "description": "This branch examines how work is organized so multiple operations can progress together. In system performance optimization, the aim is to use available CPU and I/O efficiently without creating excessive contention, unsafe shared-state behavior, or coordination overhead that erodes the benefit of parallel execution.",
+      "children": [
+        {
+          "node_name": "Threads vs Processes",
+          "description": "This node compares two execution models for concurrent work. Threads share memory and can communicate quickly, while processes are more isolated and often safer but heavier. In performance optimization, the choice affects memory use, coordination cost, and how much parallel work the system can sustain.",
+          "children": []
+        },
+        {
+          "node_name": "Thread Pools",
+          "description": "This node describes a controlled set of reusable worker threads. For performance, pools reduce creation overhead and keep concurrency bounded so the system does not spawn too much work at once. They are useful when many short tasks must be processed efficiently without exhausting resources.",
+          "children": []
+        },
+        {
+          "node_name": "Asynchronous Non-blocking I/O",
+          "description": "This node represents waiting for I/O without tying up a worker thread during the wait. That improves performance when the workload spends significant time on network or disk operations. The goal is to keep execution resources available for other tasks instead of idling during blocking calls.",
+          "children": []
+        },
+        {
+          "node_name": "Race Conditions & Prevention",
+          "description": "This node focuses on errors that appear when multiple execution paths access shared state at the wrong time. In performance optimization, prevention matters because concurrency bugs can corrupt data, create retries, or force overly conservative locking. Safe coordination lets the system stay fast and correct together.",
+          "children": []
+        },
+        {
+          "node_name": "Deadlock Resolution",
+          "description": "This node covers situations where concurrent workers wait on each other forever. Deadlocks are a performance issue because they stop progress and may consume resources while doing no useful work. Resolution involves designing lock order, timeouts, or retries so the system can recover and keep moving.",
+          "children": []
+        }
+      ]
+    },
+    {
+      "node_name": "Testing & Monitoring",
+      "description": "This branch is about validating performance in realistic conditions and observing systems after deployment. In optimization work, testing reveals how the system behaves under load, while monitoring shows where bottlenecks, regressions, and cost inefficiencies appear in live operation.",
+      "children": [
+        {
+          "node_name": "Testing (Load, Stress, Spike, Endurance)",
+          "description": "This node groups the major kinds of performance testing used to understand system limits. Load tests measure expected demand, stress tests push beyond it, spike tests observe sudden jumps, and endurance tests reveal long-run degradation. Together they expose capacity and stability issues before users do.",
+          "children": []
+        },
+        {
+          "node_name": "Monitoring Tools (APM, Prometheus, Grafana)",
+          "description": "This node refers to the observability stack used to watch performance metrics and system behavior over time. APM tools help trace application latency, while metric systems and dashboards make trends visible. In system performance optimization, these tools help teams detect regressions and verify improvements.",
+          "children": []
+        },
+        {
+          "node_name": "Bottleneck Identification",
+          "description": "This node is about finding the specific component that limits the whole system. A bottleneck may appear in CPU, memory, disk, network, locks, queues, or queries. Performance optimization depends on identifying that limiting factor rather than guessing, because fixing the wrong layer yields little improvement.",
+          "children": []
+        },
+        {
+          "node_name": "Cloud Cost-Performance Trade-offs",
+          "description": "This node considers performance improvements together with infrastructure spending. A faster configuration may require more compute, storage, or managed-service features, so optimization is not only about speed. In cloud systems, the best design balances latency, throughput, resilience, and spend per unit of work.",
+          "children": []
+        }
+      ]
+    }
+  ]
+}

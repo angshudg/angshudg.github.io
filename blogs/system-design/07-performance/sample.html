@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Building Systems That Scale: The Complete Engineer's Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Design Tokens ─── */
+    :root {
+      --ink:         #1a1814;
+      --ink-2:       #3d3a35;
+      --ink-3:       #6b6760;
+      --ink-4:       #9e9b97;
+      --paper:       #faf9f7;
+      --paper-2:     #f3f1ed;
+      --paper-3:     #eae7e1;
+      --rule:        #e2dfd8;
+      --accent:      #c0392b;
+      --accent-2:    #922b21;
+      --accent-soft: #fdf2f1;
+      --blue:        #1b3a6b;
+      --blue-soft:   #eef2f9;
+      --green:       #1a5c3a;
+      --green-soft:  #edf7f1;
+      --amber:       #92610a;
+      --amber-soft:  #fef9ec;
+      --purple:      #4a2570;
+      --purple-soft: #f5f0fa;
+      --mono:        'JetBrains Mono', 'Fira Code', monospace;
+      --serif:       'Lora', 'Georgia', serif;
+      --sans:        'DM Sans', system-ui, sans-serif;
+      --max-w:       720px;
+      --col-gap:     2.5rem;
+    }
+
+    /* ─── Reset & Base ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 18px; scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--serif);
+      font-weight: 400;
+      line-height: 1.75;
+      color: var(--ink);
+      background: var(--paper);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Reading Progress Bar ─── */
+    #progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 0%;
+      height: 3px;
+      background: var(--accent);
+      z-index: 1000;
+      transition: width 0.1s linear;
+    }
+
+    /* ─── Navigation ─── */
+    nav {
+      position: sticky;
+      top: 0;
+      background: rgba(250, 249, 247, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--rule);
+      z-index: 100;
+      padding: 0.85rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .nav-brand {
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      text-decoration: none;
+    }
+
+    .nav-meta {
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      color: var(--ink-4);
+      display: flex;
+      gap: 1.25rem;
+      align-items: center;
+    }
+
+    .nav-tag {
+      background: var(--paper-3);
+      border-radius: 3px;
+      padding: 0.2em 0.6em;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: var(--ink-3);
+    }
+
+    /* ─── Hero ─── */
+    .hero {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 5rem 2rem 4rem;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .hero-eyebrow {
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.25rem;
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 4.5vw, 3rem);
+      font-weight: 700;
+      line-height: 1.18;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-subtitle {
+      font-family: var(--sans);
+      font-size: 1.1rem;
+      font-weight: 300;
+      color: var(--ink-2);
+      line-height: 1.65;
+      max-width: 640px;
+      margin-bottom: 2rem;
+    }
+
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      font-family: var(--sans);
+      font-size: 0.8rem;
+      color: var(--ink-3);
+    }
+
+    .hero-meta span::before { content: '·'; margin-right: 1.5rem; }
+    .hero-meta span:first-child::before { display: none; }
+
+    /* ─── Main Layout ─── */
+    .layout {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: grid;
+      grid-template-columns: 1fr min(var(--max-w), 100%) 1fr;
+      gap: 0;
+    }
+
+    /* ─── Article ─── */
+    article {
+      grid-column: 2;
+      padding: 3.5rem 0 6rem;
+    }
+
+    /* ─── Typography ─── */
+    p {
+      margin-bottom: 1.6rem;
+      font-size: 1rem;
+      color: var(--ink);
+    }
+
+    p:last-child { margin-bottom: 0; }
+
+    strong { font-weight: 600; color: var(--ink); }
+    em { font-style: italic; }
+
+    a { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
+    a:hover { color: var(--accent); }
+
+    h2 {
+      font-family: var(--serif);
+      font-size: 1.75rem;
+      font-weight: 700;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin: 3.5rem 0 1.25rem;
+      padding-top: 1rem;
+      border-top: 2px solid var(--ink);
+    }
+
+    h3 {
+      font-family: var(--sans);
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      color: var(--ink-2);
+      margin: 2.25rem 0 0.85rem;
+    }
+
+    h4 {
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 2rem 0 0.75rem;
+    }
+
+    /* ─── Lists ─── */
+    ul, ol {
+      margin-bottom: 1.6rem;
+      padding-left: 1.5rem;
+      color: var(--ink);
+    }
+    
+    li {
+      margin-bottom: 0.5rem;
+    }
+
+    /* ─── Opening Quote ─── */
+    .pull-quote {
+      border-left: 3px solid var(--accent);
+      padding: 1rem 1.5rem;
+      margin: 2.5rem 0;
+      background: var(--accent-soft);
+      border-radius: 0 6px 6px 0;
+    }
+
+    .pull-quote p {
+      font-style: italic;
+      font-size: 1.05rem;
+      color: var(--ink-2);
+      margin-bottom: 0;
+    }
+
+    /* ─── Divider ─── */
+    .section-divider {
+      text-align: center;
+      margin: 3rem 0;
+      color: var(--ink-4);
+      font-size: 1.1rem;
+      letter-spacing: 0.3em;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--rule);
+      margin: 2.5rem 0;
+    }
+
+    /* ─── Code Blocks ─── */
+    pre {
+      background: #1e1c1a;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.75rem 0;
+      position: relative;
+    }
+
+    pre .code-label {
+      position: absolute;
+      top: 0; right: 0;
+      background: rgba(255,255,255,0.07);
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      padding: 0.35em 0.85em;
+      border-radius: 0 8px 0 6px;
+    }
+
+    pre code {
+      display: block;
+      padding: 1.5rem 1.75rem;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: #d4cfc8;
+    }
+
+    .kw  { color: #c792ea; }   
+    .fn  { color: #82aaff; }   
+    .st  { color: #c3e88d; }   
+    .cm  { color: #546e7a; font-style: italic; } 
+    .nm  { color: #f78c6c; }   
+    .at  { color: #ffcb6b; }   
+    .tp  { color: #89ddff; }   
+
+    code:not(pre code) {
+      font-family: var(--mono);
+      font-size: 0.82em;
+      background: var(--paper-3);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      padding: 0.1em 0.4em;
+      color: var(--accent-2);
+    }
+
+    /* ─── Illustration Placeholder ─── */
+    .illustration {
+      margin: 2.25rem 0;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--rule);
+      background: var(--paper-2);
+    }
+
+    .illustration img {
+      width: 100%;
+      display: block;
+    }
+
+    .illustration figcaption {
+      padding: 0.75rem 1rem;
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      color: var(--ink-3);
+      line-height: 1.5;
+      border-top: 1px solid var(--rule);
+      background: var(--paper);
+    }
+
+    /* ─── Comparison Table ─── */
+    .table-wrapper {
+      overflow-x: auto;
+      margin: 2rem 0;
+      border-radius: 8px;
+      border: 1px solid var(--rule);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      background: var(--paper);
+    }
+
+    thead tr {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    thead th {
+      padding: 0.75rem 1rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--rule);
+      transition: background 0.15s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--paper-2); }
+
+    tbody td {
+      padding: 0.7rem 1rem;
+      color: var(--ink-2);
+      vertical-align: middle;
+    }
+
+    tbody td:first-child {
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    /* ─── Section Label Accent ─── */
+    .part-label {
+      display: inline-block;
+      font-family: var(--sans);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--paper);
+      background: var(--ink);
+      padding: 0.2em 0.75em;
+      border-radius: 3px;
+      margin-bottom: 0.6rem;
+    }
+
+    /* ─── Footnote ─── */
+    .article-footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--rule);
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      color: var(--ink-3);
+      line-height: 1.7;
+    }
+
+    .article-footer strong { color: var(--ink-2); }
+
+    /* ─── TOC Sidebar (desktop only) ─── */
+    .toc-sidebar {
+      display: none;
+    }
+
+    @media (min-width: 1100px) {
+      .toc-sidebar {
+        display: block;
+        grid-column: 4;
+        padding: 3.5rem 0 6rem 3rem;
+        position: relative;
+      }
+
+      .toc-inner {
+        position: sticky;
+        top: 5rem;
+      }
+
+      .toc-label {
+        font-family: var(--sans);
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-4);
+        margin-bottom: 0.85rem;
+      }
+
+      .toc-list {
+        list-style: none;
+        border-left: 1px solid var(--rule);
+        padding-left: 1rem;
+        margin-bottom: 0;
+      }
+
+      .toc-list li {
+        margin-bottom: 0.5rem;
+      }
+
+      .toc-list a {
+        font-family: var(--sans);
+        font-size: 0.78rem;
+        font-weight: 400;
+        color: var(--ink-3);
+        text-decoration: none;
+        line-height: 1.4;
+        display: block;
+        transition: color 0.15s;
+      }
+
+      .toc-list a:hover,
+      .toc-list a.active {
+        color: var(--ink);
+      }
+
+      .toc-list a.active {
+        font-weight: 600;
+        border-left: 2px solid var(--accent);
+        margin-left: -1rem;
+        padding-left: calc(1rem - 2px);
+      }
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 700px) {
+      html { font-size: 17px; }
+      h1   { font-size: 1.75rem; }
+      h2   { font-size: 1.45rem; }
+      .hero { padding: 3rem 1.25rem 2.5rem; }
+      .layout { padding: 0 1.25rem; }
+      nav  { padding: 0.75rem 1.25rem; }
+      pre code { font-size: 0.75rem; padding: 1.25rem; }
+    }
+
+    /* ─── Animations ─── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero h1,
+    .hero .hero-subtitle,
+    .hero .hero-meta {
+      animation: fadeInUp 0.6s ease both;
+    }
+
+    .hero h1           { animation-delay: 0.05s; }
+    .hero .hero-subtitle { animation-delay: 0.15s; }
+    .hero .hero-meta   { animation-delay: 0.25s; }
+  </style>
+</head>
+<body>
+
+  <div id="progress-bar"></div>
+
+  <nav aria-label="Site navigation">
+    <a href="#" class="nav-brand">Engineering Field Guide</a>
+    <div class="nav-meta">
+      <span class="nav-tag">Systems Design</span>
+      <span class="nav-tag">Architecture</span>
+      <span>~15 min read</span>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <p class="hero-eyebrow">The Complete Engineer's Guide</p>
+    <h1>Building Systems That Scale: The Complete Engineer's Guide to System Performance Optimization</h1>
+    <p class="hero-subtitle">From first-principles thinking to production-grade architecture — everything you need to make systems faster, more efficient, and more resilient under real-world load.</p>
+    <div class="hero-meta">
+      <span>Performance Optimization</span>
+      <span>System Architecture</span>
+      <span>Scalability</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <article id="article-content">
+      
+      <section id="intro">
+        <div class="pull-quote">
+          <p>From first-principles thinking to production-grade architecture — everything you need to make systems faster, more efficient, and more resilient under real-world load.</p>
+        </div>
+        
+        <p>There's a particular kind of humiliation that every engineer experiences at some point in their career. You've built something beautiful — clean code, elegant abstractions, solid test coverage. You demo it to your team, it flies. You push to production, traffic arrives, and then... it starts gasping. Latency climbs. Queues fill up. Your database CPU looks like a mountain range. Users start complaining.</p>
+        
+        <p>Welcome to the gap between "it works" and "it performs."</p>
+        
+        <p>System performance optimization is not a single technique or a configuration knob you flip. It is a discipline — a way of thinking about how every design decision compounds under real workload pressure. This article is a structured journey through that discipline. We'll build from first principles, reason through the tradeoffs that experienced engineers navigate daily, and arrive at a vocabulary and toolkit you can carry directly into your next system design review or production incident.</p>
+        
+        <p>Whether you're a data scientist whose pipelines are timing out, an ML engineer building an inference stack, an analytics engineer watching dashboards crawl, or a software engineer who just got handed a "make this faster" ticket — this guide is written for you.</p>
+        
+        <p>Let's start at the foundation.</p>
+      </section>
+
+      <div class="section-divider">· · ·</div>
+
+      <section id="part-1">
+        <span class="part-label">Part 1</span>
+        <h2>Core Performance Concepts — Building the Right Mental Model</h2>
+        <p>Before you can optimize anything, you need to be precise about what you're trying to improve. "Make it faster" is not a specification. Performance is a multi-dimensional property, and tuning in one dimension without understanding the others is how engineers spend weeks making something worse.</p>
+
+        <h3 id="latency-vs-throughput">Latency vs. Throughput: You Can't Always Have Both</h3>
+        <p>Imagine two coffee shops. The first is a specialty shop — they spend four minutes crafting each drink to perfection, but there's only one barista. The second is a drive-through chain — each drink takes 90 seconds, but they have eight lanes running in parallel. Which shop is "faster"?</p>
+        <p>That's exactly the question latency and throughput ask, and they're measuring different things.</p>
+        <p><strong>Latency</strong> is how long a single operation takes from start to finish. In a web service, it's the time from when a request enters your system to when the response exits. It's fundamentally an experience metric — users feel latency directly. A 300ms response feels snappy; a 3-second response feels broken.</p>
+        <p><strong>Throughput</strong> is how many operations your system can complete per unit of time — requests per second, messages per minute, rows processed per hour. It's a capacity metric. You need enough throughput to serve your entire user base concurrently.</p>
+        <p>Here's why the tradeoff is subtle: many common optimizations improve one at the expense of the other. Consider batching. If you aggregate 100 database writes into a single bulk insert, your throughput may increase by an order of magnitude — you're doing far less I/O overhead per row. But the latency of each individual write increases, because the first write in the batch has to wait for 99 others before it's committed. This is a classic throughput-optimized design that's terrible for interactive latency.</p>
+        <p>The formal relationship between the two is captured by <strong>Little's Law</strong>, a beautifully simple result from queueing theory:</p>
+
+        <pre><span class="code-label">Formula</span><code>L = λ × W</code></pre>
+
+        <p>Where:</p>
+        <ul>
+          <li><code>L</code> = the average number of requests in the system (queue depth)</li>
+          <li><code>λ</code> (lambda) = the arrival rate (throughput)</li>
+          <li><code>W</code> = the average time a request spends in the system (latency)</li>
+        </ul>
+
+        <p>If your latency doubles (W × 2), and your arrival rate stays the same, your queue depth also doubles. This is why performance regressions that seem minor in isolation can cascade into massive queue buildups under load. A service that handles 1,000 RPS at 50ms average latency has roughly 50 requests "in flight" at any moment. If a bad deploy pushes that to 500ms, you now have 500 in-flight requests — a 10x memory and connection surge, with no change in traffic.</p>
+        <p>The engineering takeaway: <strong>match your optimization goal to your workload type</strong>. Batch data pipelines are throughput-bound — you want to maximize records per second and don't care if a single record takes 10 minutes. Interactive web services are latency-bound — each user request must return in hundreds of milliseconds. Real-time ML inference often has to satisfy <em>both</em>: low latency under concurrent load. Understanding which type of system you're building changes every subsequent architectural decision.</p>
+
+        <figure class="illustration">
+          <img src="images/example-diagram-1.png" alt="A side-by-side conceptual diagram comparing Latency vs Throughput. Left panel shows a single HTTP request traveling from User to Database with hop durations. Right panel shows a timeline with 20 RPS stacked.">
+          <figcaption><strong>Figure 1:</strong> Latency vs Throughput. Latency is the per-operation cost, while throughput is aggregate system capacity. They relate via Little's Law.</figcaption>
+        </figure>
+
+        <h3 id="scalability-vs-responsiveness">Scalability vs. Responsiveness: Growing Fast Without Feeling Slow</h3>
+        <p>These two concepts are easy to conflate, but they describe fundamentally different properties of a system.</p>
+        <p><strong>Scalability</strong> is about capacity growth. Can the system handle 10× the current load with 10× the resources? Or does complexity, coordination overhead, and state management mean you need 50× the resources for 10× the load? A system that scales linearly is called <strong>horizontally scalable</strong> — you add more nodes, and capacity increases proportionally.</p>
+        <p><strong>Responsiveness</strong> is about user experience under any load level. A system that can handle a million requests per second but takes 8 seconds to respond is scalable but not responsive. A single-threaded Python service running on a beefy VM might feel lightning-fast for your first 10 users but fall apart at 100. It's somewhat responsive but not scalable.</p>
+
+        <p>The interesting tension: scaling strategies often temporarily hurt responsiveness. When you introduce a distributed cache cluster, you add a network hop. When you shard your database, some queries that were simple primary-key lookups become cross-shard joins. When you add more API servers behind a load balancer, session state management gets complicated.</p>
+
+        <h3 id="defining-fast">Defining "Fast": SLAs, SLOs, and SLIs</h3>
+        <p>Here's an uncomfortable truth about performance optimization: without precise measurement definitions, you cannot know if you've succeeded. "Make it faster" is a wish. "Reduce the P99 latency of the /checkout endpoint from 800ms to 300ms as measured over 30-minute windows in production" is an engineering target.</p>
+        
+        <p>The SLI → SLO → SLA hierarchy gives you a framework for moving from vague intuition to concrete commitments.</p>
+
+        <p><strong>Service Level Indicators (SLIs)</strong> are the raw metrics you actually measure. Examples:</p>
+        <ul>
+          <li>Request latency (in milliseconds)</li>
+          <li>Error rate (percentage of 5xx responses over total requests)</li>
+          <li>Availability (percentage of time the service responds to health checks)</li>
+        </ul>
+
+        <p><strong>Service Level Objectives (SLOs)</strong> are the targets you set for your SLIs. Examples:</p>
+        <ul>
+          <li>99% of requests should complete in under 200ms</li>
+          <li>Error rate should be below 0.1% over any 5-minute window</li>
+        </ul>
+
+        <p><strong>Service Level Agreements (SLAs)</strong> are formalized business commitments — often with financial penalties — that derive from your SLOs.</p>
+
+        <pre><span class="code-label">Checklist</span><code>1. What SLI am I trying to improve? (latency? error rate? throughput?)
+2. What is the current measured value?
+3. What is the target SLO?
+4. How will I measure it? (which environment, which percentile?)
+5. What's the error budget?</code></pre>
+
+        <h3 id="why-averages-lie">Why Averages Lie: The Power of Percentiles</h3>
+        <p>Consider this scenario: your service processes 100 requests. 99 of them complete in 10ms. One request hits a cold database partition and takes 10,000ms (10 seconds). What's the average latency?</p>
+        
+        <pre><code>Average = (99 × 10ms + 1 × 10,000ms) / 100 ≈ 110ms</code></pre>
+        
+        <p>Your dashboard shows 110ms average. Looks acceptable. But one percent of your users waited 10 full seconds. At 1,000 requests per second, that's 10 users per second experiencing catastrophic performance.</p>
+        
+        <p><strong>Percentiles tell the truth that averages hide.</strong> The Pn percentile answers: "What is the maximum latency experienced by the fastest N% of requests?"</p>
+        
+        <ul>
+          <li><strong>P50 (median)</strong>: Half of requests are faster than this. A better "typical" experience metric than mean.</li>
+          <li><strong>P95</strong>: 95% of requests are faster. This is often the first place tail latency problems appear.</li>
+          <li><strong>P99</strong>: The experience of your 99th percentile user. At scale, P99 is experienced by a <em>lot</em> of real people.</li>
+        </ul>
+      </section>
+
+      <div class="section-divider">· · ·</div>
+    </article>
+
+    <aside class="toc-sidebar">
+      <div class="toc-inner">
+        <div class="toc-label">Table of Contents</div>
+        <ul class="toc-list">
+          <li><a href="#intro">Introduction</a></li>
+          <li><a href="#part-1">1 · Core Concepts</a></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    // ─── Reading progress bar ───
+    const bar = document.getElementById('progress-bar');
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      bar.style.width = (scrollTop / docHeight * 100) + '%';
+    });
+
+    // ─── Active TOC highlighting ───
+    const tocLinks = document.querySelectorAll('.toc-list a');
+    const sections = document.querySelectorAll('section[id], h2[id]');
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          tocLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + entry.target.id) {
+              link.classList.add('active');
+            }
+          });
+        }
+      });
+    }, { rootMargin: '-10% 0px -80% 0px' });
+
+    sections.forEach(section => observer.observe(section));
+  </script>
+</body>
+</html>
