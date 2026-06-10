@@ -1,0 +1,228 @@
+{
+  "node_name": "Reliability, Availability & Disaster Recovery",
+  "description": "Discipline focused on keeping systems dependable, minimizing downtime, protecting data, and restoring services after failures through reliability engineering, high availability, backups, and disaster recovery planning.",
+  "children": [
+    {
+      "node_name": "System Reliability Metrics",
+      "description": "Metrics used to quantify service dependability, outage frequency, recovery performance, and operational risk.",
+      "children": [
+        {
+          "node_name": "MTBF (Mean Time Between Failures)",
+          "description": "Measures average operating time between repairable failures; higher values generally indicate greater reliability.",
+          "children": []
+        },
+        {
+          "node_name": "MTTR (Mean Time To Recovery)",
+          "description": "Measures average time required to restore service after a failure; lower values improve resilience.",
+          "children": []
+        },
+        {
+          "node_name": "SLAs (Uptime, Response Time, Error Rate)",
+          "description": "Service commitments defining acceptable availability, latency, and error thresholds for users.",
+          "children": []
+        },
+        {
+          "node_name": "Availability vs Durability",
+          "description": "Availability concerns access to services; durability concerns long-term preservation of data.",
+          "children": []
+        }
+      ]
+    },
+    {
+      "node_name": "High Availability (HA) & Fault Tolerance",
+      "description": "Architectural approaches that keep services running despite component, infrastructure, or regional failures.",
+      "children": [
+        {
+          "node_name": "Redundancy Strategies",
+          "description": "Techniques that duplicate critical resources to eliminate single points of failure.",
+          "children": [
+            {
+              "node_name": "Active-Active Redundancy",
+              "description": "Multiple live instances serve traffic simultaneously and share workload.",
+              "children": []
+            },
+            {
+              "node_name": "Active-Passive Redundancy",
+              "description": "Standby resources remain ready and take over during failures.",
+              "children": []
+            },
+            {
+              "node_name": "N+1 Redundancy",
+              "description": "Provides at least one extra component beyond normal capacity requirements.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Architectural Patterns",
+          "description": "Design patterns commonly used to improve uptime and graceful failure handling.",
+          "children": [
+            {
+              "node_name": "Load Balancers",
+              "description": "Distribute traffic across instances to improve availability and scalability.",
+              "children": []
+            },
+            {
+              "node_name": "Failover Mechanisms",
+              "description": "Automatically redirect workloads to healthy resources during outages.",
+              "children": []
+            },
+            {
+              "node_name": "Graceful Degradation",
+              "description": "Maintains partial functionality when full service cannot be sustained.",
+              "children": []
+            },
+            {
+              "node_name": "Circuit Breakers & Retries",
+              "description": "Prevent cascading failures and improve recovery from transient issues.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "System Health",
+          "description": "Operational capabilities used to detect, respond to, and recover from failures.",
+          "children": [
+            {
+              "node_name": "Continuous Monitoring",
+              "description": "Tracks infrastructure and application signals in real time.",
+              "children": []
+            },
+            {
+              "node_name": "Self-Healing Systems",
+              "description": "Automatically detect and remediate common failures.",
+              "children": []
+            },
+            {
+              "node_name": "Automated Recovery",
+              "description": "Uses automation to restart, replace, or recover failed components.",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "Backup Strategies",
+      "description": "Practices for preserving recoverable copies of data and systems.",
+      "children": [
+        {
+          "node_name": "Backup Types",
+          "description": "Different methods for capturing and storing recoverable data.",
+          "children": [
+            {
+              "node_name": "Full Backup",
+              "description": "Creates a complete copy of protected data.",
+              "children": []
+            },
+            {
+              "node_name": "Incremental Backup",
+              "description": "Stores only changes since the most recent backup.",
+              "children": []
+            },
+            {
+              "node_name": "Differential Backup",
+              "description": "Stores changes since the last full backup.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Best Practices",
+          "description": "Operational guidelines that improve backup reliability and recoverability.",
+          "children": [
+            {
+              "node_name": "3-2-1 Rule",
+              "description": "Keep three copies, on two media types, with one copy offsite.",
+              "children": []
+            },
+            {
+              "node_name": "Encryption & Immutability",
+              "description": "Protects backup integrity and reduces ransomware risk.",
+              "children": []
+            },
+            {
+              "node_name": "Cloud-Native Tooling",
+              "description": "Leverages managed cloud services for backup and protection.",
+              "children": []
+            },
+            {
+              "node_name": "Regular Restore Testing",
+              "description": "Validates that backups can actually be recovered when needed.",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "Recovery & Disaster Recovery (DR)",
+      "description": "Processes and architectures for restoring services and data after major disruptions.",
+      "children": [
+        {
+          "node_name": "Performance Objectives",
+          "description": "Business-defined recovery targets that guide DR design.",
+          "children": [
+            {
+              "node_name": "RTO (Recovery Time Objective)",
+              "description": "Maximum acceptable downtime before service restoration is required.",
+              "children": []
+            },
+            {
+              "node_name": "RPO (Recovery Point Objective)",
+              "description": "Maximum acceptable amount of data loss measured in time.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Recovery Models",
+          "description": "Different readiness levels for disaster recovery environments.",
+          "children": [
+            {
+              "node_name": "Cold Recovery (Tape/Cloud Archive)",
+              "description": "Lowest-cost option with longer recovery times.",
+              "children": []
+            },
+            {
+              "node_name": "Warm Recovery (Standby Servers)",
+              "description": "Partially prepared environment enabling faster restoration.",
+              "children": []
+            },
+            {
+              "node_name": "Hot Recovery (Real-time Syncing)",
+              "description": "Continuously synchronized environment enabling near-immediate recovery.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "DR Implementation",
+          "description": "Engineering and operational practices used to execute disaster recovery plans.",
+          "children": [
+            {
+              "node_name": "Geo-distributed Challenges",
+              "description": "Managing latency, consistency, and coordination across regions.",
+              "children": []
+            },
+            {
+              "node_name": "Quorum-based Design (Paxos/Raft)",
+              "description": "Uses distributed consensus to maintain correctness during failures.",
+              "children": []
+            },
+            {
+              "node_name": "Multi-region Failover",
+              "description": "Redirects workloads between geographic regions during outages.",
+              "children": []
+            },
+            {
+              "node_name": "Chaos Engineering Drills",
+              "description": "Controlled failure experiments that validate resilience and recovery.",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
