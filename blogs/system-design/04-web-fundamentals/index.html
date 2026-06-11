@@ -1381,21 +1381,20 @@ producer = <span class="tok-func">AvroProducer</span>({
 
 <h4>Readability vs. Efficiency</h4>
 
-<p>The tension is stark. Every character in a JSON key name (<code>"transaction_amount"</code>) is twenty bytes repeated in every single message. At 10,000 messages per second, that's 200 KB/s spent on a single field name. Protobuf replaces this with a single integer tag — one byte in the wire format.</p>
+<p>The tension is stark. Every character in a JSON key name (<code>"transaction_amount"</code>) is twenty bytes repeated in every single message. At 10,000 messages per second, that's 200 KB/s spent on a single field name. Protobuf replaces this with a single integer tag — one byte in the wire format. 
+  Rough parsing performance comparison for a small example. Same payload, different parsing choices:</p>
 
-<span class="code-label">Rough parsing performance comparison</span>
-<pre><code><span class="tok-comment"># At 100,000 requests per second, format choice has real cost:</span>
-<span class="tok-comment">#</span>
-<span class="tok-comment"># Standard json:  ~50µs/parse  →  5,000ms CPU per second per core</span>
-<span class="tok-comment"># ujson (fast):   ~15µs/parse  →  1,500ms CPU per second per core</span>
-<span class="tok-comment"># Protobuf:        ~5µs/parse  →    500ms CPU per second per core</span>
-<span class="tok-comment">#</span>
-<span class="tok-comment"># 10x more capacity from the same hardware — not a rounding error</span>
-<span class="tok-keyword">import</span> timeit
+<div class="ascii-diagram" aria-label="Rough parsing performance comparison">Payload sizes
+--------------------------------------------------
+JSON     : 13,234 bytes
+Protobuf : 4,921 bytes
 
-json_time    = timeit.<span class="tok-func">timeit</span>(<span class="tok-keyword">lambda</span>: json.<span class="tok-func">loads</span>(large_json_str), number=<span class="tok-number">10000</span>)
-proto_time   = timeit.<span class="tok-func">timeit</span>(<span class="tok-keyword">lambda</span>: Msg.<span class="tok-func">FromString</span>(proto_bytes),    number=<span class="tok-number">10000</span>)
-<span class="tok-func">print</span>(<span class="tok-func">f</span><span class="tok-string">"JSON: {json_time*100:.1f}µs avg | Protobuf: {proto_time*100:.1f}µs avg"</span>)</code></pre>
+Deserialization benchmark
+--------------------------------------------------
+JSON      : 35.12 µs/op
+Protobuf  : 8.41 µs/op
+Speedup   : 4.18x
+</div>
 
 <h4>Schema Enforcement and Evolution</h4>
 
@@ -1772,21 +1771,60 @@ ALLOWED_ORIGINS = {<span class="tok-string">"https://myapp.com"</span>, <span cl
 </div><!-- .site-wrap -->
 
 <script>
-  // Progress bar
+  // Unique key per page
+  const STORAGE_KEY = 'reading-progress:' + window.location.pathname;
+
+  // Restore scroll position
+  window.addEventListener('load', () => {
+    const savedProgress = parseFloat(localStorage.getItem(STORAGE_KEY));
+
+    if (!isNaN(savedProgress) && savedProgress > 0.01) {
+      const target =
+        savedProgress *
+        (document.documentElement.scrollHeight - window.innerHeight);
+
+      window.scrollTo(0, target);
+    }
+  });
+
+  // Progress bar + save reading progress
   const bar = document.getElementById('progress-bar');
+
+  let saveTimeout;
+
   window.addEventListener('scroll', () => {
     const h = document.documentElement;
-    const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+
+    const pct =
+      (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+
     bar.style.width = Math.min(pct, 100) + '%';
+
+    // Throttle localStorage writes
+    clearTimeout(saveTimeout);
+
+    saveTimeout = setTimeout(() => {
+      localStorage.setItem(
+        STORAGE_KEY,
+        (pct / 100).toString()
+      );
+    }, 250);
+
   }, { passive: true });
 
   // Scroll-reveal
   const reveals = document.querySelectorAll('.reveal');
+
   const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        io.unobserve(e.target);
+      }
+    });
   }, { threshold: 0.08 });
+
   reveals.forEach(el => io.observe(el));
 </script>
-
 </body>
 </html>

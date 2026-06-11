@@ -1,0 +1,323 @@
+{
+  "node_name": "Security in System Design",
+  "description": "The root topic frames security as a design concern across software, data, identity, networks, and cloud infrastructure. It ties together core security principles, access control, cryptography, platform defenses, and threat reduction so that protections are built into the system architecture rather than added late.",
+  "children": [
+    {
+      "node_name": "Core Concepts & Models",
+      "description": "This branch introduces the conceptual vocabulary used to reason about security in a system design. It covers the CIA triad, threat modeling, and secure SDLC practices so that risks are identified early and design choices can be mapped to concrete security goals.",
+      "children": [
+        {
+          "node_name": "CIA Triad",
+          "description": "The CIA triad is the classic model for information security in system design. It organizes protections around confidentiality, integrity, and availability, which are the three outcomes most security controls are meant to preserve.",
+          "children": [
+            {
+              "node_name": "Confidentiality",
+              "description": "Confidentiality means only authorized parties can see sensitive data or system details. In system design, it drives access restrictions, encryption, and privacy controls that prevent disclosure of secrets, personal data, and proprietary information.",
+              "children": []
+            },
+            {
+              "node_name": "Integrity",
+              "description": "Integrity means data and system state are not altered improperly. Within secure system design, it motivates controls such as hashes, signatures, authenticated channels, and validation checks that help detect tampering or unauthorized modification.",
+              "children": []
+            },
+            {
+              "node_name": "Availability",
+              "description": "Availability means the system remains usable when legitimate users need it. Security design uses resilience, redundancy, monitoring, throttling, and denial-of-service defenses so that attacks or failures do not take critical services offline.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Threat Modeling",
+          "description": "Threat modeling is the discipline of asking what can go wrong before a system is built or released. It helps teams identify threats, attack paths, and mitigations by describing the system, the trust boundaries, and the assets that need protection.",
+          "children": [
+            {
+              "node_name": "STRIDE Model",
+              "description": "STRIDE is a structured way to classify threats during analysis. It helps designers look for spoofing, tampering, repudiation, information disclosure, denial of service, and privilege escalation so the design can be reviewed systematically.",
+              "children": []
+            },
+            {
+              "node_name": "Attack Surface",
+              "description": "The attack surface is the total set of entry points and exposed behaviors an adversary can interact with. In system design, reducing it means minimizing public endpoints, permissions, protocols, and code paths that are reachable from outside trust boundaries.",
+              "children": []
+            },
+            {
+              "node_name": "Assets & Vulnerabilities",
+              "description": "Assets are the things worth protecting, while vulnerabilities are weaknesses that can be exploited. A secure design starts by identifying critical assets such as credentials, keys, data, and services, then mapping the weak points that could compromise them.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Security in SDLC",
+          "description": "This node covers how security is embedded across the software development life cycle. The idea is to design, test, release, and maintain software with explicit security practices so problems are found earlier and are cheaper to fix.",
+          "children": [
+            {
+              "node_name": "Shift Left Principle",
+              "description": "Shift left means addressing security earlier in the development lifecycle instead of waiting until production. In practice, it reduces the cost of remediation by incorporating secure design reviews, testing, and checks while requirements and code are still changing.",
+              "children": []
+            },
+            {
+              "node_name": "Secure Architecture Design",
+              "description": "Secure architecture design means choosing system boundaries, trust relationships, and control points with security in mind. It shapes how components communicate, how secrets are protected, and where authentication, authorization, and isolation should be enforced.",
+              "children": []
+            },
+            {
+              "node_name": "Patch Management",
+              "description": "Patch management is the ongoing process of keeping software and infrastructure updated against known vulnerabilities. Within system design, it requires inventory, testing, deployment workflows, and rollback strategies so security fixes can be applied quickly without destabilizing the service.",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "Authentication & Authorization",
+      "description": "This branch explains how a system proves who a user or service is, and then decides what that identity is allowed to do. It includes token-based authentication, access control models, and identity federation patterns that are central to modern application security.",
+      "children": [
+        {
+          "node_name": "Authentication Methods",
+          "description": "Authentication methods are the mechanisms a system uses to verify identity. They range from browser-based sign-in flows and tokens to multi-factor checks and single sign-on, allowing applications to balance usability with stronger assurance.",
+          "children": [
+            {
+              "node_name": "OAuth 2.0 / OpenID Connect",
+              "description": "OAuth 2.0 and OpenID Connect are widely used standards for delegated access and identity-aware sign-in. In system design, OAuth handles authorization to protected resources, while OpenID Connect layers identity verification on top for user authentication.",
+              "children": []
+            },
+            {
+              "node_name": "JWT (Stateless Tokens)",
+              "description": "JWTs are compact tokens that carry claims between parties without forcing the server to keep session state. They are commonly used in distributed system designs because they can be signed or encrypted and verified independently by receiving services.",
+              "children": []
+            },
+            {
+              "node_name": "MFA (Multi-Factor)",
+              "description": "Multi-factor authentication requires more than one proof of identity, usually combining something the user knows, has, or is. In a system design context, MFA reduces the impact of password theft and makes account compromise harder.",
+              "children": []
+            },
+            {
+              "node_name": "SSO (Single Sign-On)",
+              "description": "Single sign-on lets a user authenticate once and reuse that identity across multiple applications. For system design, SSO simplifies user experience while centralizing authentication policy, session handling, and account lifecycle management.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Access Control Models",
+          "description": "Access control models define the logic that decides whether a request should be allowed. They translate identities, roles, attributes, and policy rules into concrete authorization decisions, which is a core part of secure system behavior.",
+          "children": [
+            {
+              "node_name": "RBAC (Role-Based)",
+              "description": "Role-based access control grants permissions to roles instead of individual users. In system design, RBAC simplifies administration because access can be managed by assigning users or service accounts to well-defined operational roles.",
+              "children": []
+            },
+            {
+              "node_name": "ABAC (Attribute-Based)",
+              "description": "Attribute-based access control evaluates policy using attributes about the user, resource, action, and sometimes the environment. It is useful when system design needs more context-aware authorization than a simple role mapping can provide.",
+              "children": []
+            },
+            {
+              "node_name": "DAC & MAC",
+              "description": "Discretionary and mandatory access control are two classic authorization styles. DAC lets the resource owner decide access, while MAC uses centrally enforced labels or classifications, which is helpful when security policy must remain strict and non-negotiable.",
+              "children": []
+            },
+            {
+              "node_name": "Least Privilege",
+              "description": "Least privilege means each user, service, or component gets only the access required to perform its task. In system design, this reduces blast radius, limits lateral movement, and makes misuse or compromise less damaging.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Identity Federation",
+          "description": "Identity federation lets one system trust identities issued by another trusted provider. This pattern is common in enterprise architecture because it avoids duplicated credentials and allows applications to rely on external identity providers for authentication and sign-in.",
+          "children": [
+            {
+              "node_name": "Identity Providers",
+              "description": "Identity providers are the services that authenticate a user and issue assertions or tokens about that identity. In system design, they become a trusted source for login flows, account linking, and single sign-on across multiple applications.",
+              "children": []
+            },
+            {
+              "node_name": "SAML / OIDC",
+              "description": "SAML and OpenID Connect are common federation standards used to move identity information between trusted parties. SAML is often associated with enterprise web single sign-on, while OIDC is widely used in modern application sign-in flows.",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "Data Protection & Communication",
+      "description": "This branch focuses on protecting data itself, whether it is stored, transmitted, or being validated for integrity. It combines encryption, hashing, digital signatures, HMACs, and PKI so that confidentiality and trust can be maintained across the system.",
+      "children": [
+        {
+          "node_name": "Encryption",
+          "description": "Encryption transforms data so that it is unreadable without the correct key. System design uses it both to protect stored information and to secure communication channels, ensuring secrets remain protected even when data crosses untrusted environments.",
+          "children": [
+            {
+              "node_name": "Symmetric (AES)",
+              "description": "Symmetric encryption uses the same key to encrypt and decrypt data, making it efficient for bulk protection. AES is the standard example in system design, especially for encrypting large data sets, backups, and local storage.",
+              "children": []
+            },
+            {
+              "node_name": "Asymmetric (RSA/TCC)",
+              "description": "Asymmetric encryption uses a public key and a private key pair, which makes it useful for trust exchange and key distribution. In system design it supports identity, key exchange, and certificate-based workflows rather than high-volume bulk encryption.",
+              "children": []
+            },
+            {
+              "node_name": "Data at Rest (TDE/Full-Disk)",
+              "description": "Data at rest protections secure information stored on disks, databases, or backups. Full-disk encryption and transparent data encryption help system designers reduce exposure if storage media, snapshots, or backups are copied without authorization.",
+              "children": []
+            },
+            {
+              "node_name": "Data in Transit (TLS/HTTPS)",
+              "description": "Data in transit protections secure information while it moves across networks. TLS and HTTPS are central to system design because they help prevent eavesdropping, tampering, and message forgery between clients, services, and APIs.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Hashing & Integrity",
+          "description": "Hashing and integrity controls help prove that data has not been altered. They are especially important for passwords, signed content, messages, and software artifacts where the system must detect modification or verify authenticity.",
+          "children": [
+            {
+              "node_name": "One-Way Functions",
+              "description": "One-way functions are designed to be easy to compute but hard to reverse. In system design they underpin password storage, digest generation, and other integrity checks where the original value should not be recoverable from the output.",
+              "children": []
+            },
+            {
+              "node_name": "Password Salting (bcrypt)",
+              "description": "Password salting adds unique randomness before hashing a password, making precomputed attacks less effective. bcrypt is commonly used in system design because it includes salting and cost tuning to slow down offline guessing attempts.",
+              "children": []
+            },
+            {
+              "node_name": "Digital Signatures",
+              "description": "Digital signatures use cryptography to prove who created data and whether it was changed. In system design they support software release verification, certificate-based trust, and signed messages where authenticity and non-repudiation matter.",
+              "children": []
+            },
+            {
+              "node_name": "HMACs",
+              "description": "HMACs combine a secret key with a hash function to produce a message authentication code. They are used in system design when a service needs integrity and authenticity for messages, APIs, or tokens without using public-key signatures.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "PKI (Public Key Infrastructure)",
+          "description": "PKI is the trust framework that makes public-key systems usable at scale. It ties certificates, certificate authorities, revocation, and chain validation together so systems can trust the identities behind keys and encrypted channels.",
+          "children": [
+            {
+              "node_name": "Certificate Authorities (CAs)",
+              "description": "Certificate authorities issue and vouch for certificates that bind keys to identities. In system design they sit at the center of certificate trust because clients rely on them to decide whether a server or service identity is legitimate.",
+              "children": []
+            },
+            {
+              "node_name": "Chain of Trust",
+              "description": "A chain of trust links a leaf certificate back to a trusted root through intermediate certificates. System design depends on this chain so that a client can validate identity without manually trusting every individual certificate.",
+              "children": []
+            },
+            {
+              "node_name": "Revocation (CRL/OCSP)",
+              "description": "Revocation mechanisms let systems reject certificates that should no longer be trusted. CRLs and OCSP are used in PKI designs to answer whether a certificate has been revoked after compromise, replacement, or policy change.",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_name": "Network & Infrastructure Security",
+      "description": "This branch covers the controls that protect traffic, services, workloads, and deployment environments. It includes perimeter defenses, zero trust patterns, platform isolation, and attack mitigation techniques that reduce exposure across modern infrastructure.",
+      "children": [
+        {
+          "node_name": "Network Protection",
+          "description": "Network protection controls limit how traffic can move between clients, servers, and zones. In system design they establish perimeters and filtering points that reduce exposure to scanning, abuse, and unauthorized access.",
+          "children": [
+            {
+              "node_name": "Firewalls",
+              "description": "Firewalls control the flow of network traffic between hosts or networks with different security postures. They are a foundational network defense in system design because they enforce policy at boundaries and block unwanted traffic.",
+              "children": []
+            },
+            {
+              "node_name": "Reverse Proxies",
+              "description": "Reverse proxies sit in front of backend services and handle incoming requests on their behalf. In system design they can hide internal topology, terminate TLS, balance traffic, and add a layer for filtering or inspection.",
+              "children": []
+            },
+            {
+              "node_name": "WAF (Web App Firewall)",
+              "description": "A web application firewall inspects HTTP traffic for malicious patterns aimed at web applications. It is used in system design to block common web attacks such as injection and scripting abuses before they reach the application.",
+              "children": []
+            },
+            {
+              "node_name": "DDoS Mitigation",
+              "description": "DDoS mitigation limits the impact of traffic floods that try to exhaust service capacity. In system design it includes filtering, scrubbing, autoscaling, throttling, and resilience measures that keep legitimate users online during abuse.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Modern Security Models",
+          "description": "Modern security models shift protection away from a single perimeter and toward identity, policy, and segmentation. They are designed for cloud-native and distributed environments where components communicate continuously over dynamic networks.",
+          "children": [
+            {
+              "node_name": "Zero Trust (Always Verify)",
+              "description": "Zero trust is the idea that no request is trusted just because it originates from inside the network. In system design it means continuously verifying identity, context, and policy before granting access to resources.",
+              "children": []
+            },
+            {
+              "node_name": "Service Mesh (mTLS)",
+              "description": "A service mesh adds a communications layer for service-to-service security and traffic control. mTLS is a common part of that design because it gives workloads mutual authentication and encrypted connections without changing application code.",
+              "children": []
+            },
+            {
+              "node_name": "Micro-Segmentation",
+              "description": "Micro-segmentation divides infrastructure into smaller security zones with tighter communication rules. In system design this limits lateral movement and lets teams apply different policies to services, namespaces, or workloads.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Workload & Cloud Security",
+          "description": "Workload and cloud security focuses on protecting the compute layer where applications actually run. It includes cluster authorization, network policy, container hygiene, and cloud key management so deployed workloads inherit strong default protections.",
+          "children": [
+            {
+              "node_name": "Kubernetes RBAC & Network Policies",
+              "description": "Kubernetes RBAC and network policies restrict who can do what inside a cluster and which pods may talk to one another. Together they help system design enforce least privilege for both API actions and network communication.",
+              "children": []
+            },
+            {
+              "node_name": "Container Image Scanning",
+              "description": "Container image scanning checks images for known vulnerabilities before they are deployed. In system design it is usually part of CI/CD so risky packages and misconfigurations can be caught before they reach production.",
+              "children": []
+            },
+            {
+              "node_name": "IAM Roles & KMS",
+              "description": "IAM roles and key management services control who can use cloud resources and cryptographic keys. System design uses them to issue temporary permissions, separate duties, and centralize control over encryption operations.",
+              "children": []
+            }
+          ]
+        },
+        {
+          "node_name": "Threat Mitigation",
+          "description": "Threat mitigation is the practical layer that reduces real attack scenarios in production systems. It uses known risk frameworks and rate controls to harden applications against common web abuses and overload conditions.",
+          "children": [
+            {
+              "node_name": "OWASP Top 10",
+              "description": "The OWASP Top 10 is a widely used awareness list of the most critical web application security risks. In system design it serves as a checklist for reviewing common failure modes before they become production incidents.",
+              "children": []
+            },
+            {
+              "node_name": "Injection Protection",
+              "description": "Injection protection means preventing untrusted input from being interpreted as code or commands. In system design this includes validation, parameterization, encoding, and sandboxing to block SQL, command, and similar injection paths.",
+              "children": []
+            },
+            {
+              "node_name": "Rate Limiting",
+              "description": "Rate limiting controls how often a client can use an endpoint or function in a given time window. It protects system design from abuse, brute force, and resource exhaustion by throttling expensive or repeated requests.",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

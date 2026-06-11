@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Building Bulletproof Systems — Reliability, Availability &amp; Disaster Recovery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Design Tokens ─── */
+    :root {
+      --ink:         #1a1814;
+      --ink-2:       #3d3a35;
+      --ink-3:       #6b6760;
+      --ink-4:       #9e9b97;
+      --paper:       #faf9f7;
+      --paper-2:     #f3f1ed;
+      --paper-3:     #eae7e1;
+      --rule:        #e2dfd8;
+      --accent:      #c0392b;
+      --accent-2:    #922b21;
+      --accent-soft: #fdf2f1;
+      --blue:        #1b3a6b;
+      --blue-soft:   #eef2f9;
+      --green:       #1a5c3a;
+      --green-soft:  #edf7f1;
+      --amber:       #92610a;
+      --amber-soft:  #fef9ec;
+      --mono:        'JetBrains Mono', 'Fira Code', monospace;
+      --serif:       'Lora', 'Georgia', serif;
+      --sans:        'DM Sans', system-ui, sans-serif;
+      --max-w:       720px;
+    }
+
+    /* ─── Reset ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 18px; scroll-behavior: smooth; }
+    body {
+      font-family: var(--serif);
+      font-weight: 400;
+      line-height: 1.75;
+      color: var(--ink);
+      background: var(--paper);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Progress Bar ─── */
+    #progress-bar {
+      position: fixed; top: 0; left: 0;
+      width: 0%; height: 3px;
+      background: var(--accent);
+      z-index: 1000;
+      transition: width 0.1s linear;
+    }
+
+    /* ─── Navigation ─── */
+    nav {
+      position: sticky; top: 0;
+      background: rgba(250, 249, 247, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--rule);
+      z-index: 100;
+      padding: 0.85rem 2rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    }
+    .nav-brand {
+      font-family: var(--sans); font-size: 0.78rem; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--ink-3); text-decoration: none;
+    }
+    .nav-meta {
+      font-family: var(--sans); font-size: 0.75rem; color: var(--ink-4);
+      display: flex; gap: 1.25rem; align-items: center;
+    }
+    .nav-tag {
+      background: var(--paper-3); border-radius: 3px;
+      padding: 0.2em 0.6em; font-size: 0.7rem; font-weight: 500;
+      letter-spacing: 0.04em; color: var(--ink-3);
+    }
+
+    /* ─── Hero ─── */
+    .hero {
+      max-width: 860px; margin: 0 auto;
+      padding: 5rem 2rem 4rem;
+      border-bottom: 1px solid var(--rule);
+    }
+    .hero-eyebrow {
+      font-family: var(--sans); font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 1.25rem;
+    }
+    h1 {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 4.5vw, 3rem);
+      font-weight: 700; line-height: 1.18; letter-spacing: -0.02em;
+      color: var(--ink); margin-bottom: 1.25rem;
+    }
+    .hero-subtitle {
+      font-family: var(--sans); font-size: 1.1rem; font-weight: 300;
+      color: var(--ink-2); line-height: 1.65; max-width: 640px; margin-bottom: 2rem;
+    }
+    .hero-meta {
+      display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+      font-family: var(--sans); font-size: 0.8rem; color: var(--ink-3);
+    }
+    .hero-meta span::before { content: '·'; margin-right: 1.5rem; }
+    .hero-meta span:first-child::before { display: none; }
+
+    /* ─── Layout ─── */
+    .layout {
+      max-width: 1100px; margin: 0 auto; padding: 0 2rem;
+      display: grid;
+      grid-template-columns: 1fr min(var(--max-w), 100%) 1fr;
+      gap: 0;
+    }
+    article { grid-column: 2; padding: 3.5rem 0 6rem; }
+
+    /* ─── Typography ─── */
+    p { margin-bottom: 1.6rem; font-size: 1rem; color: var(--ink); }
+    p:last-child { margin-bottom: 0; }
+    strong { font-weight: 600; color: var(--ink); }
+    em { font-style: italic; }
+    a { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
+    a:hover { color: var(--accent); }
+
+    h2 {
+      font-family: var(--serif); font-size: 1.75rem; font-weight: 700;
+      line-height: 1.25; letter-spacing: -0.02em; color: var(--ink);
+      margin: 3.5rem 0 1.25rem; padding-top: 1rem;
+      border-top: 2px solid var(--ink);
+    }
+    h3 {
+      font-family: var(--sans); font-size: 1.05rem; font-weight: 600;
+      letter-spacing: 0.01em; color: var(--ink-2); margin: 2.25rem 0 0.85rem;
+    }
+    h4 {
+      font-family: var(--sans); font-size: 0.9rem; font-weight: 600;
+      letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent);
+      margin: 2rem 0 0.75rem;
+    }
+
+    /* ─── Lists ─── */
+    ul, ol { margin-bottom: 1.6rem; padding-left: 1.5rem; color: var(--ink); }
+    li { margin-bottom: 0.5rem; }
+
+    /* ─── Pull Quote ─── */
+    blockquote.pull-quote {
+      border-left: 3px solid var(--accent); padding: 1rem 1.5rem;
+      margin: 2.5rem 0; background: var(--accent-soft); border-radius: 0 6px 6px 0;
+    }
+    blockquote.pull-quote p {
+      font-style: italic; font-size: 1.05rem; color: var(--ink-2); margin-bottom: 0;
+    }
+
+    /* ─── Section Divider ─── */
+    .section-divider {
+      text-align: center; margin: 3rem 0; color: var(--ink-4);
+      font-size: 1.1rem; letter-spacing: 0.3em;
+    }
+    hr { border: none; border-top: 1px solid var(--rule); margin: 2.5rem 0; }
+
+    /* ─── Code ─── */
+    pre {
+      background: #1e1c1a; border-radius: 8px;
+      overflow-x: auto; margin: 1.75rem 0; position: relative;
+    }
+    pre .code-label {
+      position: absolute; top: 0; right: 0;
+      background: rgba(255,255,255,0.07);
+      font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.08em;
+      text-transform: uppercase; color: rgba(255,255,255,0.35);
+      padding: 0.35em 0.85em; border-radius: 0 8px 0 6px;
+    }
+    pre code {
+      display: block; padding: 1.5rem 1.75rem;
+      font-family: var(--mono); font-size: 0.8rem; line-height: 1.7; color: #d4cfc8;
+    }
+    code:not(pre code) {
+      font-family: var(--mono); font-size: 0.82em;
+      background: var(--paper-3); border: 1px solid var(--rule);
+      border-radius: 4px; padding: 0.1em 0.4em; color: var(--accent-2);
+    }
+
+    /* ─── Illustrations ─── */
+    .illustration {
+      margin: 2.25rem 0; border-radius: 10px;
+      overflow: hidden; border: 1px solid var(--rule); background: var(--paper-2);
+    }
+    .illustration img { width: 100%; display: block; }
+    .illustration figcaption {
+      padding: 0.75rem 1rem; font-family: var(--sans); font-size: 0.75rem;
+      color: var(--ink-3); line-height: 1.5;
+      border-top: 1px solid var(--rule); background: var(--paper);
+    }
+
+    /* ─── Tables ─── */
+    .table-wrapper {
+      overflow-x: auto; margin: 2rem 0;
+      border-radius: 8px; border: 1px solid var(--rule);
+    }
+    table {
+      width: 100%; border-collapse: collapse;
+      font-family: var(--sans); font-size: 0.82rem; background: var(--paper);
+    }
+    thead tr { background: var(--ink); color: var(--paper); }
+    thead th {
+      padding: 0.75rem 1rem; font-weight: 500; letter-spacing: 0.03em;
+      text-align: left; white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid var(--rule); transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--paper-2); }
+    tbody td { padding: 0.7rem 1rem; color: var(--ink-2); vertical-align: top; }
+    tbody td:first-child { font-weight: 600; color: var(--ink); }
+
+    /* ─── Part Label ─── */
+    .part-label {
+      display: inline-block; font-family: var(--sans); font-size: 0.68rem;
+      font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--paper); background: var(--ink);
+      padding: 0.2em 0.75em; border-radius: 3px; margin-bottom: 0.6rem;
+    }
+
+    /* ─── Article Footer ─── */
+    .article-footer {
+      margin-top: 4rem; padding-top: 2rem;
+      border-top: 1px solid var(--rule);
+      font-family: var(--sans); font-size: 0.82rem; color: var(--ink-3); line-height: 1.7;
+    }
+    .article-footer strong { color: var(--ink-2); }
+    .article-footer h2 {
+      font-family: var(--sans); font-size: 1rem; font-weight: 700;
+      border-top: none; margin-top: 0; padding-top: 0;
+      color: var(--ink-2); letter-spacing: 0;
+    }
+    .article-footer ul { margin-top: 0.75rem; }
+
+    /* ─── TOC Sidebar ─── */
+    .toc-sidebar { display: none; }
+
+    @media (min-width: 1100px) {
+      .toc-sidebar {
+        display: block; grid-column: 4; padding: 3.5rem 0 6rem 3rem; position: relative;
+      }
+      .toc-inner { position: sticky; top: 5rem; }
+      .toc-label {
+        font-family: var(--sans); font-size: 0.65rem; font-weight: 700;
+        letter-spacing: 0.14em; text-transform: uppercase;
+        color: var(--ink-4); margin-bottom: 0.85rem;
+      }
+      .toc-list {
+        list-style: none; border-left: 1px solid var(--rule);
+        padding-left: 1rem; margin-bottom: 0;
+      }
+      .toc-list li { margin-bottom: 0.45rem; }
+      .toc-list a {
+        font-family: var(--sans); font-size: 0.76rem; font-weight: 400;
+        color: var(--ink-3); text-decoration: none; line-height: 1.4;
+        display: block; transition: color 0.15s;
+      }
+      .toc-list a:hover, .toc-list a.active { color: var(--ink); }
+      .toc-list a.active {
+        font-weight: 600; border-left: 2px solid var(--accent);
+        margin-left: -1rem; padding-left: calc(1rem - 2px);
+      }
+      .toc-list .toc-sub {
+        padding-left: 0.75rem; margin-top: 0.3rem;
+      }
+      .toc-list .toc-sub a { font-size: 0.7rem; color: var(--ink-4); }
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 700px) {
+      html { font-size: 17px; }
+      h1   { font-size: 1.75rem; }
+      h2   { font-size: 1.45rem; }
+      .hero { padding: 3rem 1.25rem 2.5rem; }
+      .layout { padding: 0 1.25rem; }
+      nav  { padding: 0.75rem 1.25rem; }
+      pre code { font-size: 0.75rem; padding: 1.25rem; }
+      .hero-meta { gap: 0.75rem; }
+    }
+
+    /* ─── Animations ─── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .hero h1, .hero .hero-subtitle, .hero .hero-meta {
+      animation: fadeInUp 0.6s ease both;
+    }
+    .hero h1             { animation-delay: 0.05s; }
+    .hero .hero-subtitle { animation-delay: 0.15s; }
+    .hero .hero-meta     { animation-delay: 0.25s; }
+
+    /* ─── Scroll Reveal ─── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+  <div id="progress-bar"></div>
+
+  <nav aria-label="Site navigation">
+    <a href="#" class="nav-brand">Engineering Field Guide</a>
+    <div class="nav-meta">
+      <span class="nav-tag">Reliability</span>
+      <span class="nav-tag">Distributed Systems</span>
+      <span>~30 min read</span>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <p class="hero-eyebrow">The Engineer's Field Guide · Reliability Series</p>
+    <h1>Building Bulletproof Systems</h1>
+    <p class="hero-subtitle">A Deep Dive into Reliability, Availability &amp; Disaster Recovery — for data scientists, ML engineers, analytics engineers, and every engineer who's ever been woken up at 2 AM by a production alert.</p>
+    <div class="hero-meta">
+      <span>System Reliability</span>
+      <span>High Availability</span>
+      <span>Disaster Recovery</span>
+      <span>MLOps</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <article id="article-content">
+
+      <!-- ─── Introduction ─── -->
+      <section id="intro" class="reveal">
+        <p>It starts like any other Tuesday. Your ML pipeline is humming, the feature store is serving predictions, dashboards look healthy, and you're finally getting to that backlog ticket you've been putting off for two weeks.</p>
+
+        <p>Then Slack lights up.</p>
+
+        <blockquote class="pull-quote">
+          <p>"Hey — the recommendation engine is returning the same result for everyone. Is something wrong?"</p>
+        </blockquote>
+
+        <p>You open the monitoring dashboard. One of your feature store replicas went unresponsive fifteen minutes ago. No alert fired. No failover triggered. Hundreds of thousands of users are getting stale predictions because your system had no plan for what to do when a single node disappeared.</p>
+
+        <p>This scenario — or a version of it — plays out every day in engineering organizations around the world. And almost always, the post-mortem conclusion is the same: <em>we didn't design for failure from the start.</em></p>
+
+        <p>This article is a comprehensive guide to building systems that don't just work in ideal conditions — they degrade gracefully, recover automatically, and let you sleep at night. We'll start from first principles and work our way up to the architectural patterns, backup strategies, and disaster recovery frameworks used by production-grade systems at scale.</p>
+      </section>
+
+      <div class="section-divider">· · ·</div>
+
+      <!-- ─── Why Reliability Isn't Optional ─── -->
+      <section id="why-reliability" class="reveal">
+        <h2>Why Reliability Isn't Optional</h2>
+
+        <p>There's a mental model that trips up most engineers early in their careers: the belief that reliability engineering is "ops work" — something you bolt on after you've shipped the feature, or delegate entirely to your SRE team.</p>
+
+        <p>In reality, reliability is an emergent property of every design decision you make. The database schema you chose, the way you cache model predictions, whether your training pipeline checkpoints intermediate states — these decisions accumulate into a system that is either resilient to failure or surprisingly fragile.</p>
+
+        <p>For data scientists and ML engineers specifically, the stakes are higher than they first appear. A recommendation engine returning stale predictions isn't just a user experience problem — it's revenue. A feature store that goes dark mid-inference causes model drift that's invisible in your evaluation metrics but corrosive to model trust. A data pipeline that silently loses records creates training data corruption that won't surface for months.</p>
+
+        <p>Reliability, availability, and disaster recovery (RA&amp;DR) aren't about perfection. Systems <em>will</em> fail. Hardware dies. Networks partition. Cloud regions go down. The discipline is about designing systems that fail <em>safely</em>, recover <em>quickly</em>, and lose <em>as little data as possible</em> when they do.</p>
+
+        <p>Let's start with the vocabulary.</p>
+      </section>
+
+      <div class="section-divider">· · ·</div>
+
+      <!-- ─── Part I: Metrics ─── -->
+      <section id="part-1" class="reveal">
+        <span class="part-label">Part I</span>
+        <h2>Measuring What Matters — System Reliability Metrics</h2>
+
+        <blockquote class="pull-quote">
+          <p>"You can't improve what you can't measure." — a cliché that remains entirely true.</p>
+        </blockquote>
+
+        <p>Before you can design a reliable system, you need a shared language for what "reliable" actually means. Reliability metrics give engineering teams, product managers, and business stakeholders a common framework for discussing failure, recovery, and acceptable risk.</p>
+
+        <h3 id="mtbf">MTBF: Mean Time Between Failures</h3>
+
+        <p>MTBF measures the average operating time between repairable failures. Think of it as the "expected lifetime" of a component or system before it breaks down again.</p>
+
+        <p><strong>Formula:</strong></p>
+        <pre><span class="code-label">Formula</span><code>MTBF = Total Operational Time / Number of Failures</code></pre>
+
+        <p><strong>Example:</strong> If a database node runs for 10,000 hours and experiences 5 failures in that period, the MTBF is 2,000 hours (~83 days).</p>
+
+        <p>A high MTBF is good. It means failures are rare. But MTBF alone is insufficient — a system with a high MTBF that takes three days to recover from each failure is arguably less reliable than one with a moderate MTBF that self-heals in seconds.</p>
+
+        <p><strong>ML Engineering context:</strong> MTBF is relevant when thinking about your training infrastructure. If your GPU cluster experiences node failures every 48 hours on average during multi-week training runs, that should directly inform how frequently you checkpoint model weights. Training a large language model for 72 hours without checkpointing on a cluster with a 48-hour MTBF is a statistical gamble you will almost certainly lose.</p>
+
+        <h3 id="mttr">MTTR: Mean Time To Recovery</h3>
+
+        <p>MTTR is the flip side of MTBF — it measures how long it takes to restore service after a failure occurs.</p>
+
+        <p><strong>Formula:</strong></p>
+        <pre><span class="code-label">Formula</span><code>MTTR = Total Downtime / Number of Failures</code></pre>
+
+        <p><strong>Example:</strong> If your system was down for a total of 8 hours across 4 incidents, your MTTR is 2 hours per incident.</p>
+
+        <figure class="illustration">
+          <img src="images/example-diagram-1.png" alt="A timeline diagram showing system operational periods in green and failure/recovery periods in red, with MTBF spanning between failures and MTTR spanning within each failure window, alongside formula legend" />
+          <figcaption><strong>Figure 1:</strong> MTBF vs. MTTR on a system timeline. MTBF measures the gap between failures; MTTR measures how long each recovery takes. Together they define system availability.</figcaption>
+        </figure>
+
+        <p>The relationship between MTBF and MTTR defines your system's <em>availability</em>. Availability is the percentage of time a system is operational and usable:</p>
+        <pre><span class="code-label">Formula</span><code>Availability = MTBF / (MTBF + MTTR)</code></pre>
+
+        <p>Maximize MTBF (fail less often), minimize MTTR (recover faster) — these are the two levers of availability.</p>
+
+        <p><strong>Practical insight:</strong> In most modern cloud-native systems, reducing MTTR is often <em>more impactful</em> than improving MTBF. You can't always prevent failures, but with the right automation, you can reduce MTTR from hours to minutes or even seconds. This is why observability, automated runbooks, and self-healing infrastructure are so heavily invested in by high-reliability organizations.</p>
+
+        <h3 id="slas">SLAs: The Contract Between You and Your Users</h3>
+
+        <p>A Service Level Agreement (SLA) is a formal commitment — often contractual — about the expected behavior of a service. It typically covers three dimensions:</p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>SLA Dimension</th>
+                <th>What It Measures</th>
+                <th>Example Target</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Uptime / Availability</td>
+                <td>Percentage of time the service is operational</td>
+                <td>99.9% ("three nines")</td>
+              </tr>
+              <tr>
+                <td>Response Time / Latency</td>
+                <td>How quickly the service responds to requests</td>
+                <td>p99 &lt; 200ms</td>
+              </tr>
+              <tr>
+                <td>Error Rate</td>
+                <td>Percentage of requests that result in errors</td>
+                <td>&lt; 0.1%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>The "nines" of availability is a common shorthand you'll encounter everywhere:</p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Availability</th>
+                <th>Annual Downtime</th>
+                <th>Monthly Downtime</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>99% ("two nines")</td><td>~87.6 hours</td><td>~7.3 hours</td></tr>
+              <tr><td>99.9% ("three nines")</td><td>~8.76 hours</td><td>~43.8 minutes</td></tr>
+              <tr><td>99.99% ("four nines")</td><td>~52.6 minutes</td><td>~4.4 minutes</td></tr>
+              <tr><td>99.999% ("five nines")</td><td>~5.26 minutes</td><td>~26.3 seconds</td></tr>
+              <tr><td>99.9999% ("six nines")</td><td>~31.5 seconds</td><td>~2.6 seconds</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>"Five nines" availability is the gold standard for mission-critical systems — and it's deceptively hard to achieve. At 99.999% availability, you have roughly five minutes per year of allowable downtime. A single botched deployment that takes ten minutes to roll back burns your entire annual budget twice over.</p>
+
+        <p><strong>For ML systems:</strong> SLAs are often more nuanced than simple uptime. Consider:</p>
+        <ul>
+          <li><strong>Prediction latency SLA:</strong> "95% of inference calls complete within 50ms."</li>
+          <li><strong>Data freshness SLA:</strong> "Feature values are no more than 5 minutes stale."</li>
+          <li><strong>Model staleness SLA:</strong> "Production models are retrained within 24 hours of data drift detection."</li>
+        </ul>
+
+        <p>These ML-specific SLAs don't appear in textbooks but are critical for maintaining model utility in production.</p>
+
+        <p><strong>The difference between SLIs, SLOs, and SLAs:</strong></p>
+        <ul>
+          <li><strong>SLI (Service Level Indicator):</strong> The actual measured metric (e.g., request latency in milliseconds).</li>
+          <li><strong>SLO (Service Level Objective):</strong> Your internal target for that metric (e.g., p99 latency &lt; 200ms).</li>
+          <li><strong>SLA (Service Level Agreement):</strong> The external, often legally binding commitment (e.g., "we guarantee p99 latency &lt; 500ms or provide service credits").</li>
+        </ul>
+
+        <p>Your SLO should always be tighter than your SLA. If you promise users 99.9% uptime in your SLA, your internal SLO might target 99.95% to create a buffer for the inevitable.</p>
+
+        <h3 id="avail-vs-durability">Availability vs. Durability: A Critical Distinction</h3>
+
+        <p>These two terms are frequently conflated, and confusing them leads to serious architectural mistakes.</p>
+
+        <p><strong>Availability</strong> answers: <em>"Can I access my data right now?"</em><br>
+        <strong>Durability</strong> answers: <em>"Will my data still exist in the future?"</em></p>
+
+        <p>Amazon S3 is the classic example that makes this crisp:</p>
+        <ul>
+          <li>S3 offers <strong>99.999999999% (eleven nines) durability</strong> — the probability of losing an object is astronomically small.</li>
+          <li>S3 Standard offers <strong>99.99% availability</strong> — there's a small but non-zero chance you can't <em>access</em> an object at any given moment.</li>
+        </ul>
+
+        <p>A system can be highly available but not durable (e.g., a cache — always fast to access, but data evicts). It can be highly durable but not always available (e.g., a cold archive stored on tape — data is definitely there, but retrieval takes hours).</p>
+
+        <figure class="illustration">
+          <img src="images/example-diagram-2.png" alt="A 2x2 quadrant diagram plotting storage systems by Availability on the Y-axis and Durability on the X-axis, placing production datastores like S3 in the high-high quadrant, caches in high-low, tape archives in low-high, and single disks in low-low" />
+          <figcaption><strong>Figure 2:</strong> Availability vs. Durability as independent axes. S3 is eleven-nines durable but only four-nines available. A Redis cache is highly available but ephemeral by design.</figcaption>
+        </figure>
+
+        <p><strong>The practical takeaway:</strong> When designing data storage for your ML systems, always explicitly state both your availability and durability requirements. Your feature store might need high availability (sub-millisecond reads) but only moderate durability (features can be recomputed from raw data). Your model registry, on the other hand, might accept lower availability (accessed rarely) but demands near-perfect durability (losing a production model checkpoint is catastrophic).</p>
+      </section>
+
+      <div class="section-divider">· · ·</div>
+
+      <!-- ─── Part II: High Availability ─── -->
+      <section id="part-2" class="reveal">
+        <span class="part-label">Part II</span>
+        <h2>Never Go Down — High Availability &amp; Fault Tolerance</h2>
+
+        <p>Having clear metrics is step one. Step two is building systems that actually hit those metrics.</p>
+
+        <p>High Availability (HA) is the architectural philosophy that systems should remain operational despite component failures. Fault Tolerance takes this a step further: a fault-tolerant system not only survives individual failures but does so <em>without any degradation in service quality</em>.</p>
+
+        <p>The difference matters. An HA system might briefly redirect traffic during a failover. A fault-tolerant system might be so well-designed that users never notice a node went offline.</p>
+
+        <p>Both goals require deliberate architectural choices, starting with redundancy.</p>
+
+        <h3 id="redundancy">Redundancy Strategies: Eliminating the Single Point of Failure</h3>
+
+        <p>A Single Point of Failure (SPOF) is any component whose failure brings down the entire system. Eliminating SPOFs is the first law of high-availability architecture.</p>
+
+        <p>The tool for eliminating SPOFs is <strong>redundancy</strong> — having multiple copies of critical components so that no single failure is catastrophic.</p>
+
+        <h4>Active-Active Redundancy</h4>
+
+        <p>In an active-active configuration, multiple instances of a service are all running simultaneously and all serving traffic. If one fails, the others absorb its load — often without any observable blip for users.</p>
+
+        <p><strong>Example:</strong> A Kubernetes deployment with 3 replicas of a model serving pod. Requests are distributed across all three by a load balancer. If one pod crashes, traffic is routed to the remaining two while Kubernetes spins up a replacement.</p>
+
+        <p><strong>Tradeoff:</strong> Active-active requires all nodes to stay in sync, which adds complexity — especially for stateful services like databases. For stateless services like REST APIs or model inference endpoints, active-active is almost always the right choice.</p>
+
+        <p><strong>ML Engineering context:</strong> Model serving is a natural fit for active-active. Multiple replicas of your inference server are stateless — each one can serve any request independently. This is how services like TensorFlow Serving, Triton Inference Server, or Ray Serve are typically deployed in production.</p>
+
+        <h4>Active-Passive Redundancy</h4>
+
+        <p>In active-passive (also called primary-standby or primary-replica), one instance handles all traffic while one or more standbys remain ready but idle. When the primary fails, a standby is promoted to active.</p>
+
+        <p><strong>Example:</strong> A primary PostgreSQL database node with a hot standby replica streaming WAL (Write-Ahead Log) changes. If the primary crashes, the standby can be promoted in under a minute.</p>
+
+        <p><strong>Tradeoff:</strong> Active-passive is simpler to implement for stateful systems, but the failover isn't instant. There's a brief window of unavailability during promotion. Additionally, the standby is "wasted capacity" in normal operation — it's not serving any traffic.</p>
+
+        <figure class="illustration">
+          <img src="images/example-diagram-3.png" alt="Side-by-side architecture comparison: Active-Active shows a load balancer distributing traffic equally to three live instances; Active-Passive shows one primary receiving all traffic with two idle standbys connected via replication arrows, plus failure scenario sub-diagrams for each" />
+          <figcaption><strong>Figure 3:</strong> Active-Active vs. Active-Passive redundancy. Active-active maximizes capacity utilization; active-passive simplifies state management at the cost of idle standby resources.</figcaption>
+        </figure>
+
+        <h4>N+1 Redundancy</h4>
+
+        <p>N+1 redundancy is a pragmatic middle ground: you provision exactly one extra component beyond what you need for normal operation. If N=3 servers can handle your peak load, you provision 4. The "+1" is your failure buffer.</p>
+
+        <p>This is the standard approach for infrastructure where you need redundancy without the cost of doubling your fleet. It's common in:</p>
+        <ul>
+          <li>Database replica sets (2 replicas + 1 arbiter in MongoDB)</li>
+          <li>Kubernetes node pools (provision N+1 nodes for your pod count)</li>
+          <li>GPU clusters for training (N+1 nodes in case a node fails mid-run)</li>
+        </ul>
+
+        <p><strong>The math:</strong> N+1 redundancy protects you from any single component failure. For protection against simultaneous failures, you'd need N+2 (or higher). The right number depends on your failure probability model and your tolerance for risk.</p>
+
+        <h3 id="arch-patterns">Architectural Patterns: Design for Failure</h3>
+
+        <p>Beyond raw redundancy, there are specific patterns that teams use to build availability into the architecture of distributed systems.</p>
+
+        <h4>Load Balancers: The Traffic Director</h4>
+
+        <p>A load balancer distributes incoming requests across multiple healthy backend instances. It's both a redundancy mechanism and a scalability mechanism — it ensures no single server is overwhelmed, and it automatically stops sending traffic to unhealthy instances.</p>
+
+        <p>Modern load balancers operate at two layers:</p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Type</th><th>Layer</th><th>What It Routes On</th><th>Common Use Case</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>L4 (Network LB)</td>
+                <td>Transport</td>
+                <td>IP address + TCP/UDP port</td>
+                <td>Simple, high-throughput routing</td>
+              </tr>
+              <tr>
+                <td>L7 (Application LB)</td>
+                <td>Application</td>
+                <td>URL path, HTTP headers, cookies</td>
+                <td>Microservices, path-based routing, A/B testing</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>L7 load balancers are particularly powerful for ML systems. You can use path-based routing to direct <code>/v1/predict</code> to your stable model and <code>/v2/predict</code> to a candidate model — a clean pattern for A/B testing models in production.</p>
+
+        <p><strong>Health checks are the heartbeat of load balancing.</strong> A load balancer continuously probes each backend with a health check endpoint. Instances that fail health checks are automatically removed from the rotation. Here's a minimal example:</p>
+
+        <pre><span class="code-label">Python</span><code># FastAPI model serving endpoint with health check
+from fastapi import FastAPI
+import torch
+
+app = FastAPI()
+model = torch.load("model.pt")
+model.eval()
+
+@app.get("/health")
+def health_check():
+    """
+    Called by the load balancer every few seconds.
+    Return 200 OK only if the model is loaded and ready.
+    """
+    if model is None:
+        return {"status": "unhealthy"}, 503
+    return {"status": "healthy", "model_version": "v2.1.3"}
+
+@app.post("/v1/predict")
+def predict(features: dict):
+    # Inference logic
+    ...</code></pre>
+
+        <p>A Kubernetes liveness and readiness probe configuration for this same service:</p>
+
+        <pre><span class="code-label">YAML</span><code># kubernetes/deployment.yaml
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 8000
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  failureThreshold: 2</code></pre>
+
+        <p>The <strong>liveness probe</strong> answers: "Is this pod alive?" If it fails, Kubernetes restarts the pod. The <strong>readiness probe</strong> answers: "Is this pod ready to serve traffic?" If it fails, Kubernetes removes the pod from the load balancer without restarting it — crucial for pods that are still warming up (e.g., loading large model weights into GPU memory).</p>
+
+        <h4>Failover Mechanisms: Automatic Recovery from Failure</h4>
+
+        <p>A failover mechanism automatically detects that a primary resource has failed and redirects workloads to a healthy backup — without requiring human intervention.</p>
+
+        <p>The key design challenge of failover is the <strong>split-brain problem</strong>: what happens if a standby node incorrectly concludes the primary is down (due to a network partition) and promotes itself, while the primary is still running? Now you have two primaries, and they'll start accepting conflicting writes.</p>
+
+        <p>Modern systems solve this through:</p>
+        <ul>
+          <li><strong>Heartbeat timeouts with fencing tokens:</strong> The failing node must be "fenced" (blocked from writing) before the new primary takes over.</li>
+          <li><strong>Consensus-based elections:</strong> A quorum of nodes must agree before a new primary is elected (more on this in the DR section).</li>
+          <li><strong>External arbitrators:</strong> A third-party service (like ZooKeeper) breaks ties.</li>
+        </ul>
+
+        <p><strong>DNS-based failover</strong> is a simpler pattern for stateless services: when the primary endpoint goes down, DNS is updated to point to a standby. The downside is DNS TTL — clients cache old DNS responses, so failover can take minutes unless TTLs are set very low (which has its own performance implications).</p>
+
+        <h4>Graceful Degradation: Staying Partially Useful</h4>
+
+        <p>Graceful degradation is the principle that a system should continue providing <em>some</em> value even when it can't provide <em>full</em> value. It's the opposite of an all-or-nothing failure mode.</p>
+
+        <p>Think of it like a commercial airplane. If one engine fails, the plane doesn't fall out of the sky — it continues flying on the remaining engines. The experience degrades (lower ceiling, reduced speed) but the plane doesn't crash.</p>
+
+        <p><strong>Real examples:</strong></p>
+        <ul>
+          <li>Netflix disables personalized recommendations when the recommendation service is down, but still shows generic content rather than a blank screen.</li>
+          <li>Google Maps shows cached map tiles when offline rather than showing nothing.</li>
+          <li>An e-commerce site hides review scores when the reviews service is unavailable rather than crashing the product page.</li>
+        </ul>
+
+        <p><strong>ML-specific graceful degradation patterns:</strong></p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Failure Scenario</th><th>Degraded Response</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Feature store unavailable</td><td>Fall back to default feature values or serve last-known-good features</td></tr>
+              <tr><td>Primary model times out</td><td>Serve predictions from a simpler, faster fallback model</td></tr>
+              <tr><td>Real-time feature pipeline down</td><td>Fall back to batch-computed features (slightly stale)</td></tr>
+              <tr><td>Model version A crashes</td><td>Route all traffic to model version B</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <pre><span class="code-label">Python</span><code># Graceful degradation example: ML prediction with fallbacks
+import functools
+import logging
+
+def predict_with_fallback(user_id: str, features: dict) -&gt; dict:
+    """
+    Try the primary personalized model first.
+    Fall back to a lightweight model if primary fails.
+    Fall back to default recommendations if both fail.
+    """
+    try:
+        # Primary: personalized deep model (high latency, high quality)
+        result = primary_model.predict(user_id, features)
+        return {"predictions": result, "model": "primary", "degraded": False}
+
+    except PrimaryModelException as e:
+        logging.warning(f"Primary model failed: {e}. Trying fallback model.")
+        try:
+            # Secondary: lightweight collaborative filtering (fast, good)
+            result = fallback_model.predict(user_id)
+            return {"predictions": result, "model": "fallback", "degraded": True}
+
+        except FallbackModelException as e:
+            logging.error(f"Fallback model also failed: {e}. Using defaults.")
+            # Tertiary: static defaults (always available)
+            return {
+                "predictions": DEFAULT_RECOMMENDATIONS,
+                "model": "default",
+                "degraded": True
+            }</code></pre>
+
+        <p>Graceful degradation requires that you proactively define your fallback hierarchy at design time — not during an incident.</p>
+
+        <h4>Circuit Breakers &amp; Retries: Preventing Cascading Failures</h4>
+
+        <p>Imagine your model serving endpoint starts timing out. Without a circuit breaker, every client that calls it will wait the full timeout duration before failing — potentially exhausting connection pools, thread pools, or goroutine limits. A slow service becomes a service that drags down everything that depends on it. This is a <strong>cascading failure</strong>.</p>
+
+        <p>The circuit breaker pattern (borrowed from electrical engineering) prevents cascading failures by monitoring the failure rate of downstream calls and "tripping" the circuit when failures exceed a threshold — temporarily stopping all calls to the failing service.</p>
+
+        <p>A circuit breaker has three states:</p>
+        <ul>
+          <li><strong>Closed (normal operation):</strong> Requests flow through. The circuit breaker monitors failure rates.</li>
+          <li><strong>Open (failure detected):</strong> All requests fail immediately without calling the downstream service. Callers get a fast error (or can trigger graceful degradation).</li>
+          <li><strong>Half-Open (recovery probe):</strong> After a timeout, a few test requests are let through. If they succeed, the circuit closes again.</li>
+        </ul>
+
+        <figure class="illustration">
+          <img src="images/example-diagram-4.png" alt="State machine diagram with three circular nodes: CLOSED (green, normal operation), OPEN (red, fast fail), and HALF-OPEN (orange, probing recovery), with labeled directed arrows showing transition conditions between states" />
+          <figcaption><strong>Figure 4:</strong> Circuit breaker state machine. The circuit automatically opens when failures exceed a threshold, preventing cascading failures. It probes recovery via the half-open state before fully restoring traffic.</figcaption>
+        </figure>
+
+        <p>Here's a minimal Python circuit breaker using the <code>pybreaker</code> library:</p>
+
+        <pre><span class="code-label">Python</span><code>import pybreaker
+import requests
+
+# Trip after 5 consecutive failures; reset after 60 seconds
+circuit_breaker = pybreaker.CircuitBreaker(
+    fail_max=5,
+    reset_timeout=60
+)
+
+@circuit_breaker
+def call_feature_store(entity_id: str) -&gt; dict:
+    response = requests.get(
+        f"https://feature-store.internal/features/{entity_id}",
+        timeout=0.1  # 100ms hard timeout
+    )
+    response.raise_for_status()
+    return response.json()
+
+def get_features_safe(entity_id: str) -&gt; dict:
+    try:
+        return call_feature_store(entity_id)
+    except pybreaker.CircuitBreakerError:
+        # Circuit is open — use cached or default features
+        return get_cached_features(entity_id)
+    except requests.RequestException as e:
+        logging.warning(f"Feature store call failed: {e}")
+        return get_cached_features(entity_id)</code></pre>
+
+        <p><strong>Retries with exponential backoff</strong> are the complement to circuit breakers. When a request fails due to a transient error, retrying makes sense. But retrying immediately, or retrying too aggressively, can worsen an overloaded server's condition. Exponential backoff with jitter spaces retries out progressively:</p>
+
+        <pre><span class="code-label">Python</span><code>import time
+import random
+
+def retry_with_backoff(fn, max_retries=4, base_delay=0.1, max_delay=10.0):
+    """
+    Retry fn with exponential backoff + jitter.
+    Backoff: 0.1s, 0.2s, 0.4s, 0.8s (+ random jitter each time)
+    """
+    for attempt in range(max_retries):
+        try:
+            return fn()
+        except TransientException as e:
+            if attempt == max_retries - 1:
+                raise
+            delay = min(base_delay * (2 ** attempt), max_delay)
+            jitter = random.uniform(0, delay * 0.1)
+            time.sleep(delay + jitter)</code></pre>
+
+        <p><strong>The important rule:</strong> Retries are for transient errors. They are <em>not</em> appropriate for:</p>
+        <ul>
+          <li>4xx errors (bad request, unauthorized) — retrying won't fix a malformed request.</li>
+          <li>Operations that are not idempotent — retrying a non-idempotent write can cause duplicate data.</li>
+          <li>When the circuit breaker is open — don't retry into a failing downstream system.</li>
+        </ul>
+
+        <h3 id="sys-health">System Health: Detecting, Responding, and Recovering</h3>
+
+        <p>Redundancy and architectural patterns give you the infrastructure to survive failures. But you also need the operational capabilities to <em>know</em> when something is wrong and <em>act</em> on it quickly.</p>
+
+        <h4>Continuous Monitoring</h4>
+
+        <p>Modern distributed systems emit three types of observability signals, collectively called the "three pillars":</p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Pillar</th><th>What It Is</th><th>Example Tools</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Metrics</td><td>Numeric time-series data (counts, gauges, histograms)</td><td>Prometheus, Datadog, CloudWatch</td></tr>
+              <tr><td>Logs</td><td>Structured or unstructured event records</td><td>ELK Stack, Loki, Splunk</td></tr>
+              <tr><td>Traces</td><td>End-to-end request journey across services</td><td>Jaeger, Zipkin, AWS X-Ray</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>For ML systems, you need a fourth dimension: <strong>model monitoring</strong> — tracking data drift, concept drift, prediction distribution shift, and feature skew. Tools like Evidently, WhyLabs, and Arize fill this gap.</p>
+
+        <p><strong>A practical alerting philosophy:</strong> Alert on <em>symptoms</em>, not <em>causes</em>. "Error rate on <code>/predict</code> is &gt; 1% for 5 minutes" is a symptom alert — it fires exactly when users are affected. "CPU utilization on model server is &gt; 80%" is a cause alert — it fires often when nothing is actually wrong, leading to alert fatigue.</p>
+
+        <h4>Self-Healing Systems</h4>
+
+        <p>A self-healing system automatically detects and remedies common failure conditions without human intervention. Kubernetes is the canonical example:</p>
+        <ul>
+          <li><strong>CrashLoopBackOff recovery:</strong> Kubernetes detects a pod that keeps crashing and restarts it with exponential backoff.</li>
+          <li><strong>Liveness probe failure → automatic restart:</strong> If a pod's liveness probe fails N consecutive times, Kubernetes kills and restarts it.</li>
+          <li><strong>Node failure → pod rescheduling:</strong> If a node goes offline, Kubernetes reschedules the pods that were running on it to healthy nodes.</li>
+          <li><strong>OOMKilled → restart + resource limit enforcement:</strong> If a container is killed for exceeding memory limits, Kubernetes restarts it and enforces the limits.</li>
+        </ul>
+
+        <p>For ML systems, self-healing might also mean:</p>
+        <ul>
+          <li>Automatically triggering model retraining when data drift exceeds a threshold.</li>
+          <li>Restarting a Spark streaming job that died mid-processing.</li>
+          <li>Re-enqueuing failed batch prediction jobs.</li>
+        </ul>
+
+        <h4>Automated Recovery</h4>
+
+        <p>Automated recovery goes beyond self-healing — it's about automating the <em>runbook</em> that an on-call engineer would otherwise execute manually. Runbook automation tools like PagerDuty Process Automation, AWS Systems Manager Automation, or custom Lambda functions can execute complex recovery procedures in response to alerts:</p>
+
+        <pre><span class="code-label">YAML</span><code># Example: AWS Systems Manager Automation Document
+# Automatically restores a database replica from backup if health check fails
+
+description: "Auto-recover replica database"
+schemaVersion: "0.3"
+mainSteps:
+  - name: CheckReplicaHealth
+    action: aws:executeAwsApi
+    inputs:
+      Service: rds
+      Api: DescribeDBInstances
+      Filters:
+        - Name: db-instance-identifier
+          Values: ["prod-replica-1"]
+    outputs:
+      - Name: DBStatus
+        Selector: $.DBInstances[0].DBInstanceStatus
+
+  - name: RestoreFromSnapshot
+    action: aws:executeAwsApi
+    onFailure: Abort
+    isEnd: false
+    inputs:
+      Service: rds
+      Api: RestoreDBInstanceFromDBSnapshot
+      DBSnapshotIdentifier: "prod-daily-snapshot-latest"
+    nextStep: WaitForRestoreComplete</code></pre>
+
+        <p>The goal is to reduce MTTR to the point where on-call engineers are reviewing incident reports rather than executing recovery procedures — automated systems move faster and don't make tired, 3 AM mistakes.</p>
+      </section>
+
+      <div class="section-divider">· · ·</div>
+
+      <!-- ─── Part III: Backup Strategies ─── -->
+      <section id="part-3" class="reveal">
+        <span class="part-label">Part III</span>
+        <h2>Your Safety Net — Backup Strategies</h2>
+
+        <p>High availability and fault tolerance protect you against infrastructure failures. But there's a different class of failure they don't protect against: data loss. A corrupted database write, a developer who accidentally drops a table, ransomware that encrypts your data store — these require a different defense: backups.</p>
+
+        <p>A backup is a separate, independently stored copy of your data that can be used to restore the original if it's lost or corrupted. The word "separate" is doing a lot of work in that sentence. <strong>A replica isn't a backup.</strong> A read replica of your production database, maintained by replication, will faithfully replicate a <code>DROP TABLE</code> command just as quickly as it replicates normal writes.</p>
+
+        <p>True backups are independent snapshots in time, stored somewhere the primary system can't accidentally overwrite or corrupt.</p>
+
+        <h3 id="backup-types">Backup Types: Know the Tradeoffs</h3>
+
+        <figure class="illustration">
+          <img src="images/example-diagram-5.png" alt="Three-row timeline comparison of backup strategies over seven days: Full backup shows large blue blocks every few days; Incremental backup shows one large full block plus small daily change blocks; Differential backup shows a growing green block each day since the last full, with restore complexity annotated" />
+          <figcaption><strong>Figure 5:</strong> Full, Incremental, and Differential backup strategies compared across a 7-day window. Full backups are simple to restore; incremental backups minimize storage at the cost of restore complexity.</figcaption>
+        </figure>
+
+        <h4>Full Backup</h4>
+
+        <p>A full backup captures a complete snapshot of all protected data. It's the simplest approach and produces the easiest-to-restore backup — you need only the single snapshot.</p>
+
+        <p><strong>Pros:</strong> Simple restore process; no dependencies on previous backups.<br>
+        <strong>Cons:</strong> Storage-intensive; slow to produce (must read and copy all data); if backups run daily, you can afford fewer of them.</p>
+
+        <p><strong>Use case:</strong> Critical, relatively static datasets — model registry snapshots, data warehouse exports, complete database dumps. A weekly full backup of your entire feature store might be appropriate.</p>
+
+        <h4>Incremental Backup</h4>
+
+        <p>An incremental backup stores only the changes since the <em>most recent backup</em> (full or incremental). Day 1: back up everything changed since the full backup. Day 2: back up everything changed since Day 1. And so on.</p>
+
+        <p><strong>Pros:</strong> Very fast and storage-efficient — only changed data is backed up.<br>
+        <strong>Cons:</strong> Restore is complex and slow — you need the full backup plus every incremental since then, in sequence. A chain of 30 incrementals is 31 separate restore operations.</p>
+
+        <p><strong>Use case:</strong> High-frequency backups of rapidly changing data — transactional databases, event streams, write-ahead logs.</p>
+
+        <h4>Differential Backup</h4>
+
+        <p>A differential backup stores all changes since the <em>most recent full backup</em> — regardless of when the last differential ran. It's a middle ground between full and incremental.</p>
+
+        <p><strong>Pros:</strong> Restore requires only two pieces: the last full backup + the most recent differential. Faster restore than incrementals.<br>
+        <strong>Cons:</strong> Grows larger over time (by the end of the week, it's storing 6 days of changes). Slower to create than incrementals.</p>
+
+        <p><strong>The practical recommendation for most teams:</strong> Use a hybrid strategy — weekly full backups, daily incrementals, with periodic restore testing. For ML training data, consider a version-controlled data lake (Delta Lake, Apache Iceberg) which provides time-travel capabilities and effectively gives you free incremental backups.</p>
+
+        <pre><span class="code-label">Python</span><code># Example: Automated daily backup with retention policy using boto3
+import boto3
+from datetime import datetime, timedelta
+
+s3 = boto3.client("s3")
+SOURCE_BUCKET = "prod-feature-store"
+BACKUP_BUCKET = "prod-feature-store-backups"
+RETENTION_DAYS = 30
+
+def run_backup():
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+
+    # List objects in source bucket
+    paginator = s3.get_paginator("list_objects_v2")
+    for page in paginator.paginate(Bucket=SOURCE_BUCKET):
+        for obj in page.get("Contents", []):
+            source_key = obj["Key"]
+            backup_key = f"daily/{timestamp}/{source_key}"
+
+            # Copy to backup bucket
+            s3.copy_object(
+                Bucket=BACKUP_BUCKET,
+                CopySource={"Bucket": SOURCE_BUCKET, "Key": source_key},
+                Key=backup_key,
+                ServerSideEncryption="AES256",  # Encrypt at rest
+            )
+    print(f"Backup completed: {timestamp}")
+
+def prune_old_backups():
+    cutoff = datetime.utcnow() - timedelta(days=RETENTION_DAYS)
+    paginator = s3.get_paginator("list_objects_v2")
+    for page in paginator.paginate(Bucket=BACKUP_BUCKET, Prefix="daily/"):
+        for obj in page.get("Contents", []):
+            if obj["LastModified"].replace(tzinfo=None) &lt; cutoff:
+                s3.delete_object(Bucket=BACKUP_BUCKET, Key=obj["Key"])
+                print(f"Pruned expired backup: {obj['Key']}")</code></pre>
+
+        <h3 id="backup-practices">Backup Best Practices: Beyond "Have a Backup"</h3>
+
+        <p>Having a backup is necessary but not sufficient. The graveyard of data disasters is filled with teams who had backups — backups they discovered, at the worst possible moment, were corrupted, incomplete, or impossible to restore.</p>
+
+        <h4>The 3-2-1 Rule</h4>
+
+        <p>The 3-2-1 rule is the foundational principle of backup strategy:</p>
+        <ul>
+          <li><strong>3 copies</strong> of your data (original + 2 backups)</li>
+          <li><strong>2 different storage media</strong> (e.g., local disk + cloud object storage)</li>
+          <li><strong>1 copy offsite</strong> (in a different physical location or cloud region)</li>
+        </ul>
+
+        <p>Why three copies? Because single backups fail. Disks fail. Cloud regions have outages. A second copy on the same media as the first isn't really a backup — it's just a duplicate on equally vulnerable infrastructure.</p>
+
+        <p><strong>For cloud-native teams, a modern variant is 3-2-1-1-0:</strong></p>
+        <ul>
+          <li>3 copies on 2 different media with 1 offsite copy</li>
+          <li>1 copy that is immutable (write-once, read-many — protects against ransomware)</li>
+          <li>0 errors in backup validation (automated restore testing, discussed below)</li>
+        </ul>
+
+        <h4>Encryption &amp; Immutability</h4>
+
+        <p>Backups are a prime target for ransomware attacks. An attacker who compromises your backup storage and encrypts your backups has neutralized your recovery capability entirely.</p>
+
+        <p>Two defenses:</p>
+        <ul>
+          <li><strong>Encryption:</strong> Encrypt backups both in transit (TLS) and at rest (AES-256). Your backup data is as sensitive as your production data — arguably more so.</li>
+          <li><strong>Immutability:</strong> Use object lock policies (AWS S3 Object Lock, Azure Immutable Blob Storage) to make backups write-once. Even if an attacker gains write access to your backup bucket, they can't overwrite or delete existing backups.</li>
+        </ul>
+
+        <pre><span class="code-label">JSON</span><code>// S3 Object Lock configuration: prevent deletion for 30 days
+{
+  "ObjectLockEnabled": "Enabled",
+  "Rule": {
+    "DefaultRetention": {
+      "Mode": "GOVERNANCE",
+      "Days": 30
+    }
+  }
+}</code></pre>
+
+        <h4>Cloud-Native Tooling</h4>
+
+        <p>Modern cloud providers offer managed backup services that handle scheduling, versioning, encryption, and cross-region replication:</p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Service</th><th>Cloud</th><th>What It Backs Up</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>AWS Backup</td><td>AWS</td><td>EC2, EBS, RDS, DynamoDB, EFS, S3</td></tr>
+              <tr><td>Azure Backup</td><td>Azure</td><td>VMs, SQL, SAP HANA, Blobs</td></tr>
+              <tr><td>Google Cloud Backup</td><td>GCP</td><td>VMs, databases, GKE</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>For ML teams, additional relevant tooling includes:</p>
+        <ul>
+          <li><strong>MLflow Model Registry:</strong> Provides versioning for model artifacts with S3/GCS/Azure Blob backends.</li>
+          <li><strong>Delta Lake / Apache Iceberg:</strong> Time-travel queries on data lakes — effectively giving you point-in-time recovery for your training data.</li>
+          <li><strong>DVC (Data Version Control):</strong> Git-like versioning for datasets and ML pipeline artifacts.</li>
+        </ul>
+
+        <p>The key advantage of managed cloud backup is operational simplicity — you define the policy, the service handles execution, and you get audit trails and compliance reporting out of the box.</p>
+
+        <h4>Regular Restore Testing</h4>
+
+        <p>This is the most important backup best practice, and also the most consistently neglected.</p>
+
+        <p>A backup you have never restored is a <em>hypothesis</em>, not a guarantee. Disk corruption, software version mismatches, incomplete transfers, missing decryption keys — these issues are invisible until you actually try to restore. And you do not want to discover them during an actual emergency.</p>
+
+        <p><strong>Best practice:</strong> Automate restore testing as a regular scheduled job. At minimum:</p>
+        <ul>
+          <li>Monthly: Restore a sample backup to a test environment and validate data integrity.</li>
+          <li>Weekly: Verify backup completion and run checksum validation against known hashes.</li>
+          <li>After every infrastructure change: Re-validate that backups still work with the new configuration.</li>
+        </ul>
+
+        <pre><span class="code-label">Python</span><code># Automated restore validation — runs weekly in CI/CD pipeline
+import hashlib
+import subprocess
+
+def validate_backup_restore(backup_path: str, expected_checksum: str) -&gt; bool:
+    """
+    Restore a database backup to a test environment and verify integrity.
+    Returns True if restore is valid, False otherwise.
+    """
+    # Step 1: Restore to ephemeral test DB
+    print("Restoring backup to test environment...")
+    result = subprocess.run(
+        ["pg_restore", "--host=test-db", "--dbname=validation_db", backup_path],
+        capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        print(f"RESTORE FAILED: {result.stderr}")
+        return False
+
+    # Step 2: Run data validation queries
+    print("Running integrity checks...")
+    row_count = query_test_db("SELECT COUNT(*) FROM critical_table;")
+    if row_count == 0:
+        print("VALIDATION FAILED: critical_table is empty after restore")
+        return False
+
+    # Step 3: Verify checksum
+    with open(backup_path, "rb") as f:
+        actual_checksum = hashlib.sha256(f.read()).hexdigest()
+    if actual_checksum != expected_checksum:
+        print(f"CHECKSUM MISMATCH: backup may be corrupted")
+        return False
+
+    print(f"Restore validation PASSED ✓ — {row_count} rows verified")
+    return True</code></pre>
+
+        <p>If your restore validation is not automated, it will gradually be skipped as teams get busy. Automate it.</p>
+      </section>
+
+      <div class="section-divider">· · ·</div>
+
+      <!-- ─── Part IV: Disaster Recovery ─── -->
+      <section id="part-4" class="reveal">
+        <span class="part-label">Part IV</span>
+        <h2>When Things Go Really Wrong — Disaster Recovery</h2>
+
+        <p>High availability keeps your service running through routine failures. Backups protect your data from corruption and deletion. But neither is sufficient for the class of incident where an entire system — or an entire region — becomes unavailable.</p>
+
+        <p>A hurricane destroys a data center. A cloud provider has a major regional outage. A cyberattack takes down your entire infrastructure. Your core database is corrupted and must be restored from a 12-hour-old backup.</p>
+
+        <p>These are Disaster scenarios with a capital D, and they require a separate discipline: <strong>Disaster Recovery (DR)</strong>.</p>
+
+        <p>DR is not just a technical problem. It's a business problem. The core question of DR planning is: <em>"How much downtime and how much data loss can the business tolerate — and what is it worth spending to achieve that tolerance?"</em></p>
+
+        <p>The answer is expressed through two business-defined objectives.</p>
+
+        <h3 id="rto-rpo">Performance Objectives: RTO and RPO</h3>
+
+        <h4>RTO: Recovery Time Objective</h4>
+
+        <p><strong>RTO</strong> is the maximum acceptable duration of downtime before service must be restored. It answers: <em>"How long can we be down?"</em></p>
+
+        <p>Examples:</p>
+        <ul>
+          <li>A payment processing system might have an RTO of 15 minutes — any longer and regulatory requirements are violated and revenue loss becomes significant.</li>
+          <li>An internal analytics dashboard might have an RTO of 24 hours — a day of unavailability is tolerable.</li>
+          <li>An autonomous vehicle control system might have an RTO measured in milliseconds.</li>
+        </ul>
+
+        <p><strong>RTO drives infrastructure investment.</strong> A 15-minute RTO requires a pre-warmed, continuously synchronized standby environment. A 24-hour RTO allows you to restore from last night's backup. The difference in cost can be orders of magnitude.</p>
+
+        <h4>RPO: Recovery Point Objective</h4>
+
+        <p><strong>RPO</strong> is the maximum acceptable amount of data loss, measured as time elapsed since the last good backup. It answers: <em>"How much data can we afford to lose?"</em></p>
+
+        <p>Examples:</p>
+        <ul>
+          <li>A financial trading system might have an RPO of zero — losing even one transaction is unacceptable.</li>
+          <li>A social media application might have an RPO of 5 minutes — users losing the last few minutes of posts is tolerable.</li>
+          <li>A daily analytics ETL pipeline might have an RPO of 24 hours — losing a day's run is painful but the data can be reprocessed.</li>
+        </ul>
+
+        <p><strong>RPO drives backup frequency.</strong> If your RPO is 1 hour, you must take backups at least every hour. An RPO of zero effectively requires synchronous replication to a standby.</p>
+
+        <figure class="illustration">
+          <img src="images/example-diagram-6.png" alt="Two-panel timeline diagram: the top panel shows RPO as the window between the last backup and the disaster event (data loss zone); the bottom panel shows RTO as the window between the disaster event and service restored (downtime zone), with a cost vs protection tradeoff callout below" />
+          <figcaption><strong>Figure 6:</strong> RPO measures the data loss window (last backup → disaster); RTO measures the downtime window (disaster → service restored). They are independent business decisions with separate cost implications.</figcaption>
+        </figure>
+
+        <p><strong>A practical framework for setting RTO and RPO:</strong></p>
+
+        <p>Start with the business impact. For each system, quantify:</p>
+        <ol>
+          <li><strong>Revenue impact per hour of downtime</strong> (for revenue-generating systems)</li>
+          <li><strong>Cost of data loss</strong> (regulatory fines, customer trust, reprocessing cost)</li>
+          <li><strong>Maximum recovery cost the business will fund</strong></li>
+        </ol>
+
+        <p>The intersection of impact and cost gives you the target RTO and RPO. This conversation should happen between engineering and business leadership — engineers can't set these numbers alone, because they represent business risk tolerance decisions.</p>
+
+        <h3 id="recovery-models">Recovery Models: Matching Architecture to Objectives</h3>
+
+        <p>Different RTO/RPO targets require fundamentally different infrastructure architectures. There's a direct tradeoff: <em>shorter RTO/RPO = higher ongoing cost</em>.</p>
+
+        <figure class="illustration">
+          <img src="images/example-diagram-7.png" alt="A horizontal spectrum diagram showing three disaster recovery tiers from left to right: Cold Recovery (slow, cheap, archive icon), Warm Recovery (moderate speed, moderate cost, standby server icon), and Hot Recovery (fast, expensive, active sync icon), with RTO ranges and cost multipliers labeled" />
+          <figcaption><strong>Figure 7:</strong> The DR spectrum: Cold → Warm → Hot. Recovery speed increases with cost. Hot recovery can cost 2–10× more than cold for the same workload but delivers near-instant failover.</figcaption>
+        </figure>
+
+        <h4>Cold Recovery (Tape / Cloud Archive)</h4>
+
+        <p>The most economical DR option. Your data is backed up to an offline or near-offline medium (tape, AWS Glacier, Azure Archive Storage). In a disaster, you provision infrastructure from scratch and restore from the backup.</p>
+
+        <p><strong>RTO:</strong> Hours to days. You're waiting for hardware provisioning (or Glacier retrieval, which takes up to 12 hours on standard tier) plus restore time.<br>
+        <strong>RPO:</strong> Determined by backup frequency — typically hours to days.<br>
+        <strong>Cost:</strong> Very low ongoing cost. You pay only for storage.<br>
+        <strong>Use case:</strong> Non-critical systems, compliance archiving, historical data that doesn't need fast recovery.</p>
+
+        <p><strong>For ML teams:</strong> Cold recovery is appropriate for historical training datasets, model artifacts beyond the most recent N versions, and experiment tracking data. A model you trained six months ago doesn't need sub-hour recovery.</p>
+
+        <h4>Warm Recovery (Standby Servers)</h4>
+
+        <p>A warm standby is a partially provisioned environment that receives periodic backups or asynchronous replication. It's not serving traffic, but the infrastructure is ready to accept it — you don't need to provision from scratch.</p>
+
+        <p><strong>RTO:</strong> Minutes to hours. You need to restore the latest backup, run startup checks, and redirect traffic.<br>
+        <strong>RPO:</strong> Typically hours (determined by replication/backup frequency).<br>
+        <strong>Cost:</strong> Moderate. You pay for standby infrastructure that isn't generating revenue.<br>
+        <strong>Use case:</strong> Business-critical but not mission-critical systems — internal applications, secondary API services, analytics pipelines.</p>
+
+        <p>A warm standby might receive daily backup restores and hourly replication — enough that you can fail over within an hour and lose at most an hour of data.</p>
+
+        <h4>Hot Recovery (Real-Time Syncing)</h4>
+
+        <p>A hot standby is a fully provisioned, continuously synchronized environment that is ready for immediate failover. In some implementations, it's actively handling some traffic (see: active-active). In others, it's a dark mirror that can be lit up in seconds.</p>
+
+        <p><strong>RTO:</strong> Seconds to minutes. Failover is essentially a DNS switch or load balancer redirect.<br>
+        <strong>RPO:</strong> Near-zero. Real-time synchronization means very little data is in-flight when a disaster strikes.<br>
+        <strong>Cost:</strong> High. You're running double (or more) the infrastructure at all times.<br>
+        <strong>Use case:</strong> Mission-critical, zero-tolerance systems — payment processing, real-time fraud detection, high-frequency trading, life-critical ML systems.</p>
+
+        <p><strong>The DNS trick that makes hot failover fast:</strong> Maintaining an extremely low DNS TTL (Time-to-Live) of 30–60 seconds ensures that when you update your DNS record to point to the standby environment, clients begin resolving the new IP within a minute. Combine with pre-warmed connection pools in the standby, and users barely notice the switch.</p>
+
+        <h3 id="dr-impl">DR Implementation: The Engineering Details</h3>
+
+        <p>Planning RTO/RPO targets is strategy. Building the infrastructure to meet them is engineering. Here's where things get genuinely hard.</p>
+
+        <h4>Geo-Distributed Challenges</h4>
+
+        <p>Multi-region deployments solve the problem of regional failure — but they introduce a new set of problems: <strong>the fundamental tension between consistency and availability in distributed systems</strong>.</p>
+
+        <p>This is best understood through the <strong>CAP theorem</strong>: In any distributed system experiencing a network partition, you must choose between:</p>
+        <ul>
+          <li><strong>Consistency (C):</strong> Every read receives the most recent write or an error.</li>
+          <li><strong>Availability (A):</strong> Every request receives a response, though it might be stale.</li>
+        </ul>
+
+        <p>You cannot have both during a partition. This isn't a limitation of engineering — it's a mathematical proof.</p>
+
+        <p>For practical DR systems, this manifests as:</p>
+        <ul>
+          <li><strong>Synchronous replication:</strong> Writes are confirmed only after they've been committed to both primary and standby. Guarantees zero data loss (RPO=0) but adds latency to every write — often 10–100ms for cross-region replication.</li>
+          <li><strong>Asynchronous replication:</strong> Writes are confirmed immediately on the primary; the standby catches up asynchronously. Lower write latency, but if the primary fails before the standby catches up, you lose those in-flight writes (RPO &gt; 0).</li>
+        </ul>
+
+        <p><strong>The speed of light problem:</strong> A round-trip between AWS <code>us-east-1</code> and <code>us-west-2</code> takes approximately 60ms. Between <code>us-east-1</code> and <code>ap-southeast-1</code> (Singapore), it's around 230ms. Synchronous writes that must cross these distances will be perceived by users — there's no engineering solution to the speed of light.</p>
+
+        <h4>Quorum-Based Design: Paxos and Raft</h4>
+
+        <p>One of the deepest problems in distributed systems is consensus: how do multiple nodes agree on the current state of the system when messages can be lost, delayed, or nodes can fail?</p>
+
+        <p><strong>Raft</strong> (and its more complex predecessor, <strong>Paxos</strong>) are consensus algorithms that solve this. The core idea of Raft is the <strong>quorum</strong> — a majority of nodes must agree before any change is committed.</p>
+
+        <p>With 5 nodes, a quorum is 3. If 2 nodes fail, the system continues operating because 3 nodes can still form a majority. If 3 nodes fail, no quorum can be reached and the system stops accepting writes — this is the correct behavior, because proceeding without quorum risks data inconsistency.</p>
+
+        <pre><span class="code-label">Diagram</span><code>Example: 5-node Raft cluster for distributed feature store
+
+Node 1 (Leader) ─── Node 2 (Follower)
+        │        ╲─ Node 3 (Follower)
+        │        ╱─ Node 4 (Follower)
+        └───────── Node 5 (Follower)
+
+Write request arrives at Leader:
+1. Leader proposes write to all followers
+2. Waits for acknowledgment from majority (≥3 nodes)
+3. Commits write once quorum reached
+4. Responds success to client
+
+If Leader fails:
+1. Followers detect timeout on heartbeat
+2. One follower calls election
+3. Candidate requests votes from other nodes
+4. If it receives majority of votes → becomes new Leader
+5. Cluster continues operating (as long as ≥3 nodes are healthy)</code></pre>
+
+        <p><strong>Where you'll encounter this in practice:</strong></p>
+        <ul>
+          <li><strong>etcd</strong> (used by Kubernetes for cluster state) uses Raft.</li>
+          <li><strong>Apache Kafka</strong> uses a simplified leader-election mechanism with ZooKeeper (or its own KRaft mode).</li>
+          <li><strong>CockroachDB</strong> and <strong>YugabyteDB</strong> use Raft for each data range.</li>
+          <li><strong>Amazon DynamoDB</strong> uses a Paxos-inspired protocol internally.</li>
+        </ul>
+
+        <p>For ML engineers: if you use a distributed feature store like Feast (backed by Redis Cluster) or a distributed KV store for real-time features, you're relying on these consensus mechanisms for correctness under failure.</p>
+
+        <h4>Multi-Region Failover</h4>
+
+        <p>A fully realized multi-region failover architecture is one of the most complex engineering challenges in distributed systems. Here's a simplified view of how a production ML serving system might implement it:</p>
+
+        <figure class="illustration">
+          <img src="images/example-diagram-8.png" alt="Multi-region ML serving architecture showing a Global Load Balancer at the top routing to a Primary Region (Active, solid green border) with API Gateway, Load Balancer, Model Serving Pods, Feature Store Primary, and Database Primary; and a Secondary Region (Standby, dashed amber border) with matching components receiving async replication arrows, with failover trigger annotation" />
+          <figcaption><strong>Figure 8:</strong> Multi-region active-passive failover for an ML serving system. Async replication keeps the secondary synchronized. On disaster, DNS switches to the secondary, the DB replica is promoted, and pods scale to full capacity.</figcaption>
+        </figure>
+
+        <p><strong>The critical pre-failover checklist (before you need it):</strong></p>
+
+        <pre><span class="code-label">Runbook</span><code>## DR Runbook: Multi-Region Failover Checklist
+
+### Pre-conditions
+- [ ] Secondary region's DB replica is fully caught up (lag &lt; 30s)
+- [ ] Secondary feature store is synchronized
+- [ ] Secondary pod count is scaled to production capacity
+- [ ] DNS TTL has been reduced to 60s (do this 24h before planned failover)
+
+### Failover Sequence
+1. [ ] Trigger DB replica promotion in secondary region
+2. [ ] Update connection strings in application config to point to new primary DB
+3. [ ] Verify model serving pods pass health checks in secondary
+4. [ ] Update Route53 / DNS to point traffic to secondary
+5. [ ] Monitor error rates and latency for 15 minutes
+6. [ ] Alert on-call team: "Failover complete, secondary region is now primary"
+
+### Rollback Criteria
+- Error rate &gt; 5% for &gt; 5 minutes post-failover
+- Model prediction latency p99 &gt; 2x baseline
+- Feature store cache hit rate &lt; 80%</code></pre>
+
+        <h4>Chaos Engineering Drills: Practice Failing</h4>
+
+        <p>The most important insight in modern reliability engineering is this: <strong>you cannot discover your failure modes by reading architecture diagrams. You must actually break things.</strong></p>
+
+        <p><strong>Chaos engineering</strong> is the discipline of deliberately introducing failures into production (or production-like) environments to discover weaknesses before real disasters do. Netflix famously runs "Chaos Monkey" in production — a tool that randomly terminates EC2 instances to verify that services automatically recover without human intervention.</p>
+
+        <p>The progression of chaos experiments:</p>
+        <ol>
+          <li><strong>Unit chaos:</strong> Kill a single pod. Does Kubernetes reschedule it? Do users notice?</li>
+          <li><strong>Node failure:</strong> Terminate an entire node. Does the cluster rebalance?</li>
+          <li><strong>Network partition:</strong> Introduce latency or packet loss between services. Do circuit breakers trip? Does graceful degradation kick in?</li>
+          <li><strong>Region failure:</strong> Cut off an entire availability zone. Does failover activate correctly?</li>
+          <li><strong>Data corruption injection:</strong> Introduce bad data into a feature store. Does your data validation layer catch it?</li>
+        </ol>
+
+        <pre><span class="code-label">Python</span><code># Simplified chaos experiment: inject latency into feature store calls
+# Use this in staging environments to test circuit breaker behavior
+import time
+import random
+from unittest.mock import patch
+
+def chaos_inject_latency(probability=0.3, latency_ms=500):
+    """
+    Decorator: with `probability` chance, inject `latency_ms` of delay.
+    Use to simulate slow downstream dependencies.
+    """
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            if random.random() &lt; probability:
+                time.sleep(latency_ms / 1000.0)
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+# Apply in test environment:
+@chaos_inject_latency(probability=0.3, latency_ms=500)
+def get_features_from_store(entity_id: str) -&gt; dict:
+    # Normal feature retrieval logic
+    ...
+
+# Then run your full stack and verify:
+# 1. Circuit breaker trips when latency exceeds threshold
+# 2. Graceful degradation returns cached/default features
+# 3. Alerting fires appropriately
+# 4. MTTR is within SLA</code></pre>
+
+        <p><strong>The GameDay:</strong> A structured chaos exercise where an entire team runs a defined failure scenario — ideally without warning key stakeholders in advance, to simulate real incident conditions. Teams measure actual MTTR, identify gaps in runbooks, and update procedures based on real findings. Run GameDays quarterly.</p>
+      </section>
+
+      <div class="section-divider">· · ·</div>
+
+      <!-- ─── Maturity Model ─── -->
+      <section id="maturity" class="reveal">
+        <h2>Putting It All Together: A Reliability Maturity Model</h2>
+
+        <p>Reliability isn't a binary state — you don't flip a switch and go from "unreliable" to "reliable." It's a spectrum of capability. Here's a practical maturity model to help you assess where your systems are and where to invest next:</p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Level</th><th>Capability</th><th>Indicators</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Level 0: Fragile</td><td>No formal reliability practices</td><td>SPOFs everywhere, no monitoring, manual recovery</td></tr>
+              <tr><td>Level 1: Reactive</td><td>Basic monitoring and manual runbooks</td><td>Alerts fire, but humans execute all recovery</td></tr>
+              <tr><td>Level 2: Proactive</td><td>Redundancy + automated failover</td><td>HA for critical paths, circuit breakers, automated health checks</td></tr>
+              <tr><td>Level 3: Resilient</td><td>Multi-region, backup + DR tested</td><td>Validated DR plan, regular chaos experiments, RTO/RPO defined and met</td></tr>
+              <tr><td>Level 4: Antifragile</td><td>Self-healing, learns from failure</td><td>Automated chaos, ML-driven anomaly detection, continuous DR validation</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>Most teams operate at Level 1–2. Moving to Level 3 requires both engineering investment and organizational buy-in — someone must own reliability, run game days, and report on SLO compliance. The SRE (Site Reliability Engineering) discipline exists precisely to fill this role.</p>
+
+        <p><strong>For data and ML teams, a reliability maturity model specifically for ML systems:</strong></p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>ML Reliability Concern</th><th>Basic</th><th>Intermediate</th><th>Advanced</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Model serving</td><td>Single instance</td><td>Multiple replicas + LB</td><td>Active-active multi-region</td></tr>
+              <tr><td>Feature store</td><td>Single node</td><td>Primary + replica</td><td>Distributed, region-replicated</td></tr>
+              <tr><td>Training pipeline</td><td>No checkpointing</td><td>Checkpoint every N epochs</td><td>Checkpoint + S3-backed resume</td></tr>
+              <tr><td>Data pipeline</td><td>No retry logic</td><td>Retry with backoff</td><td>Dead letter queue + replay</td></tr>
+              <tr><td>Model monitoring</td><td>Manual spot checks</td><td>Automated drift alerts</td><td>Auto-retrain on drift detection</td></tr>
+              <tr><td>Recovery testing</td><td>Never</td><td>Ad-hoc</td><td>Scheduled automated GameDays</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="section-divider">· · ·</div>
+
+      <!-- ─── Conclusion ─── -->
+      <section id="conclusion" class="reveal">
+        <h2>Conclusion</h2>
+
+        <p>Reliability, availability, and disaster recovery are not glamorous. They don't make it into product announcements or machine learning conference keynotes. But they are the invisible foundation on which every successful production system is built.</p>
+
+        <p>The concepts we've covered form a coherent discipline:</p>
+        <ul>
+          <li><strong>Measure</strong> your system's reliability with MTBF, MTTR, SLAs, and the distinction between availability and durability.</li>
+          <li><strong>Architect</strong> for high availability by eliminating SPOFs through redundancy, implementing load balancers and circuit breakers, and designing for graceful degradation.</li>
+          <li><strong>Protect your data</strong> with a layered backup strategy — full, incremental, and differential backups, governed by the 3-2-1 rule and validated through regular automated restore testing.</li>
+          <li><strong>Plan for disasters</strong> by defining RTO and RPO with business stakeholders, choosing the right recovery model (cold/warm/hot), and building the multi-region infrastructure to meet your targets.</li>
+          <li><strong>Validate everything</strong> through chaos engineering and GameDays, because failure modes you discover in a controlled drill are far less expensive than the ones you discover at 2 AM in production.</li>
+        </ul>
+
+        <p>The teams that operate the most reliable systems in the world — Google, Netflix, Amazon, Stripe — didn't build that reliability overnight. They built it incident by incident, post-mortem by post-mortem, investment by investment. Each outage became a learning that hardened the system against the next one.</p>
+
+        <p>Start wherever you are. Measure something today. Fix one SPOF this week. Write one runbook this month. The path to reliability is taken one step at a time — but it starts with deciding that reliability is worth the investment.</p>
+
+        <p>Because the only thing more expensive than building reliable systems is failing to build them.</p>
+      </section>
+
+      <!-- ─── Article Footer ─── -->
+      <div class="article-footer">
+        <p><em>This article is part of a series on production system design for data and ML engineers. If you found it useful, consider following for future posts on observability, distributed data systems, and MLOps architecture.</em></p>
+
+        <hr>
+
+        <h2>Further Reading</h2>
+        <ul>
+          <li><strong>"Site Reliability Engineering"</strong> (Beyer et al., Google) — The foundational SRE textbook</li>
+          <li><strong>"The Art of Chaos Engineering"</strong> (Rosenthal et al.) — Deep dive into chaos practice</li>
+          <li><strong>AWS Well-Architected Framework: Reliability Pillar</strong> — Cloud-native reliability patterns</li>
+          <li><strong>"Designing Data-Intensive Applications"</strong> (Kleppmann) — Distributed systems foundations, including consensus and replication</li>
+          <li><strong>Netflix Tech Blog: Chaos Engineering</strong> — Real-world chaos engineering at scale</li>
+          <li><strong>Martin Fowler: Circuit Breaker Pattern</strong> — The canonical circuit breaker reference</li>
+        </ul>
+      </div>
+
+    </article>
+
+    <!-- ─── TOC Sidebar ─── -->
+    <aside class="toc-sidebar">
+      <div class="toc-inner">
+        <div class="toc-label">Contents</div>
+        <ul class="toc-list">
+          <li><a href="#intro">Introduction</a></li>
+          <li><a href="#why-reliability">Why Reliability Isn't Optional</a></li>
+          <li><a href="#part-1">Part I: Reliability Metrics</a></li>
+          <ul class="toc-sub">
+            <li><a href="#mtbf">MTBF</a></li>
+            <li><a href="#mttr">MTTR</a></li>
+            <li><a href="#slas">SLAs</a></li>
+            <li><a href="#avail-vs-durability">Availability vs. Durability</a></li>
+          </ul>
+          <li><a href="#part-2">Part II: High Availability</a></li>
+          <ul class="toc-sub">
+            <li><a href="#redundancy">Redundancy Strategies</a></li>
+            <li><a href="#arch-patterns">Architectural Patterns</a></li>
+            <li><a href="#sys-health">System Health</a></li>
+          </ul>
+          <li><a href="#part-3">Part III: Backup Strategies</a></li>
+          <ul class="toc-sub">
+            <li><a href="#backup-types">Backup Types</a></li>
+            <li><a href="#backup-practices">Best Practices</a></li>
+          </ul>
+          <li><a href="#part-4">Part IV: Disaster Recovery</a></li>
+          <ul class="toc-sub">
+            <li><a href="#rto-rpo">RTO &amp; RPO</a></li>
+            <li><a href="#recovery-models">Recovery Models</a></li>
+            <li><a href="#dr-impl">DR Implementation</a></li>
+          </ul>
+          <li><a href="#maturity">Maturity Model</a></li>
+          <li><a href="#conclusion">Conclusion</a></li>
+        </ul>
+      </div>
+    </aside>
+
+  </div><!-- /.layout -->
+
+  <script>
+    // ─── Reading Progress Bar ───
+    const STORAGE_KEY = 'reading-progress:' + window.location.pathname;
+    const bar = document.getElementById('progress-bar');
+
+    window.addEventListener('load', () => {
+      const savedProgress = parseFloat(localStorage.getItem(STORAGE_KEY));
+      if (!isNaN(savedProgress) && savedProgress > 0.01) {
+        const target = savedProgress * (document.documentElement.scrollHeight - window.innerHeight);
+        window.scrollTo(0, target);
+      }
+    });
+
+    let saveTimeout;
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = (scrollTop / docHeight) * 100;
+      bar.style.width = Math.min(pct, 100) + '%';
+
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        if (pct >= 95) {
+          localStorage.removeItem(STORAGE_KEY);
+        } else {
+          localStorage.setItem(STORAGE_KEY, (pct / 100).toString());
+        }
+      }, 250);
+    }, { passive: true });
+
+    // ─── Scroll Reveal ───
+    const reveals = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.05 });
+    reveals.forEach(el => revealObserver.observe(el));
+
+    // ─── Active TOC Highlighting ───
+    const tocLinks = document.querySelectorAll('.toc-list a');
+    const headings = document.querySelectorAll('h2[id], h3[id], section[id]');
+
+    const tocObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const id = entry.target.id;
+        tocLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+        });
+      });
+    }, { rootMargin: '-10% 0px -75% 0px' });
+
+    headings.forEach(el => tocObserver.observe(el));
+  </script>
+
+</body>
+</html>

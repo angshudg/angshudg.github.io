@@ -639,32 +639,95 @@
   </div>
 
   <script>
-    // ─── Reading progress bar ───
-    const bar = document.getElementById('progress-bar');
-    window.addEventListener('scroll', () => {
-      const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      bar.style.width = (scrollTop / docHeight * 100) + '%';
+  // ─────────────────────────────────────────────
+  // Persistent reading progress
+  // ─────────────────────────────────────────────
+
+  const STORAGE_KEY = 'reading-progress:' + window.location.pathname;
+  const bar = document.getElementById('progress-bar');
+
+  window.addEventListener('load', () => {
+    const savedProgress = parseFloat(localStorage.getItem(STORAGE_KEY));
+
+    if (!isNaN(savedProgress) && savedProgress > 0.01) {
+      const target =
+        savedProgress *
+        (document.documentElement.scrollHeight - window.innerHeight);
+
+      window.scrollTo(0, target);
+    }
+  });
+
+  let saveTimeout;
+
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docHeight =
+      document.documentElement.scrollHeight - window.innerHeight;
+
+    const pct = (scrollTop / docHeight) * 100;
+
+    // Update progress bar
+    bar.style.width = Math.min(pct, 100) + '%';
+
+    // Save reading position (throttled)
+    clearTimeout(saveTimeout);
+
+    saveTimeout = setTimeout(() => {
+      if (pct >= 95) {
+        localStorage.removeItem(STORAGE_KEY);
+      } else {
+        localStorage.setItem(
+          STORAGE_KEY,
+          (pct / 100).toString()
+        );
+      }
+    }, 250);
+
+  }, { passive: true });
+
+  // ─────────────────────────────────────────────
+  // Scroll reveal animations
+  // ─────────────────────────────────────────────
+
+  const reveals = document.querySelectorAll('.reveal');
+
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
+      }
     });
+  }, { threshold: 0.08 });
 
-    // ─── Active TOC highlighting ───
-    const tocLinks = document.querySelectorAll('.toc-list a');
-    const sections = document.querySelectorAll('section[id], h2[id]');
+  reveals.forEach(el => revealObserver.observe(el));
 
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          tocLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href') === '#' + entry.target.id) {
-              link.classList.add('active');
-            }
-          });
-        }
+  // ─────────────────────────────────────────────
+  // Active TOC highlighting
+  // ─────────────────────────────────────────────
+
+  const tocLinks = document.querySelectorAll('.toc-list a');
+  const sections = document.querySelectorAll('section[id], h2[id]');
+
+  const tocObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+
+      const id = entry.target.id;
+
+      tocLinks.forEach(link => {
+        link.classList.toggle(
+          'active',
+          link.getAttribute('href') === '#' + id
+        );
       });
-    }, { rootMargin: '-10% 0px -80% 0px' });
+    });
+  }, {
+    rootMargin: '-20% 0px -70% 0px'
+  });
 
-    sections.forEach(section => observer.observe(section));
-  </script>
+  sections.forEach(section => tocObserver.observe(section));
+</script>
 </body>
 </html>
