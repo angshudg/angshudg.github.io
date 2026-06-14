@@ -47,6 +47,7 @@
       font-family: var(--font-serif);
       line-height: 1.8;
       -webkit-font-smoothing: antialiased;
+      margin-left: 280px;
     }
 
     /* ─── Layout Wrapper ─────────────────────────────────────── */
@@ -517,10 +518,80 @@
       .code-block pre { padding: 16px; }
       .insight-grid { grid-template-columns: 1fr; }
     }
+.chapter-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 250px;
+    height: 100vh;
+
+    overflow-y: auto;
+
+    background: #ffffff;
+    border-right: 1px solid #ddd;
+
+    padding: 20px;
+    box-sizing: border-box;
+
+    z-index: 1000;
+}
+
+.chapter-nav h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.chapter-nav a {
+    display: block;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+
+    text-decoration: none;
+    color: #333;
+
+    border-radius: 6px;
+}
+
+.chapter-nav a:hover {
+    background: #f3f4f6;
+}
+
+.chapter-nav a.active {
+    background: #2563eb;
+    color: white;
+    font-weight: bold;
+}
+@media (max-width: 1200px) {
+    .chapter-nav {
+        display: none;
+    }
+
+    main,
+    .container,
+    .content {
+        margin-left: 0;
+    }
+}
   </style>
 </head>
 
 <body>
+
+  <div class="chapter-nav">
+    <h3>Chapters</h3>
+
+    <a href="../01-networking/index.html">01 Networking</a>
+    <a href="../02-protocols/index.html">02 Protocols</a>
+    <a href="../03-architecture/index.html">03 Architecture</a>
+    <a href="../04-web-fundamentals/index.html">04 Web Fundamentals</a>
+    <a href="../05-scalability/index.html" class="active">05 Scalability</a>
+    <a href="../06-storage/index.html">06 Storage</a>
+    <a href="../07-performance/index.html">07 Performance</a>
+    <a href="../08-reliability/index.html">08 Reliability</a>
+    <a href="../09-security/index.html">09 Security</a>
+</div>
+
   <div class="article-wrapper">
 
     <!-- ══════════════════ HERO ══════════════════ -->

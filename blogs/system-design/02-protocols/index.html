@@ -6,458 +6,649 @@
   <title>Networking Protocols Every Data Scientist Should Know</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,400&display=swap" rel="stylesheet" />
-
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
   <style>
-    /* ─── Tokens ─────────────────────────────────────────────────── */
+    /* ─── Design Tokens ─── */
     :root {
-      --bg:           #f9f7f4;
-      --surface:      #ffffff;
-      --border:       #e4e0da;
-      --text:         #1a1917;
-      --text-muted:   #6b6560;
-      --text-faint:   #9e9890;
-      --accent:       #1d6a5e;
-      --accent-light: #e6f2f0;
-      --accent-mid:   #c0deda;
-      --warn:         #b34b00;
-      --code-bg:      #1e1e1e;
-      --code-text:    #d4d4d4;
-      --code-accent:  #4ec9b0;
-      --code-string:  #ce9178;
-      --code-keyword: #569cd6;
-      --code-comment: #6a9955;
-      --tag-bg:       #edeae5;
-      --tag-text:     #4a4540;
-      --serif:        'Lora', Georgia, serif;
-      --mono:         'IBM Plex Mono', 'Courier New', monospace;
-      --display:      'Fraunces', Georgia, serif;
+      --ink:         #1a1814;
+      --ink-2:       #3d3a35;
+      --ink-3:       #6b6760;
+      --ink-4:       #9e9b97;
+      --paper:       #faf9f7;
+      --paper-2:     #f3f1ed;
+      --paper-3:     #eae7e1;
+      --rule:        #e2dfd8;
+      --accent:      #c0392b;
+      --accent-2:    #922b21;
+      --accent-soft: #fdf2f1;
+      --blue:        #1b3a6b;
+      --blue-soft:   #eef2f9;
+      --green:       #1a5c3a;
+      --green-soft:  #edf7f1;
+      --amber:       #92610a;
+      --amber-soft:  #fef9ec;
+      --purple:      #4a2570;
+      --purple-soft: #f5f0fa;
+      --mono:        'JetBrains Mono', 'Fira Code', monospace;
+      --serif:       'Lora', 'Georgia', serif;
+      --sans:        'DM Sans', system-ui, sans-serif;
+      --max-w:       720px;
+      --col-gap:     2.5rem;
     }
 
-    /* ─── Reset ──────────────────────────────────────────────────── */
+    /* ─── Reset & Base ─── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     html { font-size: 18px; scroll-behavior: smooth; }
 
-    /* ─── Base ───────────────────────────────────────────────────── */
     body {
-      background: var(--bg);
-      color: var(--text);
       font-family: var(--serif);
-      line-height: 1.85;
+      font-weight: 400;
+      line-height: 1.75;
+      color: var(--ink);
+      background: var(--paper);
       -webkit-font-smoothing: antialiased;
+      margin-left: 280px;
     }
 
-    /* ─── Layout ─────────────────────────────────────────────────── */
-    .page-wrap {
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 0 24px 100px;
+    /* ─── Reading Progress Bar ─── */
+    #progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 0%;
+      height: 3px;
+      background: var(--accent);
+      z-index: 1000;
+      transition: width 0.1s linear;
     }
 
-    /* ─── Header ─────────────────────────────────────────────────── */
-    header {
-      padding: 72px 0 48px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 56px;
+    /* ─── Navigation ─── */
+    nav {
+      position: sticky;
+      top: 0;
+      background: rgba(250, 249, 247, 0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--rule);
+      z-index: 100;
+      padding: 0.85rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
     }
 
-    .kicker {
-      font-family: var(--mono);
+    .nav-brand {
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      text-decoration: none;
+    }
+
+    .nav-meta {
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      color: var(--ink-4);
+      display: flex;
+      gap: 1.25rem;
+      align-items: center;
+    }
+
+    .nav-tag {
+      background: var(--paper-3);
+      border-radius: 3px;
+      padding: 0.2em 0.6em;
       font-size: 0.7rem;
-      letter-spacing: 0.15em;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: var(--ink-3);
+    }
+
+    /* ─── Hero ─── */
+    .hero {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 5rem 2rem 4rem;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .hero-eyebrow {
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--accent);
-      margin-bottom: 20px;
+      margin-bottom: 1.25rem;
     }
 
     h1 {
-      font-family: var(--display);
-      font-size: clamp(2rem, 5vw, 3.2rem);
-      font-weight: 900;
-      line-height: 1.15;
-      color: var(--text);
-      letter-spacing: -0.02em;
-      margin-bottom: 24px;
-    }
-
-    .subtitle {
       font-family: var(--serif);
-      font-size: 1.15rem;
-      font-style: italic;
-      color: var(--text-muted);
-      line-height: 1.7;
-      border-left: 3px solid var(--accent);
-      padding-left: 20px;
-      margin-bottom: 28px;
+      font-size: clamp(2rem, 4.5vw, 3rem);
+      font-weight: 700;
+      line-height: 1.18;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin-bottom: 1.25rem;
     }
 
-    .meta {
+    .hero-subtitle {
+      font-family: var(--sans);
+      font-size: 1.1rem;
+      font-weight: 300;
+      color: var(--ink-2);
+      line-height: 1.65;
+      max-width: 640px;
+      margin-bottom: 2rem;
+    }
+
+    .hero-meta {
       display: flex;
       flex-wrap: wrap;
-      gap: 20px;
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      color: var(--text-faint);
+      align-items: center;
+      gap: 1.25rem;
+      font-family: var(--sans);
+      font-size: 0.8rem;
+      color: var(--ink-3);
     }
 
-    .meta span { display: flex; align-items: center; gap: 6px; }
-
-    /* ─── TOC ────────────────────────────────────────────────────── */
-    .toc {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 28px 32px;
-      margin-bottom: 56px;
+    /* ─── Main Layout ─── */
+    .layout {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: grid;
+      grid-template-columns: 1fr min(var(--max-w), 100%) 1fr;
+      gap: 0;
     }
 
-    .toc-label {
-      font-family: var(--mono);
-      font-size: 0.68rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--text-faint);
-      margin-bottom: 16px;
+    /* ─── Article ─── */
+    article {
+      grid-column: 2;
+      padding: 3.5rem 0 6rem;
     }
 
-    .toc ol {
-      padding-left: 0;
-      list-style: none;
-      counter-reset: toc-counter;
-    }
-
-    .toc li {
-      counter-increment: toc-counter;
-      display: flex;
-      align-items: baseline;
-      gap: 12px;
-      padding: 5px 0;
-      border-bottom: 1px dashed var(--border);
-    }
-
-    .toc li:last-child { border-bottom: none; }
-
-    .toc li::before {
-      content: counter(toc-counter, decimal-leading-zero);
-      font-family: var(--mono);
-      font-size: 0.68rem;
-      color: var(--text-faint);
-      min-width: 24px;
-    }
-
-    .toc a {
-      font-size: 0.95rem;
-      color: var(--text);
-      text-decoration: none;
-      font-family: var(--serif);
-    }
-
-    .toc a:hover { color: var(--accent); text-decoration: underline; }
-
-    /* ─── Prose ──────────────────────────────────────────────────── */
-    .prose > * + * { margin-top: 1.6rem; }
-
+    /* ─── Typography ─── */
     p {
+      margin-bottom: 1.6rem;
       font-size: 1rem;
-      line-height: 1.9;
-      color: var(--text);
+      color: var(--ink);
     }
 
-    /* ─── Headings ───────────────────────────────────────────────── */
+    p:last-child { margin-bottom: 0; }
+
+    strong { font-weight: 600; color: var(--ink); }
+    em { font-style: italic; }
+
+    a { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
+    a:hover { color: var(--accent); }
+
     h2 {
-      font-family: var(--display);
-      font-size: clamp(1.5rem, 3vw, 1.95rem);
+      font-family: var(--serif);
+      font-size: 1.75rem;
       font-weight: 700;
-      line-height: 1.2;
-      letter-spacing: -0.01em;
-      color: var(--text);
-      margin-top: 72px;
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 2px solid var(--accent-mid);
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      margin: 3.5rem 0 1.25rem;
+      padding-top: 1rem;
+      border-top: 2px solid var(--ink);
     }
 
     h3 {
-      font-family: var(--display);
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--text);
-      margin-top: 48px;
-      margin-bottom: 14px;
-      letter-spacing: -0.01em;
+      font-family: var(--sans);
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      color: var(--ink-2);
+      margin: 2.25rem 0 0.85rem;
     }
 
     h4 {
-      font-family: var(--mono);
-      font-size: 0.82rem;
-      letter-spacing: 0.08em;
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
       color: var(--accent);
-      margin-top: 28px;
-      margin-bottom: 10px;
+      margin: 2rem 0 0.75rem;
     }
 
-    /* ─── Section rule ───────────────────────────────────────────── */
+    /* ─── Blockquote / Pull Quote ─── */
+    blockquote {
+      border-left: 3px solid var(--accent);
+      padding: 1rem 1.5rem;
+      margin: 2.5rem 0;
+      background: var(--accent-soft);
+      border-radius: 0 6px 6px 0;
+    }
+
+    blockquote p {
+      font-style: italic;
+      font-size: 1.05rem;
+      color: var(--ink-2);
+      margin-bottom: 0;
+    }
+
+    .pull-quote {
+      border-left: 3px solid var(--accent);
+      padding: 1rem 1.5rem;
+      margin: 2.5rem 0;
+      background: var(--accent-soft);
+      border-radius: 0 6px 6px 0;
+    }
+
+    .pull-quote p {
+      font-style: italic;
+      font-size: 1.05rem;
+      color: var(--ink-2);
+      margin-bottom: 0;
+    }
+
+    /* ─── Divider ─── */
+    .section-divider {
+      text-align: center;
+      margin: 3rem 0;
+      color: var(--ink-4);
+      font-size: 1.1rem;
+      letter-spacing: 0.3em;
+    }
+
     hr {
       border: none;
-      border-top: 1px solid var(--border);
-      margin: 52px 0;
+      border-top: 1px solid var(--rule);
+      margin: 2.5rem 0;
     }
 
-    /* ─── Inline elements ────────────────────────────────────────── */
-    strong { font-weight: 700; color: var(--text); }
-    em { font-style: italic; }
-
-    a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
-    a:hover { color: var(--warn); }
-
-    code {
-      font-family: var(--mono);
-      font-size: 0.83em;
-      background: var(--accent-light);
-      color: var(--accent);
-      padding: 0.15em 0.4em;
-      border-radius: 3px;
-    }
-
-    /* ─── Code blocks ────────────────────────────────────────────── */
+    /* ─── Code Blocks ─── */
     pre {
-      background: var(--code-bg);
+      background: #1e1c1a;
       border-radius: 8px;
       overflow-x: auto;
-      margin: 28px 0;
+      margin: 1.75rem 0;
       position: relative;
+    }
+
+    /* Language label via span.code-label (sample.html style) */
+    pre .code-label {
+      position: absolute;
+      top: 0; right: 0;
+      background: rgba(255,255,255,0.07);
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      padding: 0.35em 0.85em;
+      border-radius: 0 8px 0 6px;
+    }
+
+    /* Language label via data-lang attribute (index.html style) */
+    pre[data-lang]::before {
+      content: attr(data-lang);
+      position: absolute;
+      top: 0; right: 0;
+      background: rgba(255,255,255,0.07);
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      padding: 0.35em 0.85em;
+      border-radius: 0 8px 0 6px;
     }
 
     pre code {
       display: block;
+      padding: 1.5rem 1.75rem;
       font-family: var(--mono);
       font-size: 0.8rem;
       line-height: 1.7;
-      color: var(--code-text);
-      background: none;
-      padding: 24px 28px;
-      border-radius: 0;
+      color: #d4cfc8;
     }
 
-    /* language badge */
-    pre[data-lang]::before {
-      content: attr(data-lang);
-      position: absolute;
-      top: 10px;
-      right: 14px;
-      font-family: var(--mono);
-      font-size: 0.62rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: #555;
-    }
-
-    /* ASCII diagram blocks — lighter bg, smaller text */
+    /* ASCII diagram blocks — lighter background */
     pre.ascii {
-      background: #f5f2ee;
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      background: var(--paper-2);
+      border: 1px solid var(--rule);
     }
 
     pre.ascii code {
-      color: #2a2520;
-      font-size: 0.74rem;
-      line-height: 1.55;
+      color: var(--ink-2);
+      font-size: 0.75rem;
+      line-height: 1.6;
     }
 
-    /* ─── Syntax coloring (static classes applied by JS) ─────────── */
-    .kw  { color: var(--code-keyword); }
-    .st  { color: var(--code-string); }
-    .cm  { color: var(--code-comment); font-style: italic; }
-    .fn  { color: #dcdcaa; }
-    .nm  { color: var(--code-accent); }
+    /* Syntax colouring */
+    .kw  { color: #c792ea; }
+    .fn  { color: #82aaff; }
+    .st  { color: #c3e88d; }
+    .cm  { color: #546e7a; font-style: italic; }
+    .nm  { color: #f78c6c; }
+    .at  { color: #ffcb6b; }
+    .tp  { color: #89ddff; }
     .nu  { color: #b5cea8; }
 
-    /* ─── Blockquotes ────────────────────────────────────────────── */
-    blockquote {
-      border-left: 4px solid var(--accent-mid);
-      background: var(--accent-light);
-      padding: 18px 24px;
-      border-radius: 0 6px 6px 0;
-      margin: 28px 0;
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
-
-    blockquote strong { color: var(--accent); }
-    blockquote p { margin: 0; line-height: 1.75; }
-    blockquote p + p { margin-top: 0.75rem; }
-
-    /* ─── Note callout ───────────────────────────────────────────── */
-    .note {
-      border-left: 4px solid #d4a017;
-      background: #fdf8ec;
-      padding: 18px 24px;
-      border-radius: 0 6px 6px 0;
-      margin: 28px 0;
-      font-size: 0.93rem;
-      color: #5a4a1a;
-    }
-
-    .note-label {
+    code:not(pre code) {
       font-family: var(--mono);
-      font-size: 0.68rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #9a7a1a;
-      margin-bottom: 6px;
+      font-size: 0.82em;
+      background: var(--paper-3);
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      padding: 0.1em 0.4em;
+      color: var(--accent-2);
     }
 
-    /* ─── Lists ──────────────────────────────────────────────────── */
-    ul, ol {
-      padding-left: 1.5rem;
+    /* ─── Figures ─── */
+    figure, .illustration {
+      margin: 2.25rem 0;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--rule);
+      background: var(--paper-2);
     }
 
-    li {
-      margin-bottom: 6px;
-      line-height: 1.8;
+    figure img, .illustration img {
+      width: 100%;
+      display: block;
     }
 
-    li strong { color: var(--accent); }
+    figure figcaption, .illustration figcaption {
+      padding: 0.75rem 1rem;
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      color: var(--ink-3);
+      line-height: 1.5;
+      border-top: 1px solid var(--rule);
+      background: var(--paper);
+    }
 
-    /* ─── Tables ─────────────────────────────────────────────────── */
-    .table-wrap {
+    /* ─── Tables ─── */
+    .table-wrap, .table-wrapper {
       overflow-x: auto;
-      margin: 32px 0;
+      margin: 2rem 0;
       border-radius: 8px;
-      border: 1px solid var(--border);
+      border: 1px solid var(--rule);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.88rem;
-      background: var(--surface);
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      background: var(--paper);
     }
 
     thead tr {
-      background: var(--text);
-      color: #fff;
+      background: var(--ink);
+      color: var(--paper);
     }
 
     thead th {
-      padding: 14px 18px;
-      text-align: left;
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      padding: 0.75rem 1rem;
       font-weight: 500;
-    }
-
-    tbody tr {
-      border-bottom: 1px solid var(--border);
-    }
-
-    tbody tr:last-child { border-bottom: none; }
-    tbody tr:nth-child(even) { background: #faf8f5; }
-
-    td {
-      padding: 12px 18px;
-      vertical-align: middle;
-      line-height: 1.5;
-      font-family: var(--serif);
-    }
-
-    td:first-child {
-      font-family: var(--mono);
-      font-size: 0.82rem;
-      color: var(--accent);
+      letter-spacing: 0.03em;
+      text-align: left;
       white-space: nowrap;
     }
 
-    /* cheatsheet table — first col is bold serif */
-    .cheatsheet td:first-child {
-      font-family: var(--serif);
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--text);
+    tbody tr {
+      border-bottom: 1px solid var(--rule);
+      transition: background 0.15s;
     }
 
-    /* ─── Images ─────────────────────────────────────────────────── */
-    figure {
-      margin: 40px 0;
-      text-align: center;
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--paper-2); }
+
+    tbody td {
+      padding: 0.7rem 1rem;
+      color: var(--ink-2);
+      vertical-align: middle;
     }
 
-    figure img {
-      max-width: 100%;
+    tbody td:first-child {
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    /* ─── Info Callouts ─── */
+    .callout {
+      display: flex;
+      gap: 1rem;
+      padding: 1.25rem 1.5rem;
       border-radius: 8px;
-      border: 1px solid var(--border);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
-      display: block;
-      margin: 0 auto;
+      margin: 2rem 0;
     }
 
-    figcaption {
-      margin-top: 12px;
-      font-family: var(--mono);
+    .callout.info   { background: var(--blue-soft);   border-left: 3px solid var(--blue); }
+    .callout.tip    { background: var(--green-soft);  border-left: 3px solid var(--green); }
+    .callout.warn   { background: var(--amber-soft);  border-left: 3px solid var(--amber); }
+    .callout.purple { background: var(--purple-soft); border-left: 3px solid var(--purple); }
+
+    .callout-icon {
+      font-size: 1.1rem;
+      line-height: 1.75;
+      flex-shrink: 0;
+    }
+
+    .callout-body {
+      font-family: var(--sans);
+      font-size: 0.88rem;
+      line-height: 1.65;
+      color: var(--ink-2);
+    }
+
+    .callout-body strong { color: var(--ink); }
+
+    /* ─── Note Callout (index-specific) ─── */
+    .note {
+      background: var(--amber-soft);
+      border-left: 3px solid var(--amber);
+      border-radius: 0 8px 8px 0;
+      padding: 1.25rem 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .note-label {
+      font-family: var(--sans);
       font-size: 0.72rem;
-      color: var(--text-faint);
-      letter-spacing: 0.02em;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 0.5rem;
     }
 
-    /* ─── Tags ───────────────────────────────────────────────────── */
+    .note p:not(.note-label) {
+      font-family: var(--sans);
+      font-size: 0.88rem;
+      line-height: 1.65;
+      color: var(--ink-2);
+      margin-bottom: 0;
+    }
+
+    /* ─── Tradeoff Cards ─── */
+    .tradeoff-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.75rem 0;
+    }
+
+    .tradeoff-card {
+      border-radius: 8px;
+      padding: 1.1rem 1.25rem;
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .tradeoff-card.pro  { background: var(--green-soft); border-top: 3px solid var(--green); }
+    .tradeoff-card.con  { background: var(--accent-soft); border-top: 3px solid var(--accent); }
+
+    .tradeoff-card h5 {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.6rem;
+    }
+
+    .tradeoff-card.pro h5 { color: var(--green); }
+    .tradeoff-card.con h5 { color: var(--accent); }
+
+    .tradeoff-card ul { padding-left: 1rem; }
+    .tradeoff-card li { margin-bottom: 0.35rem; color: var(--ink-2); }
+
+    /* ─── Part Label ─── */
+    .part-label {
+      display: inline-block;
+      font-family: var(--sans);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--paper);
+      background: var(--ink);
+      padding: 0.2em 0.75em;
+      border-radius: 3px;
+      margin-bottom: 0.6rem;
+    }
+
+    /* ─── Lists ─── */
+    article ul, article ol {
+      padding-left: 1.4rem;
+      margin: 0.5rem 0 1.5rem;
+    }
+
+    article li {
+      margin-bottom: 0.4rem;
+      line-height: 1.75;
+      color: var(--ink);
+    }
+
+    /* ─── Post Footer ─── */
+    .post-footer, .article-footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--rule);
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      color: var(--ink-3);
+      line-height: 1.7;
+    }
+
+    .post-footer p, .article-footer p {
+      font-style: italic;
+      color: var(--ink-3);
+      margin-bottom: 0;
+    }
+
+    .post-footer strong, .article-footer strong { color: var(--ink-2); }
+
+    /* ─── Tags ─── */
     .tags {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-top: 48px;
-      padding-top: 32px;
-      border-top: 1px solid var(--border);
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--rule);
     }
 
     .tag {
-      font-family: var(--mono);
+      font-family: var(--sans);
       font-size: 0.7rem;
-      background: var(--tag-bg);
-      color: var(--tag-text);
-      padding: 5px 12px;
+      background: var(--paper-3);
+      color: var(--ink-3);
+      padding: 0.2em 0.75em;
       border-radius: 999px;
       letter-spacing: 0.04em;
     }
 
-    /* ─── Footer ─────────────────────────────────────────────────── */
-    .post-footer {
-      margin-top: 64px;
-      padding: 32px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      text-align: center;
+    /* ─── TOC Sidebar (desktop only) ─── */
+    .toc-sidebar {
+      display: none;
     }
 
-    .post-footer p {
-      font-style: italic;
-      color: var(--text-muted);
-      font-size: 0.95rem;
+    @media (min-width: 1100px) {
+      .toc-sidebar {
+        display: block;
+        grid-column: 4;
+        padding: 3.5rem 0 6rem 3rem;
+        position: relative;
+      }
+
+      .toc-inner {
+        position: sticky;
+        top: 5rem;
+      }
+
+      .toc-label {
+        font-family: var(--sans);
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-4);
+        margin-bottom: 0.85rem;
+      }
+
+      .toc-list {
+        list-style: none;
+        border-left: 1px solid var(--rule);
+        padding-left: 1rem;
+      }
+
+      .toc-list li {
+        margin-bottom: 0.5rem;
+      }
+
+      .toc-list a {
+        font-family: var(--sans);
+        font-size: 0.78rem;
+        font-weight: 400;
+        color: var(--ink-3);
+        text-decoration: none;
+        line-height: 1.4;
+        display: block;
+        transition: color 0.15s;
+      }
+
+      .toc-list a:hover,
+      .toc-list a.active {
+        color: var(--ink);
+      }
+
+      .toc-list a.active {
+        font-weight: 600;
+        border-left: 2px solid var(--accent);
+        margin-left: -1rem;
+        padding-left: calc(1rem - 2px);
+      }
     }
 
-    .post-footer strong { color: var(--text); font-style: normal; }
-
-    /* ─── Scroll progress bar ────────────────────────────────────── */
-    #progress-bar {
-      position: fixed;
-      top: 0; left: 0;
-      height: 3px;
-      width: 0%;
-      background: var(--accent);
-      z-index: 999;
-      transition: width 0.1s linear;
+    /* ─── Scroll Reveal ─── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
     }
 
-    /* ─── Back-to-top ────────────────────────────────────────────── */
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ─── Back-to-Top Button ─── */
     #back-to-top {
       position: fixed;
       bottom: 32px; right: 32px;
-      background: var(--text);
-      color: #fff;
+      background: var(--ink);
+      color: var(--paper);
       border: none;
       border-radius: 50%;
       width: 44px; height: 44px;
@@ -467,71 +658,155 @@
       transition: opacity 0.25s;
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+      z-index: 200;
     }
 
     #back-to-top.visible { opacity: 1; }
     #back-to-top:hover { background: var(--accent); }
 
-    /* ─── Section anchor offset ──────────────────────────────────── */
-    [id] { scroll-margin-top: 32px; }
+    /* ─── Anchor Offset ─── */
+    [id] { scroll-margin-top: 4rem; }
 
-    /* ─── Responsive ─────────────────────────────────────────────── */
-    @media (max-width: 600px) {
-      html { font-size: 16px; }
-      .page-wrap { padding: 0 16px 80px; }
-      header { padding: 48px 0 36px; }
-      h2 { margin-top: 52px; }
-      pre code { font-size: 0.72rem; padding: 18px 16px; }
-      pre.ascii code { font-size: 0.62rem; }
+    /* ─── Hero Animations ─── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero h1,
+    .hero .hero-subtitle,
+    .hero .hero-meta {
+      animation: fadeInUp 0.6s ease both;
+    }
+
+    .hero h1           { animation-delay: 0.05s; }
+    .hero .hero-subtitle { animation-delay: 0.15s; }
+    .hero .hero-meta   { animation-delay: 0.25s; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 700px) {
+      html { font-size: 17px; }
+      h1   { font-size: 1.75rem; }
+      h2   { font-size: 1.45rem; }
+      .hero { padding: 3rem 1.25rem 2.5rem; }
+      .layout { padding: 0 1.25rem; }
+      nav  { padding: 0.75rem 1.25rem; }
+      .tradeoff-grid { grid-template-columns: 1fr; }
+      pre code { font-size: 0.75rem; padding: 1.25rem; }
+    }
+
+    /* ─── Print ─── */
+    @media print {
+      nav, #progress-bar, .toc-sidebar { display: none; }
+      body { font-size: 11pt; }
+    }
+
+    /* ─── Chapter Navigation ─── */
+    .chapter-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 250px;
+      height: 100vh;
+      overflow-y: auto;
+      background: #ffffff;
+      border-right: 1px solid #ddd;
+      padding: 20px;
+      box-sizing: border-box;
+      z-index: 1000;
+    }
+
+    .chapter-nav h3 {
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+
+    .chapter-nav a {
+      display: block;
+      padding: 8px 12px;
+      margin-bottom: 6px;
+      text-decoration: none;
+      color: #333;
+      border-radius: 6px;
+    }
+
+    .chapter-nav a:hover {
+      background: #f3f4f6;
+    }
+
+    .chapter-nav a.active {
+      background: #2563eb;
+      color: white;
+      font-weight: bold;
+    }
+
+    @media (max-width: 1200px) {
+      .chapter-nav {
+        display: none;
+      }
+
+      main,
+      .container,
+      .content {
+        margin-left: 0;
+      }
     }
   </style>
 </head>
 <body>
 
-  <div id="progress-bar"></div>
+<div class="chapter-nav">
+  <h3>Chapters</h3>
+  <a href="../01-networking/index.html">01 Networking</a>
+  <a href="../02-protocols/index.html" class="active">02 Protocols</a>
+  <a href="../03-architecture/index.html">03 Architecture</a>
+  <a href="../04-web-fundamentals/index.html">04 Web Fundamentals</a>
+  <a href="../05-scalability/index.html">05 Scalability</a>
+  <a href="../06-storage/index.html">06 Storage</a>
+  <a href="../07-performance/index.html">07 Performance</a>
+  <a href="../08-reliability/index.html">08 Reliability</a>
+  <a href="../09-security/index.html">09 Security</a>
+</div>
 
-  <div class="page-wrap">
+<div id="progress-bar"></div>
 
-    <!-- ─── Header ─────────────────────────────────────────────── -->
-    <header>
-      <p class="kicker">System Design for Data Scientists · Vol. #2</p>
-      <h1>Networking Protocols Every Data Scientist Should Know</h1>
-      <p class="subtitle">System design isn't just for backend engineers. If you build ML pipelines, deploy models, consume APIs, or stream data in real time — you're already operating in this world. Let's make it explicit.</p>
-      <div class="meta">
-        <span>&#9679; Data Science</span>
-        <span>&#9679; System Design</span>
-        <span>&#9679; MLOps</span>
-        <span>&#9679; 18 min read</span>
-      </div>
-    </header>
+<!-- Site Navigation -->
+<nav aria-label="Site navigation">
+  <a href="#" class="nav-brand">Engineering Field Guide</a>
+  <div class="nav-meta">
+    <span class="nav-tag">Networking</span>
+    <span class="nav-tag">Protocols</span>
+    <span>~18 min read</span>
+  </div>
+</nav>
 
-    <!-- ─── TOC ────────────────────────────────────────────────── -->
-    <nav class="toc" aria-label="Table of contents">
-      <p class="toc-label">Table of Contents</p>
-      <ol>
-        <li><a href="#the-big-picture">The Big Picture: How Distributed Systems Talk</a></li>
-        <li><a href="#transport-layer">Transport Layer: TCP vs UDP</a></li>
-        <li><a href="#http-https">HTTP &amp; HTTPS: The Language of the Web</a></li>
-        <li><a href="#rest">REST &amp; RESTful Design: APIs That Make Sense</a></li>
-        <li><a href="#real-time">Real-Time Communication: When Request-Response Isn't Enough</a></li>
-        <li><a href="#modern-protocols">Modern API Protocols: gRPC and GraphQL</a></li>
-        <li><a href="#cheatsheet">Putting It All Together: A Data Science System Design Cheatsheet</a></li>
-      </ol>
-    </nav>
+<!-- Hero -->
+<header class="hero">
+  <p class="hero-eyebrow">System Design for Data Scientists · Vol. #2</p>
+  <h1>Networking Protocols Every Data Scientist Should Know</h1>
+  <p class="hero-subtitle">System design isn't just for backend engineers. If you build ML pipelines, deploy models, consume APIs, or stream data in real time — you're already operating in this world. Let's make it explicit.</p>
+  <div class="hero-meta">
+    <span>&#9679; Data Science</span>
+    <span>&#9679; System Design</span>
+    <span>&#9679; MLOps</span>
+    <span>&#9679; 18 min read</span>
+  </div>
+</header>
 
-    <!-- ─── Prose ───────────────────────────────────────────────── -->
-    <article class="prose">
+<!-- Main Layout -->
+<div class="layout">
+  <article id="article-content">
 
-      <p>You spent months mastering gradient descent, transformer architectures, and the dark art of hyperparameter tuning. Then one day your manager asks why the model inference endpoint is timing out under load, or why the real-time feature store is dropping packets during a traffic spike — and you realize that the gap between a data science notebook and a production system is filled almost entirely with <strong>networking</strong>.</p>
+    <p>You spent months mastering gradient descent, transformer architectures, and the dark art of hyperparameter tuning. Then one day your manager asks why the model inference endpoint is timing out under load, or why the real-time feature store is dropping packets during a traffic spike — and you realize that the gap between a data science notebook and a production system is filled almost entirely with <strong>networking</strong>.</p>
 
-      <p>This post is your on-ramp. We'll cover the full stack of networking protocols from the transport layer up to modern API paradigms, with a focus on <em>why any of this matters when you're training models, building pipelines, or deploying to production</em>.</p>
+    <p>This post is your on-ramp. We'll cover the full stack of networking protocols from the transport layer up to modern API paradigms, with a focus on <em>why any of this matters when you're training models, building pipelines, or deploying to production</em>.</p>
 
-      <hr />
+    <hr />
 
-      <!-- ── Section 1 ─────────────────────────────────────────── -->
-      <h2 id="the-big-picture">1. The Big Picture: How Distributed Systems Talk</h2>
+    <!-- ── Section 1 ─────────────────────────────────────────── -->
+    <h2 id="the-big-picture">1. The Big Picture: How Distributed Systems Talk</h2>
 
-      <p>Before we dive into protocols, let's ground ourselves. A modern data science system is rarely a single Python script. It's a web of services talking to each other:</p>
+    <p>Before we dive into protocols, let's ground ourselves. A modern data science system is rarely a single Python script. It's a web of services talking to each other:</p>
 
 <pre class="ascii"><code>┌───────────────────────────────────────────────────────────────────────┐
 │                     A Typical ML System                               │
@@ -556,22 +831,22 @@
 │              Everything flows over TCP/IP at the bottom               │
 └───────────────────────────────────────────────────────────────────────┘</code></pre>
 
-      <p>Every arrow in that diagram is a protocol decision. Making the <em>right</em> choice at each layer determines whether your system is fast, reliable, cheap to run, and easy to maintain. Let's build up that intuition from the ground floor.</p>
+    <p>Every arrow in that diagram is a protocol decision. Making the <em>right</em> choice at each layer determines whether your system is fast, reliable, cheap to run, and easy to maintain. Let's build up that intuition from the ground floor.</p>
 
-      <hr />
+    <hr />
 
-      <!-- ── Section 2 ─────────────────────────────────────────── -->
-      <h2 id="transport-layer">2. Transport Layer: TCP vs UDP</h2>
+    <!-- ── Section 2 ─────────────────────────────────────────── -->
+    <h2 id="transport-layer">2. Transport Layer: TCP vs UDP</h2>
 
-      <p>The <strong>transport layer</strong> is the lowest level most application developers interact with. It sits between your application code and the raw IP network, and it answers one fundamental question: <em>how do we move bytes reliably between two machines?</em></p>
+    <p>The <strong>transport layer</strong> is the lowest level most application developers interact with. It sits between your application code and the raw IP network, and it answers one fundamental question: <em>how do we move bytes reliably between two machines?</em></p>
 
-      <p>There are two dominant answers: TCP and UDP. They represent opposite ends of a reliability–speed trade-off that you'll encounter constantly in data engineering and ML infrastructure.</p>
+    <p>There are two dominant answers: TCP and UDP. They represent opposite ends of a reliability–speed trade-off that you'll encounter constantly in data engineering and ML infrastructure.</p>
 
-      <hr />
+    <hr />
 
-      <h3>TCP — Reliability First</h3>
+    <h3>TCP — Reliability First</h3>
 
-      <p><strong>Transmission Control Protocol (TCP)</strong> is the workhorse of the internet. It is <em>connection-oriented</em>, meaning that before a single byte of your data is transmitted, the two machines go through a formal introduction ritual called the <strong>three-way handshake</strong>:</p>
+    <p><strong>Transmission Control Protocol (TCP)</strong> is the workhorse of the internet. It is <em>connection-oriented</em>, meaning that before a single byte of your data is transmitted, the two machines go through a formal introduction ritual called the <strong>three-way handshake</strong>:</p>
 
 <pre class="ascii"><code>   Client                          Server
      │                               │
@@ -584,34 +859,34 @@
      │  ════ DATA FLOWS BOTH WAYS ═══│
      │                               │</code></pre>
 
-      <figure>
-        <img src="images/tcp-three-way-handshake.png" alt="The TCP three-way handshake: a sequence diagram showing SYN, SYN-ACK, and ACK messages between client and server, followed by bidirectional data flow." />
-        <figcaption>Fig 1 — TCP Three-Way Handshake</figcaption>
-      </figure>
+    <figure>
+      <img src="images/tcp-three-way-handshake.png" alt="The TCP three-way handshake: a sequence diagram showing SYN, SYN-ACK, and ACK messages between client and server, followed by bidirectional data flow." />
+      <figcaption>Fig 1 — TCP Three-Way Handshake</figcaption>
+    </figure>
 
-      <p>Once connected, TCP guarantees:</p>
-      <ul>
-        <li><strong>Ordered delivery</strong> — packets arrive in the sequence they were sent, even if the network reorders them in transit.</li>
-        <li><strong>Reliable delivery</strong> — every packet is acknowledged; missing ones are retransmitted automatically.</li>
-        <li><strong>Error checking</strong> — checksums validate data integrity end-to-end.</li>
-      </ul>
+    <p>Once connected, TCP guarantees:</p>
+    <ul>
+      <li><strong>Ordered delivery</strong> — packets arrive in the sequence they were sent, even if the network reorders them in transit.</li>
+      <li><strong>Reliable delivery</strong> — every packet is acknowledged; missing ones are retransmitted automatically.</li>
+      <li><strong>Error checking</strong> — checksums validate data integrity end-to-end.</li>
+    </ul>
 
-      <p><strong>The cost of all this reliability?</strong> Latency overhead and complexity. The handshake takes time. Acknowledgments add round-trip delays. Retransmissions can stall the entire pipeline if a single packet is dropped (a behavior called <em>head-of-line blocking</em>).</p>
+    <p><strong>The cost of all this reliability?</strong> Latency overhead and complexity. The handshake takes time. Acknowledgments add round-trip delays. Retransmissions can stall the entire pipeline if a single packet is dropped (a behavior called <em>head-of-line blocking</em>).</p>
 
-      <p><strong>In data science, you care about TCP when:</strong></p>
-      <ul>
-        <li>Calling REST APIs to fetch training data from external sources</li>
-        <li>Communicating with databases (PostgreSQL, MySQL, MongoDB all use TCP)</li>
-        <li>Transferring model checkpoints or large datasets between storage and compute nodes</li>
-        <li>Serving model predictions via HTTP endpoints (which runs on top of TCP)</li>
-        <li>Running distributed training jobs (e.g., parameter servers in TensorFlow communicate over TCP)</li>
-      </ul>
+    <p><strong>In data science, you care about TCP when:</strong></p>
+    <ul>
+      <li>Calling REST APIs to fetch training data from external sources</li>
+      <li>Communicating with databases (PostgreSQL, MySQL, MongoDB all use TCP)</li>
+      <li>Transferring model checkpoints or large datasets between storage and compute nodes</li>
+      <li>Serving model predictions via HTTP endpoints (which runs on top of TCP)</li>
+      <li>Running distributed training jobs (e.g., parameter servers in TensorFlow communicate over TCP)</li>
+    </ul>
 
-      <hr />
+    <hr />
 
-      <h3>UDP — Speed First</h3>
+    <h3>UDP — Speed First</h3>
 
-      <p><strong>User Datagram Protocol (UDP)</strong> throws away the rulebook. It's <em>connectionless</em> — you just fire packets at a destination and move on, with no handshake, no acknowledgment, no retransmission. Think of it like mailing postcards vs. registered letters. Postcards are faster and cheaper, but you have no guarantee they arrive, and they might arrive out of order.</p>
+    <p><strong>User Datagram Protocol (UDP)</strong> throws away the rulebook. It's <em>connectionless</em> — you just fire packets at a destination and move on, with no handshake, no acknowledgment, no retransmission. Think of it like mailing postcards vs. registered letters. Postcards are faster and cheaper, but you have no guarantee they arrive, and they might arrive out of order.</p>
 
 <pre class="ascii"><code>   Client                          Server
      │                               │
@@ -623,48 +898,48 @@
      │   No retransmissions.         │
      │   No connection teardown.     │</code></pre>
 
-      <p>The result is dramatically lower latency and higher throughput for applications that can <em>tolerate</em> packet loss.</p>
+    <p>The result is dramatically lower latency and higher throughput for applications that can <em>tolerate</em> packet loss.</p>
 
-      <p><strong>In data science, you encounter UDP in:</strong></p>
-      <ul>
-        <li><strong>Streaming telemetry and metrics</strong> — when you're ingesting high-frequency sensor data or system logs, losing 0.1% of packets is acceptable; stalling the pipeline is not.</li>
-        <li><strong>Real-time model inference at scale</strong> — some ML inference systems built on top of QUIC (a Google protocol that runs over UDP) use it to avoid TCP's head-of-line blocking.</li>
-        <li><strong>Video analysis pipelines</strong> — if your model processes a live video stream, UDP-based streaming (RTSP, RTP) delivers frames in real time even under network stress.</li>
-      </ul>
+    <p><strong>In data science, you encounter UDP in:</strong></p>
+    <ul>
+      <li><strong>Streaming telemetry and metrics</strong> — when you're ingesting high-frequency sensor data or system logs, losing 0.1% of packets is acceptable; stalling the pipeline is not.</li>
+      <li><strong>Real-time model inference at scale</strong> — some ML inference systems built on top of QUIC (a Google protocol that runs over UDP) use it to avoid TCP's head-of-line blocking.</li>
+      <li><strong>Video analysis pipelines</strong> — if your model processes a live video stream, UDP-based streaming (RTSP, RTP) delivers frames in real time even under network stress.</li>
+    </ul>
 
-      <h3>The Trade-off at a Glance</h3>
+    <h3>The Trade-off at a Glance</h3>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Property</th>
-              <th>TCP</th>
-              <th>UDP</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>Connection model</td><td>Connection-oriented</td><td>Connectionless</td></tr>
-            <tr><td>Delivery guarantee</td><td>✅ Guaranteed</td><td>❌ Best-effort</td></tr>
-            <tr><td>Packet ordering</td><td>✅ Ordered</td><td>❌ Not guaranteed</td></tr>
-            <tr><td>Latency</td><td>Higher</td><td>Lower</td></tr>
-            <tr><td>Overhead</td><td>Higher</td><td>Minimal</td></tr>
-            <tr><td>Built-in congestion control</td><td>✅ Yes</td><td>❌ No</td></tr>
-            <tr><td><strong>Best for</strong></td><td>APIs, DBs, file transfer</td><td>Streaming, gaming, VoIP, telemetry</td></tr>
-          </tbody>
-        </table>
-      </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Property</th>
+            <th>TCP</th>
+            <th>UDP</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Connection model</td><td>Connection-oriented</td><td>Connectionless</td></tr>
+          <tr><td>Delivery guarantee</td><td>✅ Guaranteed</td><td>❌ Best-effort</td></tr>
+          <tr><td>Packet ordering</td><td>✅ Ordered</td><td>❌ Not guaranteed</td></tr>
+          <tr><td>Latency</td><td>Higher</td><td>Lower</td></tr>
+          <tr><td>Overhead</td><td>Higher</td><td>Minimal</td></tr>
+          <tr><td>Built-in congestion control</td><td>✅ Yes</td><td>❌ No</td></tr>
+          <tr><td><strong>Best for</strong></td><td>APIs, DBs, file transfer</td><td>Streaming, gaming, VoIP, telemetry</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-      <hr />
+    <hr />
 
-      <!-- ── Section 3 ─────────────────────────────────────────── -->
-      <h2 id="http-https">3. HTTP &amp; HTTPS: The Language of the Web</h2>
+    <!-- ── Section 3 ─────────────────────────────────────────── -->
+    <h2 id="http-https">3. HTTP &amp; HTTPS: The Language of the Web</h2>
 
-      <p>If TCP/UDP is the postal infrastructure, <strong>HTTP (Hypertext Transfer Protocol)</strong> is the language written on the envelope and inside the letter. Nearly every API call you make as a data scientist — fetching data from a web service, calling an inference endpoint, sending a request to Hugging Face or OpenAI — uses HTTP.</p>
+    <p>If TCP/UDP is the postal infrastructure, <strong>HTTP (Hypertext Transfer Protocol)</strong> is the language written on the envelope and inside the letter. Nearly every API call you make as a data scientist — fetching data from a web service, calling an inference endpoint, sending a request to Hugging Face or OpenAI — uses HTTP.</p>
 
-      <h3>The Request-Response Cycle</h3>
+    <h3>The Request-Response Cycle</h3>
 
-      <p>HTTP is fundamentally a <strong>request-response protocol</strong>: a client sends a request, a server processes it, and sends back a response. Every interaction follows this structure:</p>
+    <p>HTTP is fundamentally a <strong>request-response protocol</strong>: a client sends a request, a server processes it, and sends back a response. Every interaction follows this structure:</p>
 
 <pre class="ascii"><code>  ┌─────────────────────────────────────────────────────────────┐
   │                   HTTP Request                              │
@@ -692,17 +967,17 @@
   │  └──────────────────────────────────────────────────────┘   │
   └─────────────────────────────────────────────────────────────┘</code></pre>
 
-      <h3>Statelessness — And Why It's a Feature, Not a Bug</h3>
+    <h3>Statelessness — And Why It's a Feature, Not a Bug</h3>
 
-      <p>HTTP is <strong>stateless</strong>: each request is completely independent. The server has no memory of your previous request. This sounds like a limitation, but it's actually what makes HTTP-based systems so easy to scale. Because no session context is stored on the server, you can route any request to any server in a pool — horizontal scaling becomes trivial.</p>
+    <p>HTTP is <strong>stateless</strong>: each request is completely independent. The server has no memory of your previous request. This sounds like a limitation, but it's actually what makes HTTP-based systems so easy to scale. Because no session context is stored on the server, you can route any request to any server in a pool — horizontal scaling becomes trivial.</p>
 
-      <p>Of course, real applications <em>need</em> state (authentication, user sessions, etc.). This is handled externally via three mechanisms:</p>
+    <p>Of course, real applications <em>need</em> state (authentication, user sessions, etc.). This is handled externally via three mechanisms:</p>
 
-      <p><strong>Cookies</strong> are small key-value pairs stored in the browser and automatically attached to every request to a given domain. You've seen them — they power "remember me" checkboxes and analytics tracking.</p>
+    <p><strong>Cookies</strong> are small key-value pairs stored in the browser and automatically attached to every request to a given domain. You've seen them — they power "remember me" checkboxes and analytics tracking.</p>
 
-      <p><strong>Sessions</strong> keep state <em>server-side</em>, indexed by a session ID stored in a cookie. The server holds all the context; the client just carries an opaque key.</p>
+    <p><strong>Sessions</strong> keep state <em>server-side</em>, indexed by a session ID stored in a cookie. The server holds all the context; the client just carries an opaque key.</p>
 
-      <p><strong>Tokens (JWT / OAuth)</strong> are the modern, scalable alternative — and what you'll encounter most in ML systems. A <strong>JSON Web Token (JWT)</strong> is a signed, base64-encoded string that contains claims about the user (e.g., their user ID, permissions, and expiry). Because it's <em>signed</em>, the server can verify it without looking anything up in a database. This is how nearly every modern ML API authenticates:</p>
+    <p><strong>Tokens (JWT / OAuth)</strong> are the modern, scalable alternative — and what you'll encounter most in ML systems. A <strong>JSON Web Token (JWT)</strong> is a signed, base64-encoded string that contains claims about the user (e.g., their user ID, permissions, and expiry). Because it's <em>signed</em>, the server can verify it without looking anything up in a database. This is how nearly every modern ML API authenticates:</p>
 
 <pre data-lang="python"><code><span class="kw">import</span> requests
 
@@ -720,35 +995,35 @@ response = requests.<span class="fn">post</span>(
 
 embeddings = response.<span class="fn">json</span>()[<span class="st">"embeddings"</span>]</code></pre>
 
-      <h3>HTTP Methods — The Vocabulary of APIs</h3>
+    <h3>HTTP Methods — The Vocabulary of APIs</h3>
 
-      <p>HTTP defines a small set of <strong>methods</strong> (also called verbs) that describe what action you want to take on a resource. If you've ever built or consumed a REST API, you know these:</p>
+    <p>HTTP defines a small set of <strong>methods</strong> (also called verbs) that describe what action you want to take on a resource. If you've ever built or consumed a REST API, you know these:</p>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Method</th>
-              <th>Purpose</th>
-              <th>Idempotent?</th>
-              <th>Example</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>GET</td><td>Retrieve a resource</td><td>✅ Yes</td><td>Fetch model metadata</td></tr>
-            <tr><td>POST</td><td>Create a new resource</td><td>❌ No</td><td>Submit a batch inference job</td></tr>
-            <tr><td>PUT</td><td>Replace a resource entirely</td><td>✅ Yes</td><td>Replace a model config</td></tr>
-            <tr><td>PATCH</td><td>Update part of a resource</td><td>✅ Yes</td><td>Update model version tag</td></tr>
-            <tr><td>DELETE</td><td>Remove a resource</td><td>✅ Yes</td><td>Delete an experiment run</td></tr>
-          </tbody>
-        </table>
-      </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Purpose</th>
+            <th>Idempotent?</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>GET</td><td>Retrieve a resource</td><td>✅ Yes</td><td>Fetch model metadata</td></tr>
+          <tr><td>POST</td><td>Create a new resource</td><td>❌ No</td><td>Submit a batch inference job</td></tr>
+          <tr><td>PUT</td><td>Replace a resource entirely</td><td>✅ Yes</td><td>Replace a model config</td></tr>
+          <tr><td>PATCH</td><td>Update part of a resource</td><td>✅ Yes</td><td>Update model version tag</td></tr>
+          <tr><td>DELETE</td><td>Remove a resource</td><td>✅ Yes</td><td>Delete an experiment run</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-      <blockquote><p><strong>Idempotent</strong> means calling the same request multiple times produces the same result as calling it once — critical for safe retries in unreliable networks.</p></blockquote>
+    <blockquote><p><strong>Idempotent</strong> means calling the same request multiple times produces the same result as calling it once — critical for safe retries in unreliable networks.</p></blockquote>
 
-      <h3>HTTP Status Codes — Reading the Room</h3>
+    <h3>HTTP Status Codes — Reading the Room</h3>
 
-      <p>Status codes are the server's way of telling you what happened. They're grouped into ranges:</p>
+    <p>Status codes are the server's way of telling you what happened. They're grouped into ranges:</p>
 
 <pre class="ascii"><code>  2xx ─── ✅ Success          200 OK, 201 Created, 204 No Content
   3xx ─── ↩  Redirect         301 Moved Permanently, 304 Not Modified
@@ -758,36 +1033,36 @@ embeddings = response.<span class="fn">json</span>()[<span class="st">"embedding
   5xx ─── 💥 Server Error      500 Internal Server Error,
                                502 Bad Gateway, 503 Service Unavailable</code></pre>
 
-      <p>As a data scientist working with APIs, the ones you'll encounter most are:</p>
-      <ul>
-        <li><code>200 / 201</code> — your call worked.</li>
-        <li><code>400</code> — your request payload was malformed (check your JSON schema).</li>
-        <li><code>401 / 403</code> — authentication or authorization failed (check your tokens).</li>
-        <li><code>429</code> — you've been rate-limited (add exponential backoff to your retry logic).</li>
-        <li><code>500 / 503</code> — the server is broken or overwhelmed (often transient; retry with backoff).</li>
-      </ul>
+    <p>As a data scientist working with APIs, the ones you'll encounter most are:</p>
+    <ul>
+      <li><code>200 / 201</code> — your call worked.</li>
+      <li><code>400</code> — your request payload was malformed (check your JSON schema).</li>
+      <li><code>401 / 403</code> — authentication or authorization failed (check your tokens).</li>
+      <li><code>429</code> — you've been rate-limited (add exponential backoff to your retry logic).</li>
+      <li><code>500 / 503</code> — the server is broken or overwhelmed (often transient; retry with backoff).</li>
+    </ul>
 
-      <h3>HTTPS: Adding the S</h3>
+    <h3>HTTPS: Adding the S</h3>
 
-      <p><strong>HTTPS</strong> is simply HTTP with an encryption layer called <strong>SSL/TLS</strong> (Secure Sockets Layer / Transport Layer Security). Before any HTTP data flows, the client and server perform a <strong>TLS handshake</strong> to agree on encryption keys and verify the server's identity via a certificate issued by a trusted Certificate Authority (CA).</p>
+    <p><strong>HTTPS</strong> is simply HTTP with an encryption layer called <strong>SSL/TLS</strong> (Secure Sockets Layer / Transport Layer Security). Before any HTTP data flows, the client and server perform a <strong>TLS handshake</strong> to agree on encryption keys and verify the server's identity via a certificate issued by a trusted Certificate Authority (CA).</p>
 
-      <figure>
-        <img src="images/http-vs-https.png" alt="Side-by-side comparison showing HTTP with plaintext data visible to a hacker in the middle, versus HTTPS with an encrypted tunnel that renders intercepted data as ciphertext." />
-        <figcaption>Fig 2 — HTTP vs HTTPS: plaintext vs encrypted tunnel</figcaption>
-      </figure>
+    <figure>
+      <img src="images/http-vs-https.png" alt="Side-by-side comparison showing HTTP with plaintext data visible to a hacker in the middle, versus HTTPS with an encrypted tunnel that renders intercepted data as ciphertext." />
+      <figcaption>Fig 2 — HTTP vs HTTPS: plaintext vs encrypted tunnel</figcaption>
+    </figure>
 
-      <p>The practical implication: <strong>never send credentials, API keys, or sensitive data over plain HTTP in production systems.</strong> All modern ML serving infrastructure — AWS SageMaker endpoints, Vertex AI, Hugging Face Inference API — enforces HTTPS.</p>
+    <p>The practical implication: <strong>never send credentials, API keys, or sensitive data over plain HTTP in production systems.</strong> All modern ML serving infrastructure — AWS SageMaker endpoints, Vertex AI, Hugging Face Inference API — enforces HTTPS.</p>
 
-      <hr />
+    <hr />
 
-      <!-- ── Section 4 ─────────────────────────────────────────── -->
-      <h2 id="rest">4. REST &amp; RESTful Design: APIs That Make Sense</h2>
+    <!-- ── Section 4 ─────────────────────────────────────────── -->
+    <h2 id="rest">4. REST &amp; RESTful Design: APIs That Make Sense</h2>
 
-      <p>You've consumed hundreds of REST APIs. But what actually makes something "RESTful"? REST is not a protocol — it's an <strong>architectural style</strong>, a set of design constraints introduced by Roy Fielding in his 2000 dissertation that, when followed, produce APIs that are scalable, maintainable, and interoperable.</p>
+    <p>You've consumed hundreds of REST APIs. But what actually makes something "RESTful"? REST is not a protocol — it's an <strong>architectural style</strong>, a set of design constraints introduced by Roy Fielding in his 2000 dissertation that, when followed, produce APIs that are scalable, maintainable, and interoperable.</p>
 
-      <h3>The Six Constraints of REST</h3>
+    <h3>The Six Constraints of REST</h3>
 
-      <p>Think of these as the engineering principles behind every well-designed HTTP API:</p>
+    <p>Think of these as the engineering principles behind every well-designed HTTP API:</p>
 
 <pre class="ascii"><code>  ┌────────────────────────────────────────────────────────────────┐
   │                    REST Constraints                            │
@@ -801,13 +1076,13 @@ embeddings = response.<span class="fn">json</span>()[<span class="st">"embedding
   │                        (* optional, rarely used)               │
   └────────────────────────────────────────────────────────────────┘</code></pre>
 
-      <p>The <strong>Uniform Interface</strong> constraint is the one you'll feel most directly. It mandates that resources are identified by URIs, manipulated through representations (typically JSON), and accessed via standard HTTP methods. This predictability is what makes it possible for a third party to integrate with your ML API using just documentation and no coordination.</p>
+    <p>The <strong>Uniform Interface</strong> constraint is the one you'll feel most directly. It mandates that resources are identified by URIs, manipulated through representations (typically JSON), and accessed via standard HTTP methods. This predictability is what makes it possible for a third party to integrate with your ML API using just documentation and no coordination.</p>
 
-      <p><strong>Cacheability</strong> is underappreciated but powerful for data science systems. If your model metadata endpoint (e.g., <code>GET /models/sentiment-v3</code>) doesn't change frequently, annotating the response with appropriate <code>Cache-Control</code> headers means downstream services can cache it — reducing load on your model registry service dramatically.</p>
+    <p><strong>Cacheability</strong> is underappreciated but powerful for data science systems. If your model metadata endpoint (e.g., <code>GET /models/sentiment-v3</code>) doesn't change frequently, annotating the response with appropriate <code>Cache-Control</code> headers means downstream services can cache it — reducing load on your model registry service dramatically.</p>
 
-      <h3>Resources and URIs</h3>
+    <h3>Resources and URIs</h3>
 
-      <p>REST treats everything as a <strong>resource</strong> — a noun, not a verb. Good REST API design maps domain concepts to clean URIs:</p>
+    <p>REST treats everything as a <strong>resource</strong> — a noun, not a verb. Good REST API design maps domain concepts to clean URIs:</p>
 
 <pre class="ascii"><code>  ❌  POST /runInference            (RPC-style, verb in URL)
   ✅  POST /predictions             (Resource-oriented)
@@ -818,24 +1093,24 @@ embeddings = response.<span class="fn">json</span>()[<span class="st">"embedding
   ❌  DELETE /deleteExperiment/7    (verb in URL)
   ✅  DELETE /experiments/7         (method carries the verb)</code></pre>
 
-      <h3>Best Practices Data Scientists Should Know</h3>
+    <h3>Best Practices Data Scientists Should Know</h3>
 
-      <p><strong>Plural nouns for collections:</strong></p>
+    <p><strong>Plural nouns for collections:</strong></p>
 <pre class="ascii"><code>  /datasets          → collection of all datasets
   /datasets/42       → a specific dataset
   /datasets/42/runs  → runs belonging to dataset 42</code></pre>
 
-      <p><strong>Versioning your API:</strong> When you update a model and break the response schema, downstream consumers shouldn't break. Version your APIs:</p>
+    <p><strong>Versioning your API:</strong> When you update a model and break the response schema, downstream consumers shouldn't break. Version your APIs:</p>
 <pre class="ascii"><code>  /v1/predictions   (stable, legacy)
   /v2/predictions   (new schema with confidence intervals)</code></pre>
 
-      <p><strong>Pagination:</strong> Your training dataset API should never return 10 million rows in one response. Use cursor or offset-based pagination:</p>
+    <p><strong>Pagination:</strong> Your training dataset API should never return 10 million rows in one response. Use cursor or offset-based pagination:</p>
 <pre class="ascii"><code>  GET /training-samples?page=3&amp;limit=100
   GET /training-samples?cursor=eyJpZCI6MTAwfQ&amp;limit=100</code></pre>
 
-      <h3>HATEOAS — The Most Ignored REST Principle</h3>
+    <h3>HATEOAS — The Most Ignored REST Principle</h3>
 
-      <p><strong>Hypermedia as the Engine of Application State (HATEOAS)</strong> is the idea that API responses should include links to related actions, so clients can navigate workflows without hardcoding URLs. In practice:</p>
+    <p><strong>Hypermedia as the Engine of Application State (HATEOAS)</strong> is the idea that API responses should include links to related actions, so clients can navigate workflows without hardcoding URLs. In practice:</p>
 
 <pre data-lang="json"><code>{
   <span class="nm">"job_id"</span>: <span class="st">"train-job-981"</span>,
@@ -848,24 +1123,24 @@ embeddings = response.<span class="fn">json</span>()[<span class="st">"embedding
   }
 }</code></pre>
 
-      <p>HATEOAS makes APIs self-discoverable — but it's rarely implemented fully in practice. You'll still see it in ML experiment tracking tools and workflow orchestrators like Airflow or Prefect.</p>
+    <p>HATEOAS makes APIs self-discoverable — but it's rarely implemented fully in practice. You'll still see it in ML experiment tracking tools and workflow orchestrators like Airflow or Prefect.</p>
 
-      <hr />
+    <hr />
 
-      <!-- ── Section 5 ─────────────────────────────────────────── -->
-      <h2 id="real-time">5. Real-Time Communication: When Request-Response Isn't Enough</h2>
+    <!-- ── Section 5 ─────────────────────────────────────────── -->
+    <h2 id="real-time">5. Real-Time Communication: When Request-Response Isn't Enough</h2>
 
-      <p>The request-response model breaks down when you need <strong>continuous updates</strong>: model training progress bars, live dashboards showing inference throughput, collaborative labeling tools, or streaming predictions from an NLP model as it generates tokens (like you see with ChatGPT's streaming output).</p>
+    <p>The request-response model breaks down when you need <strong>continuous updates</strong>: model training progress bars, live dashboards showing inference throughput, collaborative labeling tools, or streaming predictions from an NLP model as it generates tokens (like you see with ChatGPT's streaming output).</p>
 
-      <p>For these cases, two patterns emerge — one modern and elegant, one a clever workaround.</p>
+    <p>For these cases, two patterns emerge — one modern and elegant, one a clever workaround.</p>
 
-      <hr />
+    <hr />
 
-      <h3>WebSockets — The Right Tool for Bidirectional Communication</h3>
+    <h3>WebSockets — The Right Tool for Bidirectional Communication</h3>
 
-      <p><strong>WebSockets</strong> provide a <strong>persistent, full-duplex</strong> communication channel over a single TCP connection. Once established, both client and server can send messages to each other at any time, without the overhead of repeated HTTP handshakes.</p>
+    <p><strong>WebSockets</strong> provide a <strong>persistent, full-duplex</strong> communication channel over a single TCP connection. Once established, both client and server can send messages to each other at any time, without the overhead of repeated HTTP handshakes.</p>
 
-      <p>The connection begins with an HTTP <em>upgrade request</em>:</p>
+    <p>The connection begins with an HTTP <em>upgrade request</em>:</p>
 
 <pre class="ascii"><code>  Client                                Server
     │                                      │
@@ -887,20 +1162,20 @@ embeddings = response.<span class="fn">json</span>()[<span class="st">"embedding
     │ ◄── {"epoch": 3, "loss": 1.71}  ───  │
     │                                      │</code></pre>
 
-      <figure>
-        <img src="images/websocket-vs-polling.png" alt="Split-screen diagram comparing HTTP polling on the left (choppy, repeated round-trips) versus WebSockets on the right (single persistent connection with freely flowing bidirectional messages)." />
-        <figcaption>Fig 3 — HTTP Polling vs WebSockets: repeated round-trips vs a persistent open channel</figcaption>
-      </figure>
+    <figure>
+      <img src="images/websocket-vs-polling.png" alt="Split-screen diagram comparing HTTP polling on the left (choppy, repeated round-trips) versus WebSockets on the right (single persistent connection with freely flowing bidirectional messages)." />
+      <figcaption>Fig 3 — HTTP Polling vs WebSockets: repeated round-trips vs a persistent open channel</figcaption>
+    </figure>
 
-      <p><strong>In data science, WebSockets shine for:</strong></p>
-      <ul>
-        <li><strong>Live training dashboards</strong> — streaming loss curves and metric updates to a browser without polling.</li>
-        <li><strong>Token streaming from LLMs</strong> — when you call GPT-4 or Claude in streaming mode, the token-by-token response uses a streaming HTTP/WebSocket-style connection.</li>
-        <li><strong>Collaborative data labeling</strong> — multiple annotators seeing each other's actions in real time.</li>
-        <li><strong>Real-time anomaly detection alerts</strong> — a deployed model detects a drift event and immediately pushes a notification to the monitoring dashboard.</li>
-      </ul>
+    <p><strong>In data science, WebSockets shine for:</strong></p>
+    <ul>
+      <li><strong>Live training dashboards</strong> — streaming loss curves and metric updates to a browser without polling.</li>
+      <li><strong>Token streaming from LLMs</strong> — when you call GPT-4 or Claude in streaming mode, the token-by-token response uses a streaming HTTP/WebSocket-style connection.</li>
+      <li><strong>Collaborative data labeling</strong> — multiple annotators seeing each other's actions in real time.</li>
+      <li><strong>Real-time anomaly detection alerts</strong> — a deployed model detects a drift event and immediately pushes a notification to the monitoring dashboard.</li>
+    </ul>
 
-      <p>A minimal WebSocket client in Python:</p>
+    <p>A minimal WebSocket client in Python:</p>
 
 <pre data-lang="python"><code><span class="kw">import</span> asyncio
 <span class="kw">import</span> websockets
@@ -965,11 +1240,12 @@ embeddings = response.<span class="fn">json</span>()[<span class="st">"embedding
         <code>metrics['loss']</code>.
     </li>
 </ul>
-      <hr />
 
-      <h3>Long Polling — The HTTP Workaround</h3>
+    <hr />
 
-      <p>Before WebSockets were widely supported, developers invented <strong>long polling</strong> to simulate real-time behavior using plain HTTP. The idea is simple: the client sends a request, but the server <em>doesn't respond</em> until it has new data (or a timeout occurs). The moment it responds, the client immediately fires another request:</p>
+    <h3>Long Polling — The HTTP Workaround</h3>
+
+    <p>Before WebSockets were widely supported, developers invented <strong>long polling</strong> to simulate real-time behavior using plain HTTP. The idea is simple: the client sends a request, but the server <em>doesn't respond</em> until it has new data (or a timeout occurs). The moment it responds, the client immediately fires another request:</p>
 
 <pre class="ascii"><code>  Client                          Server
     │                               │
@@ -982,40 +1258,40 @@ embeddings = response.<span class="fn">json</span>()[<span class="st">"embedding
     │ ─── GET /events ────────────► │  Client immediately reconnects
     │                               │  ... waiting again ...</code></pre>
 
-      <p>Long polling works, but it's inefficient: every response requires a full HTTP connection setup/teardown cycle, and servers must manage a large number of open connections simultaneously. It scales poorly and adds latency compared to WebSockets.</p>
+    <p>Long polling works, but it's inefficient: every response requires a full HTTP connection setup/teardown cycle, and servers must manage a large number of open connections simultaneously. It scales poorly and adds latency compared to WebSockets.</p>
 
-      <p><strong>When you still encounter long polling:</strong></p>
-      <ul>
-        <li>Legacy systems that predate WebSocket support</li>
-        <li>Environments where WebSocket connections are blocked by corporate proxies</li>
-        <li>Simple internal tools where the setup overhead of WebSockets isn't justified</li>
-      </ul>
+    <p><strong>When you still encounter long polling:</strong></p>
+    <ul>
+      <li>Legacy systems that predate WebSocket support</li>
+      <li>Environments where WebSocket connections are blocked by corporate proxies</li>
+      <li>Simple internal tools where the setup overhead of WebSockets isn't justified</li>
+    </ul>
 
-      <p><strong>The hierarchy of real-time options, from least to most efficient:</strong></p>
+    <p><strong>The hierarchy of real-time options, from least to most efficient:</strong></p>
 <pre class="ascii"><code>  Polling → Long Polling → Server-Sent Events (SSE) → WebSockets
   (worst)                                              (best for bidirectional)</code></pre>
 
-      <div class="note">
-        <p class="note-label">💡 Note on SSE</p>
-        <p>Server-Sent Events (SSE) is a lightweight alternative to WebSockets for <em>one-way</em> server-to-client streaming over HTTP. It's simpler to implement and is exactly what most LLM streaming APIs use under the hood when you set <code>stream=True</code> in the OpenAI or Anthropic client. Worth knowing.</p>
-      </div>
+    <div class="note">
+      <p class="note-label">💡 Note on SSE</p>
+      <p>Server-Sent Events (SSE) is a lightweight alternative to WebSockets for <em>one-way</em> server-to-client streaming over HTTP. It's simpler to implement and is exactly what most LLM streaming APIs use under the hood when you set <code>stream=True</code> in the OpenAI or Anthropic client. Worth knowing.</p>
+    </div>
 
-      <hr />
+    <hr />
 
-      <!-- ── Section 6 ─────────────────────────────────────────── -->
-      <h2 id="modern-protocols">6. Modern API Protocols: gRPC and GraphQL</h2>
+    <!-- ── Section 6 ─────────────────────────────────────────── -->
+    <h2 id="modern-protocols">6. Modern API Protocols: gRPC and GraphQL</h2>
 
-      <p>REST with JSON over HTTP is the default — battle-tested, simple, and universally understood. But for high-performance microservice communication and flexible data-fetching, two protocols have emerged as strong alternatives: <strong>gRPC</strong> and <strong>GraphQL</strong>.</p>
+    <p>REST with JSON over HTTP is the default — battle-tested, simple, and universally understood. But for high-performance microservice communication and flexible data-fetching, two protocols have emerged as strong alternatives: <strong>gRPC</strong> and <strong>GraphQL</strong>.</p>
 
-      <hr />
+    <hr />
 
-      <h3>gRPC — When Performance Meets Structure</h3>
+    <h3>gRPC — When Performance Meets Structure</h3>
 
-      <p><strong>gRPC</strong> (Google Remote Procedure Call) is a high-performance RPC framework designed for service-to-service communication in microservice architectures. Instead of "sending a request to a URL," gRPC lets you call functions on a remote service as if they were local — with type safety, code generation, and impressive speed.</p>
+    <p><strong>gRPC</strong> (Google Remote Procedure Call) is a high-performance RPC framework designed for service-to-service communication in microservice architectures. Instead of "sending a request to a URL," gRPC lets you call functions on a remote service as if they were local — with type safety, code generation, and impressive speed.</p>
 
-      <p>Under the hood, gRPC uses two key technologies:</p>
+    <p>Under the hood, gRPC uses two key technologies:</p>
 
-      <p><strong>HTTP/2</strong> as the transport layer. Unlike HTTP/1.1 which handles one request per connection at a time, HTTP/2 supports <em>multiplexing</em> — sending many requests and responses simultaneously over a single connection, with header compression and native streaming support:</p>
+    <p><strong>HTTP/2</strong> as the transport layer. Unlike HTTP/1.1 which handles one request per connection at a time, HTTP/2 supports <em>multiplexing</em> — sending many requests and responses simultaneously over a single connection, with header compression and native streaming support:</p>
 
 <pre class="ascii"><code>  HTTP/1.1 (sequential):                HTTP/2 (multiplexed):
   ┌────────────────────┐                ┌─────────────────────────────┐
@@ -1029,7 +1305,7 @@ embeddings = response.<span class="fn">json</span>()[<span class="st">"embedding
   One at a time. Head-of-line           All in parallel. Much faster.
   blocking is real.</code></pre>
 
-      <p><strong>Protocol Buffers (Protobuf)</strong> as the serialization format. Instead of JSON (human-readable text), gRPC serializes data into a compact binary format defined by a <code>.proto</code> schema file:</p>
+    <p><strong>Protocol Buffers (Protobuf)</strong> as the serialization format. Instead of JSON (human-readable text), gRPC serializes data into a compact binary format defined by a <code>.proto</code> schema file:</p>
 
 <pre data-lang="protobuf"><code><span class="cm">// prediction_service.proto</span>
 <span class="kw">syntax</span> = <span class="st">"proto3"</span>;
@@ -1050,8 +1326,8 @@ embeddings = response.<span class="fn">json</span>()[<span class="st">"embedding
   <span class="kw">repeated float</span> embeddings = <span class="nu">3</span>;
 }</code></pre>
 
-      <p>This <code>.proto</code> file is then compiled into client and server code in any language (Python, Go, Java, etc.).</p>
-      <p><strong>Explaining the Code Snippet</strong></p>
+    <p>This <code>.proto</code> file is then compiled into client and server code in any language (Python, Go, Java, etc.).</p>
+    <p><strong>Explaining the Code Snippet</strong></p>
 
 <ul>
   <li>
@@ -1131,28 +1407,29 @@ embeddings = response.<span class="fn">json</span>()[<span class="st">"embedding
     that field <code>3</code> will contain a list of floating-point numbers
     (the vector embeddings generated by the ML model).
   </li>
-</ul></p>      
-      <p>The result is:</p>
-      <ul>
-        <li><strong>~5x smaller payloads</strong> than JSON (binary is more compact)</li>
-        <li><strong>~10x faster serialization</strong> (no text parsing)</li>
-        <li><strong>Strongly typed contracts</strong> that catch schema mismatches at compile time, not runtime</li>
-      </ul>
+</ul>
 
-      <figure>
-        <img src="images/grpc-vs-rest-payload.png" alt="Side-by-side technical comparison between REST and gRPC: left panel shows a verbose JSON payload over HTTP/1.1, right panel shows a compact binary protobuf payload over HTTP/2, with a bar chart below comparing payload size and serialization latency." />
-        <figcaption>Fig 4 — REST+JSON vs gRPC+Protobuf: payload size and serialization speed</figcaption>
-      </figure>
+    <p>The result is:</p>
+    <ul>
+      <li><strong>~5x smaller payloads</strong> than JSON (binary is more compact)</li>
+      <li><strong>~10x faster serialization</strong> (no text parsing)</li>
+      <li><strong>Strongly typed contracts</strong> that catch schema mismatches at compile time, not runtime</li>
+    </ul>
 
-      <p><strong>In data science, gRPC is used for:</strong></p>
-      <ul>
-        <li><strong>Model serving at scale</strong> — TensorFlow Serving and Triton Inference Server expose gRPC endpoints by default because of their superior throughput for high-QPS inference.</li>
-        <li><strong>Feature store access</strong> — platforms like Feast support gRPC for low-latency online feature retrieval during real-time inference.</li>
-        <li><strong>Microservice-to-microservice calls</strong> — in a multi-model pipeline (e.g., extraction → classification → ranking), internal services typically communicate over gRPC.</li>
-        <li><strong>Distributed training coordination</strong> — parameter server architectures use RPC frameworks for gradient synchronization.</li>
-      </ul>
+    <figure>
+      <img src="images/grpc-vs-rest-payload.png" alt="Side-by-side technical comparison between REST and gRPC: left panel shows a verbose JSON payload over HTTP/1.1, right panel shows a compact binary protobuf payload over HTTP/2, with a bar chart below comparing payload size and serialization latency." />
+      <figcaption>Fig 4 — REST+JSON vs gRPC+Protobuf: payload size and serialization speed</figcaption>
+    </figure>
 
-      <p><strong>A gRPC call in Python:</strong></p>
+    <p><strong>In data science, gRPC is used for:</strong></p>
+    <ul>
+      <li><strong>Model serving at scale</strong> — TensorFlow Serving and Triton Inference Server expose gRPC endpoints by default because of their superior throughput for high-QPS inference.</li>
+      <li><strong>Feature store access</strong> — platforms like Feast support gRPC for low-latency online feature retrieval during real-time inference.</li>
+      <li><strong>Microservice-to-microservice calls</strong> — in a multi-model pipeline (e.g., extraction → classification → ranking), internal services typically communicate over gRPC.</li>
+      <li><strong>Distributed training coordination</strong> — parameter server architectures use RPC frameworks for gradient synchronization.</li>
+    </ul>
+
+    <p><strong>A gRPC call in Python:</strong></p>
 
 <p><strong>Client Code</strong></p>
 
@@ -1270,13 +1547,13 @@ embeddings = response.<span class="fn">json</span>()[<span class="st">"embedding
   </li>
 </ul>
 
-      <hr />
+    <hr />
 
-      <h3>GraphQL — Query What You Need, Nothing More</h3>
+    <h3>GraphQL — Query What You Need, Nothing More</h3>
 
-      <p><strong>GraphQL</strong> is a query language for APIs developed by Facebook (Meta) in 2015. Instead of multiple endpoints each returning a fixed shape of data, GraphQL exposes <strong>a single endpoint</strong> through which clients can request <em>exactly</em> the data they need, with arbitrary nesting.</p>
+    <p><strong>GraphQL</strong> is a query language for APIs developed by Facebook (Meta) in 2015. Instead of multiple endpoints each returning a fixed shape of data, GraphQL exposes <strong>a single endpoint</strong> through which clients can request <em>exactly</em> the data they need, with arbitrary nesting.</p>
 
-      <p>Consider a typical problem in ML infrastructure: you want to display a model card that shows the model name, its latest evaluation metrics, and the author's name — but not the full training history. With REST:</p>
+    <p>Consider a typical problem in ML infrastructure: you want to display a model card that shows the model name, its latest evaluation metrics, and the author's name — but not the full training history. With REST:</p>
 
 <pre class="ascii"><code>  REST approach — multiple round trips, over-fetching at each:
   ┌────────────────────────────────────────────────────────────┐
@@ -1301,14 +1578,14 @@ embeddings = response.<span class="fn">json</span>()[<span class="st">"embedding
   │ 1 request. Exactly 4 fields returned.                      │
   └────────────────────────────────────────────────────────────┘</code></pre>
 
-      <p>GraphQL also supports <strong>Mutations</strong> (writes) and <strong>Subscriptions</strong> (real-time updates), making it a unified interface for queries, state changes, and event streaming.</p>
+    <p>GraphQL also supports <strong>Mutations</strong> (writes) and <strong>Subscriptions</strong> (real-time updates), making it a unified interface for queries, state changes, and event streaming.</p>
 
-      <p><strong>When GraphQL shines in data science:</strong></p>
-      <ul>
-        <li><strong>ML experiment tracking UIs</strong> — tools like W&amp;B internally use GraphQL to let the frontend request exactly the metrics and plots it needs for a given view.</li>
-        <li><strong>Model registries with complex relationships</strong> — querying a model along with its lineage, datasets, hyperparameters, and downstream deployments is natural in GraphQL.</li>
-        <li><strong>Data discovery portals</strong> — flexible search and filtering over heterogeneous datasets without building N different REST endpoints.</li>
-      </ul>
+    <p><strong>When GraphQL shines in data science:</strong></p>
+    <ul>
+      <li><strong>ML experiment tracking UIs</strong> — tools like W&amp;B internally use GraphQL to let the frontend request exactly the metrics and plots it needs for a given view.</li>
+      <li><strong>Model registries with complex relationships</strong> — querying a model along with its lineage, datasets, hyperparameters, and downstream deployments is natural in GraphQL.</li>
+      <li><strong>Data discovery portals</strong> — flexible search and filtering over heterogeneous datasets without building N different REST endpoints.</li>
+    </ul>
 <p>
   To implement a GraphQL API in Python, a schema is needed that defines the
   data structure, a server to run it, and a client to query it.
@@ -1497,9 +1774,9 @@ response = requests.post(
   }
 }</code></pre>
 
-      <p><strong>The trade-offs:</strong> GraphQL adds complexity. The schema requires maintenance, resolvers can be performance bottlenecks if not carefully implemented (the N+1 query problem is notorious), and its caching story is weaker than REST's (since every query is a <code>POST</code>). Don't reach for it unless you genuinely have a flexible querying problem.</p>
+    <p><strong>The trade-offs:</strong> GraphQL adds complexity. The schema requires maintenance, resolvers can be performance bottlenecks if not carefully implemented (the N+1 query problem is notorious), and its caching story is weaker than REST's (since every query is a <code>POST</code>). Don't reach for it unless you genuinely have a flexible querying problem.</p>
 
-      <h3>Protocol Selection Guide</h3>
+    <h3>Protocol Selection Guide</h3>
 
 <pre class="ascii"><code>  ┌────────────────────────────────────────────────────────────────┐
   │         When should I use which protocol?                      │
@@ -1525,98 +1802,174 @@ response = requests.post(
   │  └─────────────────────────────────────────────────────────┘   │
   └────────────────────────────────────────────────────────────────┘</code></pre>
 
-      <hr />
+    <hr />
 
-      <!-- ── Section 7 ─────────────────────────────────────────── -->
-      <h2 id="cheatsheet">7. Putting It All Together: A Data Science System Design Cheatsheet</h2>
+    <!-- ── Section 7 ─────────────────────────────────────────── -->
+    <h2 id="cheatsheet">7. Putting It All Together: A Data Science System Design Cheatsheet</h2>
 
-      <p>Here's a complete reference card of everything covered in this post, mapped specifically to the data science workflows you'll encounter:</p>
+    <p>Here's a complete reference card of everything covered in this post, mapped specifically to the data science workflows you'll encounter:</p>
 
-      <div class="table-wrap">
-        <table class="cheatsheet">
-          <thead>
-            <tr>
-              <th>Concept</th>
-              <th>What It Is</th>
-              <th>Why a Data Scientist Needs It</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>TCP</td><td>Reliable, ordered transport</td><td>Underpins all database and API calls</td></tr>
-            <tr><td>UDP</td><td>Fast, lossy transport</td><td>Streaming data ingestion, video inference</td></tr>
-            <tr><td>HTTP Methods</td><td>GET/POST/PUT/PATCH/DELETE</td><td>Building and consuming ML REST APIs</td></tr>
-            <tr><td>HTTP Status Codes</td><td>2xx/3xx/4xx/5xx</td><td>Debugging API clients and model servers</td></tr>
-            <tr><td>HTTPS/TLS</td><td>Encrypted HTTP</td><td>Securing credentials and model payloads</td></tr>
-            <tr><td>Cookies/Sessions</td><td>HTTP state management</td><td>ML platform authentication flows</td></tr>
-            <tr><td>JWT/OAuth</td><td>Token-based auth</td><td>Authenticating with cloud ML APIs</td></tr>
-            <tr><td>REST</td><td>HTTP API design style</td><td>Exposing models and data products</td></tr>
-            <tr><td>HATEOAS</td><td>Self-describing APIs</td><td>Advanced API navigation in workflow tools</td></tr>
-            <tr><td>WebSockets</td><td>Persistent bidirectional channel</td><td>Live training metrics, LLM token streaming</td></tr>
-            <tr><td>Long Polling</td><td>Simulated real-time over HTTP</td><td>Legacy systems, simple event polling</td></tr>
-            <tr><td>gRPC</td><td>High-performance RPC over HTTP/2</td><td>TensorFlow Serving, Triton, feature stores</td></tr>
-            <tr><td>GraphQL</td><td>Flexible query language API</td><td>ML experiment UIs, model registries</td></tr>
-          </tbody>
-        </table>
-      </div>
+    <div class="table-wrap">
+      <table class="cheatsheet">
+        <thead>
+          <tr>
+            <th>Concept</th>
+            <th>What It Is</th>
+            <th>Why a Data Scientist Needs It</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>TCP</td><td>Reliable, ordered transport</td><td>Underpins all database and API calls</td></tr>
+          <tr><td>UDP</td><td>Fast, lossy transport</td><td>Streaming data ingestion, video inference</td></tr>
+          <tr><td>HTTP Methods</td><td>GET/POST/PUT/PATCH/DELETE</td><td>Building and consuming ML REST APIs</td></tr>
+          <tr><td>HTTP Status Codes</td><td>2xx/3xx/4xx/5xx</td><td>Debugging API clients and model servers</td></tr>
+          <tr><td>HTTPS/TLS</td><td>Encrypted HTTP</td><td>Securing credentials and model payloads</td></tr>
+          <tr><td>Cookies/Sessions</td><td>HTTP state management</td><td>ML platform authentication flows</td></tr>
+          <tr><td>JWT/OAuth</td><td>Token-based auth</td><td>Authenticating with cloud ML APIs</td></tr>
+          <tr><td>REST</td><td>HTTP API design style</td><td>Exposing models and data products</td></tr>
+          <tr><td>HATEOAS</td><td>Self-describing APIs</td><td>Advanced API navigation in workflow tools</td></tr>
+          <tr><td>WebSockets</td><td>Persistent bidirectional channel</td><td>Live training metrics, LLM token streaming</td></tr>
+          <tr><td>Long Polling</td><td>Simulated real-time over HTTP</td><td>Legacy systems, simple event polling</td></tr>
+          <tr><td>gRPC</td><td>High-performance RPC over HTTP/2</td><td>TensorFlow Serving, Triton, feature stores</td></tr>
+          <tr><td>GraphQL</td><td>Flexible query language API</td><td>ML experiment UIs, model registries</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-      <hr />
+    <hr />
 
-      <h3>A Note on Evolution: HTTP/3 and QUIC</h3>
+    <h3>A Note on Evolution: HTTP/3 and QUIC</h3>
 
-      <p>If you want to future-proof your knowledge: <strong>HTTP/3</strong> (finalized in 2022) replaces TCP with <strong>QUIC</strong> — a protocol that achieves TCP-like reliability <em>on top of UDP</em>, eliminating head-of-line blocking entirely. It's already deployed at major ML cloud providers. Understanding that UDP underpins this next generation of web protocols makes the fundamentals all the more valuable.</p>
+    <p>If you want to future-proof your knowledge: <strong>HTTP/3</strong> (finalized in 2022) replaces TCP with <strong>QUIC</strong> — a protocol that achieves TCP-like reliability <em>on top of UDP</em>, eliminating head-of-line blocking entirely. It's already deployed at major ML cloud providers. Understanding that UDP underpins this next generation of web protocols makes the fundamentals all the more valuable.</p>
 
-      <hr />
+    <hr />
 
-      <h2>Closing Thoughts</h2>
+    <h2>Closing Thoughts</h2>
 
-      <p>Networking protocols aren't backend-engineer territory — they're <em>infrastructure literacy</em> for anyone building systems that matter. Whether you're:</p>
-      <ul>
-        <li>Writing a data ingestion pipeline that must handle 100k events per second without packet loss</li>
-        <li>Designing a model serving API that needs to be consumed by three different teams</li>
-        <li>Building a real-time labeling tool with live collaboration</li>
-        <li>Debugging why your distributed training job is slower than expected</li>
+    <p>Networking protocols aren't backend-engineer territory — they're <em>infrastructure literacy</em> for anyone building systems that matter. Whether you're:</p>
+    <ul>
+      <li>Writing a data ingestion pipeline that must handle 100k events per second without packet loss</li>
+      <li>Designing a model serving API that needs to be consumed by three different teams</li>
+      <li>Building a real-time labeling tool with live collaboration</li>
+      <li>Debugging why your distributed training job is slower than expected</li>
+    </ul>
+
+    <p>…you will eventually hit the limits of what can be understood purely at the Python level. The protocols covered here form a coherent map of <em>how distributed systems communicate</em>, and having that map in your head is what separates a data scientist who can build production systems from one who can only build notebooks.</p>
+
+    <p>Start with REST and HTTP — you're probably already using them. Then explore gRPC for your next model serving project. And next time you see a loss curve updating smoothly in real time on a dashboard, you'll know exactly which protocol is making that possible.</p>
+
+    <!-- ── Post footer ──────────────────────────────────────── -->
+    <div class="post-footer">
+      <p><em>If this post was helpful, consider following for more content on system design for data science.</em></p>
+    </div>
+
+    <!-- ── Tags ────────────────────────────────────────────── -->
+    <div class="tags">
+      <span class="tag">#SystemDesign</span>
+      <span class="tag">#DataScience</span>
+      <span class="tag">#MachineLearning</span>
+      <span class="tag">#Networking</span>
+      <span class="tag">#MLOps</span>
+      <span class="tag">#SoftwareEngineering</span>
+      <span class="tag">#BackendDevelopment</span>
+    </div>
+
+  </article>
+
+  <!-- TOC Sidebar -->
+  <aside class="toc-sidebar" aria-label="Table of contents">
+    <div class="toc-inner">
+      <p class="toc-label">Contents</p>
+      <ul class="toc-list">
+        <li><a href="#the-big-picture">The Big Picture</a></li>
+        <li><a href="#transport-layer">TCP vs UDP</a></li>
+        <li><a href="#http-https">HTTP &amp; HTTPS</a></li>
+        <li><a href="#rest">REST &amp; RESTful Design</a></li>
+        <li><a href="#real-time">Real-Time Protocols</a></li>
+        <li><a href="#modern-protocols">gRPC and GraphQL</a></li>
+        <li><a href="#cheatsheet">Cheatsheet</a></li>
       </ul>
+    </div>
+  </aside>
+</div>
 
-      <p>…you will eventually hit the limits of what can be understood purely at the Python level. The protocols covered here form a coherent map of <em>how distributed systems communicate</em>, and having that map in your head is what separates a data scientist who can build production systems from one who can only build notebooks.</p>
+<button id="back-to-top" aria-label="Back to top" title="Back to top">↑</button>
 
-      <p>Start with REST and HTTP — you're probably already using them. Then explore gRPC for your next model serving project. And next time you see a loss curve updating smoothly in real time on a dashboard, you'll know exactly which protocol is making that possible.</p>
+<script>
+  // ─────────────────────────────────────────────
+  // Persistent reading progress
+  // ─────────────────────────────────────────────
+  const STORAGE_KEY = 'reading-progress:' + window.location.pathname;
+  const bar = document.getElementById('progress-bar');
 
-      <!-- ── Post footer ──────────────────────────────────────── -->
-      <div class="post-footer">
-        <p><em>If this post was helpful, consider following for more content on system design for data science.</em></p>
-      </div>
+  window.addEventListener('load', () => {
+    const savedProgress = parseFloat(localStorage.getItem(STORAGE_KEY));
+    if (!isNaN(savedProgress) && savedProgress > 0.01) {
+      const target = savedProgress * (document.documentElement.scrollHeight - window.innerHeight);
+      window.scrollTo(0, target);
+    }
+  });
 
-      <!-- ── Tags ────────────────────────────────────────────── -->
-      <div class="tags">
-        <span class="tag">#SystemDesign</span>
-        <span class="tag">#DataScience</span>
-        <span class="tag">#MachineLearning</span>
-        <span class="tag">#Networking</span>
-        <span class="tag">#MLOps</span>
-        <span class="tag">#SoftwareEngineering</span>
-        <span class="tag">#BackendDevelopment</span>
-      </div>
+  let saveTimeout;
 
-    </article>
-  </div>
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = (scrollTop / docHeight) * 100;
 
-  <button id="back-to-top" aria-label="Back to top" title="Back to top">↑</button>
+    bar.style.width = Math.min(pct, 100) + '%';
 
-  <script>
-    // ── Reading progress bar ─────────────────────────────────────
-    const bar = document.getElementById('progress-bar');
-    window.addEventListener('scroll', () => {
-      const scrolled = window.scrollY;
-      const total = document.body.scrollHeight - window.innerHeight;
-      bar.style.width = (total > 0 ? (scrolled / total) * 100 : 0) + '%';
-    });
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+      if (pct >= 95) {
+        localStorage.removeItem(STORAGE_KEY);
+      } else {
+        localStorage.setItem(STORAGE_KEY, (pct / 100).toString());
+      }
+    }, 250);
 
-    // ── Back-to-top button ───────────────────────────────────────
+    // Back-to-top visibility
     const btn = document.getElementById('back-to-top');
-    window.addEventListener('scroll', () => {
-      btn.classList.toggle('visible', window.scrollY > 400);
+    btn.classList.toggle('visible', window.scrollY > 400);
+  }, { passive: true });
+
+  // ─────────────────────────────────────────────
+  // Scroll reveal animations
+  // ─────────────────────────────────────────────
+  const reveals = document.querySelectorAll('.reveal');
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
+      }
     });
-    btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-  </script>
+  }, { threshold: 0.08 });
+  reveals.forEach(el => revealObserver.observe(el));
+
+  // ─────────────────────────────────────────────
+  // Active TOC highlighting
+  // ─────────────────────────────────────────────
+  const tocLinks = document.querySelectorAll('.toc-list a');
+  const sections = document.querySelectorAll('h2[id]');
+
+  const tocObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const id = entry.target.id;
+      tocLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+      });
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(section => tocObserver.observe(section));
+
+  // ─────────────────────────────────────────────
+  // Back-to-top button
+  // ─────────────────────────────────────────────
+  const btn = document.getElementById('back-to-top');
+  btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+</script>
 </body>
 </html>

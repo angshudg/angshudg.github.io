@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Building Systems That Scale: The Complete Engineer's Guide</title>
+  <title>Software Architecture Patterns & Styles — A Field Guide</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
@@ -48,6 +48,7 @@
       color: var(--ink);
       background: var(--paper);
       -webkit-font-smoothing: antialiased;
+      margin-left: 280px;
     }
 
     /* ─── Reading Progress Bar ─── */
@@ -217,17 +218,6 @@
       margin: 2rem 0 0.75rem;
     }
 
-    /* ─── Lists ─── */
-    ul, ol {
-      margin-bottom: 1.6rem;
-      padding-left: 1.5rem;
-      color: var(--ink);
-    }
-    
-    li {
-      margin-bottom: 0.5rem;
-    }
-
     /* ─── Opening Quote ─── */
     .pull-quote {
       border-left: 3px solid var(--accent);
@@ -290,13 +280,14 @@
       color: #d4cfc8;
     }
 
-    .kw  { color: #c792ea; }   
-    .fn  { color: #82aaff; }   
-    .st  { color: #c3e88d; }   
-    .cm  { color: #546e7a; font-style: italic; } 
-    .nm  { color: #f78c6c; }   
-    .at  { color: #ffcb6b; }   
-    .tp  { color: #89ddff; }   
+    /* Syntax colouring: hand-applied via spans */
+    .kw  { color: #c792ea; }   /* keyword */
+    .fn  { color: #82aaff; }   /* function */
+    .st  { color: #c3e88d; }   /* string */
+    .cm  { color: #546e7a; font-style: italic; } /* comment */
+    .nm  { color: #f78c6c; }   /* number/const */
+    .at  { color: #ffcb6b; }   /* attr / key */
+    .tp  { color: #89ddff; }   /* type */
 
     code:not(pre code) {
       font-family: var(--mono);
@@ -381,6 +372,68 @@
       white-space: nowrap;
     }
 
+    /* ─── Info Callout ─── */
+    .callout {
+      display: flex;
+      gap: 1rem;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      margin: 2rem 0;
+    }
+
+    .callout.info   { background: var(--blue-soft);   border-left: 3px solid var(--blue); }
+    .callout.tip    { background: var(--green-soft);  border-left: 3px solid var(--green); }
+    .callout.warn   { background: var(--amber-soft);  border-left: 3px solid var(--amber); }
+    .callout.purple { background: var(--purple-soft); border-left: 3px solid var(--purple); }
+
+    .callout-icon {
+      font-size: 1.1rem;
+      line-height: 1.75;
+      flex-shrink: 0;
+    }
+
+    .callout-body {
+      font-family: var(--sans);
+      font-size: 0.88rem;
+      line-height: 1.65;
+      color: var(--ink-2);
+    }
+
+    .callout-body strong { color: var(--ink); }
+
+    /* ─── Tradeoff Cards ─── */
+    .tradeoff-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.75rem 0;
+    }
+
+    .tradeoff-card {
+      border-radius: 8px;
+      padding: 1.1rem 1.25rem;
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .tradeoff-card.pro  { background: var(--green-soft); border-top: 3px solid var(--green); }
+    .tradeoff-card.con  { background: var(--accent-soft); border-top: 3px solid var(--accent); }
+
+    .tradeoff-card h5 {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.6rem;
+    }
+
+    .tradeoff-card.pro h5 { color: var(--green); }
+    .tradeoff-card.con h5 { color: var(--accent); }
+
+    .tradeoff-card ul { padding-left: 1rem; }
+    .tradeoff-card li { margin-bottom: 0.35rem; color: var(--ink-2); }
+
     /* ─── Section Label Accent ─── */
     .part-label {
       display: inline-block;
@@ -441,7 +494,6 @@
         list-style: none;
         border-left: 1px solid var(--rule);
         padding-left: 1rem;
-        margin-bottom: 0;
       }
 
       .toc-list li {
@@ -480,6 +532,7 @@
       .hero { padding: 3rem 1.25rem 2.5rem; }
       .layout { padding: 0 1.25rem; }
       nav  { padding: 0.75rem 1.25rem; }
+      .tradeoff-grid { grid-template-columns: 1fr; }
       pre code { font-size: 0.75rem; padding: 1.25rem; }
     }
 
@@ -498,147 +551,1348 @@
     .hero h1           { animation-delay: 0.05s; }
     .hero .hero-subtitle { animation-delay: 0.15s; }
     .hero .hero-meta   { animation-delay: 0.25s; }
+
+    /* ─── Print ─── */
+    @media print {
+      nav, #progress-bar, .toc-sidebar { display: none; }
+      body { font-size: 11pt; }
+    }
+.chapter-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 250px;
+    height: 100vh;
+
+    overflow-y: auto;
+
+    background: #ffffff;
+    border-right: 1px solid #ddd;
+
+    padding: 20px;
+    box-sizing: border-box;
+
+    z-index: 1000;
+}
+
+.chapter-nav h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.chapter-nav a {
+    display: block;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+
+    text-decoration: none;
+    color: #333;
+
+    border-radius: 6px;
+}
+
+.chapter-nav a:hover {
+    background: #f3f4f6;
+}
+
+.chapter-nav a.active {
+    background: #2563eb;
+    color: white;
+    font-weight: bold;
+}
+@media (max-width: 1200px) {
+    .chapter-nav {
+        display: none;
+    }
+
+    main,
+    .container,
+    .content {
+        margin-left: 0;
+    }
+}
   </style>
 </head>
 <body>
 
+  <div class="chapter-nav">
+    <h3>Chapters</h3>
+
+    <a href="../01-networking/index.html">01 Networking</a>
+    <a href="../02-protocols/index.html">02 Protocols</a>
+    <a href="../03-architecture/index.html" class="active">03 Architecture</a>
+    <a href="../04-web-fundamentals/index.html">04 Web Fundamentals</a>
+    <a href="../05-scalability/index.html">05 Scalability</a>
+    <a href="../06-storage/index.html">06 Storage</a>
+    <a href="../07-performance/index.html">07 Performance</a>
+    <a href="../08-reliability/index.html">08 Reliability</a>
+    <a href="../09-security/index.html">09 Security</a>
+</div>
+
   <div id="progress-bar"></div>
 
+  <!-- Navigation -->
   <nav aria-label="Site navigation">
     <a href="#" class="nav-brand">Engineering Field Guide</a>
     <div class="nav-meta">
       <span class="nav-tag">Systems Design</span>
       <span class="nav-tag">Architecture</span>
-      <span>~15 min read</span>
+      <span>~25 min read</span>
     </div>
   </nav>
 
+  <!-- Hero -->
   <header class="hero">
-    <p class="hero-eyebrow">The Complete Engineer's Guide</p>
-    <h1>Building Systems That Scale: The Complete Engineer's Guide to System Performance Optimization</h1>
-    <p class="hero-subtitle">From first-principles thinking to production-grade architecture — everything you need to make systems faster, more efficient, and more resilient under real-world load.</p>
+    <p class="hero-eyebrow">System Design for Data Scientists · Vol. #3</p>
+    <h1>Designing Networks for Data Science</h1>
+    <p class="hero-subtitle">From first-principles monoliths to distributed event streams — and the hard choices that sit between them. Written for data scientists, ML engineers, and analytics engineers stepping into system design.</p>
     <div class="hero-meta">
-      <span>Performance Optimization</span>
-      <span>System Architecture</span>
-      <span>Scalability</span>
+      <span>Systems Design</span>
+      <span>Distributed Systems</span>
+      <span>ML Engineering</span>
     </div>
   </header>
 
+  <!-- Main -->
   <div class="layout">
     <article id="article-content">
-      
+
+      <!-- Introduction -->
       <section id="intro">
         <div class="pull-quote">
-          <p>From first-principles thinking to production-grade architecture — everything you need to make systems faster, more efficient, and more resilient under real-world load.</p>
+          <p>"All architectures are wrong, but some are useful. The art is knowing which tradeoffs you can live with."</p>
         </div>
-        
-        <p>There's a particular kind of humiliation that every engineer experiences at some point in their career. You've built something beautiful — clean code, elegant abstractions, solid test coverage. You demo it to your team, it flies. You push to production, traffic arrives, and then... it starts gasping. Latency climbs. Queues fill up. Your database CPU looks like a mountain range. Users start complaining.</p>
-        
-        <p>Welcome to the gap between "it works" and "it performs."</p>
-        
-        <p>System performance optimization is not a single technique or a configuration knob you flip. It is a discipline — a way of thinking about how every design decision compounds under real workload pressure. This article is a structured journey through that discipline. We'll build from first principles, reason through the tradeoffs that experienced engineers navigate daily, and arrive at a vocabulary and toolkit you can carry directly into your next system design review or production incident.</p>
-        
-        <p>Whether you're a data scientist whose pipelines are timing out, an ML engineer building an inference stack, an analytics engineer watching dashboards crawl, or a software engineer who just got handed a "make this faster" ticket — this guide is written for you.</p>
-        
-        <p>Let's start at the foundation.</p>
+
+        <h2 id="introduction">Introduction: Why Architecture Is Not About Boxes and Arrows</h2>
+
+        <p>If you've spent most of your career working with data — wrangling DataFrames, training models, writing Spark jobs — you've probably had a moment where a seemingly innocent question exposes a gap: <em>"Should we process this in real-time or batch?"</em> <em>"Who owns this data contract?"</em> <em>"Why does our ML pipeline time out when the user-facing service spikes?"</em></p>
+
+        <p>These aren't data questions. They're <strong>architecture questions in disguise</strong>.</p>
+
+        <p>Software architecture is the set of structural decisions that determine how a system's components communicate, scale, fail, and evolve. It is not a formality to be drawn on a whiteboard before the real work begins — it is the real work, just moved upstream. The cost of a wrong architectural choice compounds quietly: it lives in your on-call rotation, in the 3 AM pages, in the migration sprint that ballooned from two weeks to six months.</p>
+
+        <p>This article walks through four dominant architectural styles — <strong>Monolithic</strong>, <strong>Multi-Tier</strong>, <strong>Microservices</strong>, and <strong>Event-Driven</strong> — from first principles. We'll build intuition before introducing jargon, explore the genuine tradeoffs instead of hand-waving, and surface the practical signals that help you choose one approach over another. Where relevant, we'll ground examples in the realities of data-intensive and ML-heavy systems, because that context changes the calculus significantly.</p>
+
+        <p>Let's start at the beginning — which, architecturally speaking, is usually a monolith.</p>
       </section>
 
       <div class="section-divider">· · ·</div>
 
-      <section id="part-1">
+      <!-- Part 1: Monolithic -->
+      <section id="monolith">
         <span class="part-label">Part 1</span>
-        <h2>Core Performance Concepts — Building the Right Mental Model</h2>
-        <p>Before you can optimize anything, you need to be precise about what you're trying to improve. "Make it faster" is not a specification. Performance is a multi-dimensional property, and tuning in one dimension without understanding the others is how engineers spend weeks making something worse.</p>
+        <h2>Monolithic Architecture — Where Every System Begins</h2>
 
-        <h3 id="latency-vs-throughput">Latency vs. Throughput: You Can't Always Have Both</h3>
-        <p>Imagine two coffee shops. The first is a specialty shop — they spend four minutes crafting each drink to perfection, but there's only one barista. The second is a drive-through chain — each drink takes 90 seconds, but they have eight lanes running in parallel. Which shop is "faster"?</p>
-        <p>That's exactly the question latency and throughput ask, and they're measuring different things.</p>
-        <p><strong>Latency</strong> is how long a single operation takes from start to finish. In a web service, it's the time from when a request enters your system to when the response exits. It's fundamentally an experience metric — users feel latency directly. A 300ms response feels snappy; a 3-second response feels broken.</p>
-        <p><strong>Throughput</strong> is how many operations your system can complete per unit of time — requests per second, messages per minute, rows processed per hour. It's a capacity metric. You need enough throughput to serve your entire user base concurrently.</p>
-        <p>Here's why the tradeoff is subtle: many common optimizations improve one at the expense of the other. Consider batching. If you aggregate 100 database writes into a single bulk insert, your throughput may increase by an order of magnitude — you're doing far less I/O overhead per row. But the latency of each individual write increases, because the first write in the batch has to wait for 99 others before it's committed. This is a classic throughput-optimized design that's terrible for interactive latency.</p>
-        <p>The formal relationship between the two is captured by <strong>Little's Law</strong>, a beautifully simple result from queueing theory:</p>
+        <h3>The Intuition</h3>
 
-        <pre><span class="code-label">Formula</span><code>L = λ × W</code></pre>
+        <p>Imagine you're building the first version of a recommendation engine. You need a web server to handle requests, a model inference layer, a feature store lookup, and a database to log results. The fastest path to production is to write it all in one place: one repository, one deployment artifact, one process humming away on a server.</p>
 
-        <p>Where:</p>
-        <ul>
-          <li><code>L</code> = the average number of requests in the system (queue depth)</li>
-          <li><code>λ</code> (lambda) = the arrival rate (throughput)</li>
-          <li><code>W</code> = the average time a request spends in the system (latency)</li>
-        </ul>
+        <p>Congratulations. You have a monolith.</p>
 
-        <p>If your latency doubles (W × 2), and your arrival rate stays the same, your queue depth also doubles. This is why performance regressions that seem minor in isolation can cascade into massive queue buildups under load. A service that handles 1,000 RPS at 50ms average latency has roughly 50 requests "in flight" at any moment. If a bad deploy pushes that to 500ms, you now have 500 in-flight requests — a 10x memory and connection surge, with no change in traffic.</p>
-        <p>The engineering takeaway: <strong>match your optimization goal to your workload type</strong>. Batch data pipelines are throughput-bound — you want to maximize records per second and don't care if a single record takes 10 minutes. Interactive web services are latency-bound — each user request must return in hundreds of milliseconds. Real-time ML inference often has to satisfy <em>both</em>: low latency under concurrent load. Understanding which type of system you're building changes every subsequent architectural decision.</p>
+        <p>There is nothing pejorative about this. A monolith is a single, unified application where all components share the same runtime, codebase, and deployment lifecycle. Your web handler calls your model directly — not over a network, not through a message queue, but as a local function call. It's the architectural equivalent of cooking in a studio apartment: everything is within reach, nothing requires coordination.</p>
 
-        <figure class="illustration">
-          <img src="images/example-diagram-1.png" alt="A side-by-side conceptual diagram comparing Latency vs Throughput. Left panel shows a single HTTP request traveling from User to Database with hop durations. Right panel shows a timeline with 20 RPS stacked.">
-          <figcaption><strong>Figure 1:</strong> Latency vs Throughput. Latency is the per-operation cost, while throughput is aggregate system capacity. They relate via Little's Law.</figcaption>
+        <h3>Why Monoliths Are Actually Great (At First)</h3>
+
+        <p>The advantages of a monolithic architecture are not merely theoretical — they're viscerally real in the early life of a product:</p>
+
+        <div class="tradeoff-grid">
+          <div class="tradeoff-card pro">
+            <h5>✓ Advantages</h5>
+            <ul>
+              <li><strong>Development simplicity</strong> — one codebase, one debugger, fast onboarding</li>
+              <li><strong>Deployment triviality</strong> — one pipeline, one artifact to containerize</li>
+              <li><strong>Low-latency internally</strong> — function calls, not HTTP; microseconds, not milliseconds</li>
+              <li><strong>Simple testability</strong> — spin up one process, run your entire integration suite</li>
+            </ul>
+          </div>
+          <div class="tradeoff-card con">
+            <h5>✗ Drawbacks</h5>
+            <ul>
+              <li><strong>Coarse-grained scaling</strong> — can't scale one component without scaling all</li>
+              <li><strong>Growing coupling</strong> — changes ripple unpredictably as the codebase grows</li>
+              <li><strong>Risky deployments</strong> — every feature ships together; one bug delays all</li>
+              <li><strong>Single point of failure</strong> — one bad exception, the whole app goes down</li>
+            </ul>
+          </div>
+        </div>
+
+        <figure class="illustration" id="fig-monolith">
+          <img src="images/monolith-architecture.png" alt="Diagram: The Monolith Anatomy — a single deployment block containing all modules tightly packed together, with shared runtime and a single database connection." />
+          <figcaption><strong>Figure 1:</strong> The Monolith Anatomy. All modules — web handler, business logic, ML inference, data access — live inside a single deployment unit. Every component communicates through local function calls. Scaling means scaling everything at once.</figcaption>
         </figure>
 
-        <h3 id="scalability-vs-responsiveness">Scalability vs. Responsiveness: Growing Fast Without Feeling Slow</h3>
-        <p>These two concepts are easy to conflate, but they describe fundamentally different properties of a system.</p>
-        <p><strong>Scalability</strong> is about capacity growth. Can the system handle 10× the current load with 10× the resources? Or does complexity, coordination overhead, and state management mean you need 50× the resources for 10× the load? A system that scales linearly is called <strong>horizontally scalable</strong> — you add more nodes, and capacity increases proportionally.</p>
-        <p><strong>Responsiveness</strong> is about user experience under any load level. A system that can handle a million requests per second but takes 8 seconds to respond is scalable but not responsive. A single-threaded Python service running on a beefy VM might feel lightning-fast for your first 10 users but fall apart at 100. It's somewhat responsive but not scalable.</p>
+        <h3>When the Monolith Still Wins</h3>
 
-        <p>The interesting tension: scaling strategies often temporarily hurt responsiveness. When you introduce a distributed cache cluster, you add a network hop. When you shard your database, some queries that were simple primary-key lookups become cross-shard joins. When you add more API servers behind a load balancer, session state management gets complicated.</p>
+        <p>The narrative of "monolith → microservices" being an inevitable progression is largely a tech industry myth. Many successful, profitable products run as monoliths. Basecamp, Stack Overflow, Shopify — deliberate engineering organizations that chose cohesion over distribution. For data science and ML teams specifically, the monolith often remains correct for internal tooling, batch pipelines, and experimental ML systems.</p>
 
-        <h3 id="defining-fast">Defining "Fast": SLAs, SLOs, and SLIs</h3>
-        <p>Here's an uncomfortable truth about performance optimization: without precise measurement definitions, you cannot know if you've succeeded. "Make it faster" is a wish. "Reduce the P99 latency of the /checkout endpoint from 800ms to 300ms as measured over 30-minute windows in production" is an engineering target.</p>
-        
-        <p>The SLI → SLO → SLA hierarchy gives you a framework for moving from vague intuition to concrete commitments.</p>
+        <pre>
+<span class="code-label">Python · FastAPI monolith</span><code><span class="cm"># A perfectly valid "monolithic" ML service</span>
+<span class="cm"># Everything lives in one FastAPI app — and that's fine</span>
 
-        <p><strong>Service Level Indicators (SLIs)</strong> are the raw metrics you actually measure. Examples:</p>
-        <ul>
-          <li>Request latency (in milliseconds)</li>
-          <li>Error rate (percentage of 5xx responses over total requests)</li>
-          <li>Availability (percentage of time the service responds to health checks)</li>
-        </ul>
+<span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI
+<span class="kw">from</span> model <span class="kw">import</span> load_model, predict
+<span class="kw">from</span> features <span class="kw">import</span> compute_features
+<span class="kw">from</span> db <span class="kw">import</span> get_user_context
 
-        <p><strong>Service Level Objectives (SLOs)</strong> are the targets you set for your SLIs. Examples:</p>
-        <ul>
-          <li>99% of requests should complete in under 200ms</li>
-          <li>Error rate should be below 0.1% over any 5-minute window</li>
-        </ul>
+app = <span class="fn">FastAPI</span>()
+model = <span class="fn">load_model</span>(<span class="st">"s3://models/recommender_v3.pkl"</span>)
 
-        <p><strong>Service Level Agreements (SLAs)</strong> are formalized business commitments — often with financial penalties — that derive from your SLOs.</p>
+<span class="at">@app.get</span>(<span class="st">"/recommend/{user_id}"</span>)
+<span class="kw">async def</span> <span class="fn">recommend</span>(user_id: <span class="tp">str</span>):
+    context     = <span class="fn">get_user_context</span>(user_id)    <span class="cm"># local function call</span>
+    features    = <span class="fn">compute_features</span>(context)     <span class="cm"># local function call</span>
+    predictions = <span class="fn">predict</span>(model, features)       <span class="cm"># local function call</span>
+    <span class="kw">return</span> {<span class="st">"recommendations"</span>: predictions}</code></pre>
 
-        <pre><span class="code-label">Checklist</span><code>1. What SLI am I trying to improve? (latency? error rate? throughput?)
-2. What is the current measured value?
-3. What is the target SLO?
-4. How will I measure it? (which environment, which percentile?)
-5. What's the error budget?</code></pre>
+    <p>This defines an asynchronous HTTP <code>GET</code> endpoint. When a client (like a mobile app or frontend website) hits the URL path <code>/recommend/12345</code>, this function triggers, passing <code>12345</code> as the <code>user_id</code>.</p>
 
-        <h3 id="why-averages-lie">Why Averages Lie: The Power of Percentiles</h3>
-        <p>Consider this scenario: your service processes 100 requests. 99 of them complete in 10ms. One request hits a cold database partition and takes 10,000ms (10 seconds). What's the average latency?</p>
-        
-        <pre><code>Average = (99 × 10ms + 1 × 10,000ms) / 100 ≈ 110ms</code></pre>
-        
-        <p>Your dashboard shows 110ms average. Looks acceptable. But one percent of your users waited 10 full seconds. At 1,000 requests per second, that's 10 users per second experiencing catastrophic performance.</p>
-        
-        <p><strong>Percentiles tell the truth that averages hide.</strong> The Pn percentile answers: "What is the maximum latency experienced by the fastest N% of requests?"</p>
-        
-        <ul>
-          <li><strong>P50 (median)</strong>: Half of requests are faster than this. A better "typical" experience metric than mean.</li>
-          <li><strong>P95</strong>: 95% of requests are faster. This is often the first place tail latency problems appear.</li>
-          <li><strong>P99</strong>: The experience of your 99th percentile user. At scale, P99 is experienced by a <em>lot</em> of real people.</li>
-        </ul>
+    <p>Inside the function, the recommendation is generated using three sequential local function calls:
+      <ul>
+        <li><strong>Data Retrieval:</strong> <code>get_user_context(user_id)</code> pulls the user's historical data or profile from a database wrapper.</li>
+        <li><strong>Feature Engineering:</strong> <code>compute_features(context)</code> transforms the raw user context into a feature vector suitable for the model.</li>
+        <li><strong>Model Inference:</strong> <code>predict(model, features)</code> runs the feature vector through the loaded ML model to generate recommendations.</li>
+      </ul>
+    </p>
+
+        <p>Every call here is in-process, sub-millisecond, easily debuggable. There's no service discovery, no retry logic, no distributed tracing. For a team of three serving ten thousand users, this is not a compromise — it's the right architecture.</p>
+
+        <div class="callout tip">
+          <span class="callout-icon">💡</span>
+          <div class="callout-body"><strong>Best fit:</strong> Startups, internal tools, MVPs, data science platforms with small teams, simple CRUD applications, and any system where the team is smaller than what's needed to own the overhead of distribution.</div>
+        </div>
       </section>
 
       <div class="section-divider">· · ·</div>
+
+      <!-- Part 2: Multi-Tier -->
+      <section id="multi-tier">
+        <span class="part-label">Part 2</span>
+        <h2>Multi-Tier Architecture — The Original Separation of Concerns</h2>
+
+        <h3>The Problem That Tiers Solve</h3>
+
+        <p>In the early days of web applications, the most common architecture was 2-tier: a client talking directly to a database. This worked until it didn't — until multiple clients needed the same logic, until a developer accidentally wrote a query that locked the production database, until you needed to add caching without rewriting the client.</p>
+
+        <p>The insight that changed everything was deceptively simple: <strong>separate the thing that presents from the thing that decides from the thing that persists.</strong> Multi-tier architecture formalizes this. It organizes applications into horizontal layers where each has a distinct responsibility and communicates only with adjacent layers.</p>
+
+        <h3>The Three Flavors</h3>
+
+        <h4>2-Tier: Client → Database</h4>
+        <p>The most primitive separation. A client — a web browser, a Python script, Jupyter — communicates directly with a database server. Business logic lives in the client or as stored procedures. Still common in data engineering: notebooks querying warehouses, Metabase running direct SQL. Works well when the "application" is a read layer on well-governed data.</p>
+
+        <h4>3-Tier: Presentation → Business Logic → Data</h4>
+        <p>The canonical web architecture. A <strong>Presentation Tier</strong> (browser, mobile app) displays data and captures user intent. An <strong>Application/Logic Tier</strong> (FastAPI/Django/Node server) processes requests and orchestrates data access. A <strong>Data Tier</strong> (Postgres, BigQuery) persists state. For data engineers, the logic tier maps directly to your transformation layer — your dbt project, your Airflow DAGs, your Feature Store API.</p>
+
+        <h3>Tier 1: The Presentation (or Web) Tier</h3>
+
+        <p>This tier faces the public internet, accepts incoming web requests from users, and securely routes that traffic to the internal systems, managing the flow of communication.</p>
+
+
+        <pre>
+<span class="code-label">nginx · load balancer config</span><code><span class="cm"># nginx upstream for a 3-tier ML API</span>
+upstream app_servers {
+    least_conn;  <span class="cm"># route to the server with fewest active connections</span>
+    server app1.internal:<span class="nm">8000</span> weight=<span class="nm">3</span>;
+    server app2.internal:<span class="nm">8000</span> weight=<span class="nm">3</span>;
+    server app3.internal:<span class="nm">8000</span> weight=<span class="nm">1</span>;  <span class="cm"># new server, lower weight</span>
+}
+
+server {
+    listen <span class="nm">80</span>;
+    location /api/ {
+        proxy_pass http://app_servers;
+        proxy_next_upstream error timeout http_503;
+    }
+}</code></pre>
+
+        <p><strong>Code Explanation</strong></p>
+        
+    <p>
+      This is a configuration script for <strong>Nginx</strong> (web server software).
+      In this specific snippet, it is being set up to act as a
+      <strong>load balancer</strong> and a
+      <strong>reverse proxy</strong> for a Machine Learning (ML) API.
+    </p>
+
+    <p><strong>1. The <code>upstream</code> Block (The Server Pool)</strong></p>
+
+    <ul>
+      <li>
+        <code>upstream app_servers</code>:
+        This creates a group or "pool" of backend servers and names it
+        <code>app_servers</code>.
+      </li>
+
+      <li>
+        <code>least_conn;</code>:
+        This is the routing strategy. Instead of just handing out requests
+        in a strict rotation (round-robin), it tells Nginx to send the next
+        incoming request to whichever server currently has the
+        <em>fewest active connections</em>.
+        This is great for ML APIs where some requests might take longer to
+        process than others.
+      </li>
+
+      <li>
+        <code>server ... weight=X;</code>:
+        These lines define the actual machines doing the work.
+      </li>
+
+      <li>
+        <code>app1</code> and <code>app2</code> have a
+        <code>weight=3</code>.
+      </li>
+
+      <li>
+        <code>app3</code> has a <code>weight=1</code>.
+      </li>
+
+      <li>
+        Because of the weights, <code>app1</code> and <code>app2</code>
+        will be assigned roughly 3 times as much traffic as
+        <code>app3</code>.
+        The comment mentions <code>app3</code> is a "new server," so they
+        are likely keeping its weight low to test it safely without
+        overwhelming it.
+      </li>
+    </ul>
+<br>
+    <p><strong>2. The <code>server</code> Block (The Traffic Cop)</strong></p>
+
+    <ul>
+      <li>
+        <code>listen 80;</code>:
+        This tells Nginx to listen for incoming web traffic on port 80,
+        which is the standard port for regular HTTP traffic.
+      </li>
+
+      <li>
+        <code>location /api/ { ... }</code>:
+        This rule applies to any web request that starts with
+        <code>/api/</code>
+        (e.g.,
+        <code>http://yourwebsite.com/api/predict</code>).
+      </li>
+
+      <li>
+        <code>proxy_pass http://app_servers;</code>:
+        This is the actual hand-off. When a request comes in for the API,
+        Nginx intercepts it and passes it back to the
+        <code>app_servers</code> pool we defined at the top.
+      </li>
+
+      <li>
+        <code>proxy_next_upstream ...;</code>:
+        This is a fallback/safety net. If Nginx tries to send a request to
+        one of the backend servers and that server crashes
+        (<code>error</code>), takes too long
+        (<code>timeout</code>), or is temporarily overloaded
+        (<code>http_503</code>), Nginx will automatically try sending the
+        request to the <em>next</em> server in the pool so the user doesn't
+        see an error.
+      </li>
+    </ul>
+
+        <h3>Tier 2: The Application (or Logic) Tier</h3>
+
+        <p>Represented by the destinations <code>app1.internal</code>, <code>app2.internal</code>, and <code>app3.internal</code> in the code, this is the "brain" of the application. This is where your actual Machine Learning API code runs (often written in Python using frameworks like FastAPI or Flask). Nginx (in Tier 1) passes the baton to these internal servers so they can execute the ML models, process the data, and generate a prediction.</p>
+
+        <p>A simple example of a <code>main.py</code> script running on <code>app1.internal</code> might look like this:</p>
+        <pre>
+<span class="code-label">Python · FastAPI ML API</span><code><span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI, HTTPException
+<span class="kw">import</span> psycopg2
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+app = <span class="fn">FastAPI</span>()
+
+<span class="cm"># 1. Load the Machine Learning Model (Simulated)</span>
+<span class="kw">class</span> <span class="tp">GraphRecommender</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        <span class="cm"># In reality, this would load heavy model weights into memory</span>
+        self.is_warm = <span class="kw">True</span>
+
+    <span class="kw">def</span> <span class="fn">predict</span>(self, user_features):
+        <span class="cm"># Simulate a graph-based recommendation calculation</span>
+        <span class="kw">return</span> {
+            <span class="st">"recommended_nodes"</span>: [<span class="nu">1042</span>, <span class="nu">831</span>, <span class="nu">992</span>],
+            <span class="st">"confidence"</span>: <span class="nu">0.87</span>
+        }
+
+model = <span class="fn">GraphRecommender</span>()
+
+<span class="cm"># 2. Establish a connection to Tier 3 (The Database)</span>
+<span class="kw">def</span> <span class="fn">get_db_connection</span>():
+    <span class="kw">try</span>:
+        <span class="cm"># Connecting to the internal database server</span>
+        conn = psycopg2.<span class="fn">connect</span>(
+            host=<span class="st">"db.internal"</span>,
+            database=<span class="st">"ml_features"</span>,
+            user=<span class="st">"admin"</span>,
+            password=<span class="st">"securepassword"</span>
+        )
+        <span class="kw">return</span> conn
+
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        <span class="kw">raise</span> <span class="fn">HTTPException</span>(
+            status_code=<span class="nu">503</span>,
+            detail=<span class="st">"Database connection failed"</span>
+        )
+
+<span class="cm"># 3. The API Endpoint (What Nginx routes the traffic to)</span>
+<span class="at">@app.get</span>(<span class="st">"/api/predict/{user_id}"</span>)
+<span class="kw">def</span> <span class="fn">get_recommendations</span>(user_id: <span class="tp">int</span>):
+
+    <span class="cm"># Step A: Fetch historical user data from Tier 3</span>
+    conn = <span class="fn">get_db_connection</span>()
+    cursor = conn.<span class="fn">cursor</span>()
+
+    cursor.<span class="fn">execute</span>(
+        <span class="st">"SELECT feature_vector FROM users WHERE id = %s"</span>,
+        (user_id,)
+    )
+
+    data = cursor.<span class="fn">fetchone</span>()
+
+    <span class="kw">if not</span> data:
+        <span class="kw">raise</span> <span class="fn">HTTPException</span>(
+            status_code=<span class="nu">404</span>,
+            detail=<span class="st">"User not found"</span>
+        )
+
+    user_features = data[<span class="nu">0</span>]
+
+    <span class="cm"># Step B: Run the ML prediction in Tier 2</span>
+    prediction = model.<span class="fn">predict</span>(user_features)
+
+    <span class="cm"># Step C: Return the result back to the user (via Nginx)</span>
+    <span class="kw">return</span> {
+        <span class="st">"user_id"</span>: user_id,
+        <span class="st">"recommendations"</span>: prediction
+    }</code></pre>
+    <p>When deploying an ML API, the incoming network connections are managed by a specialized ASGI (Asynchronous Server Gateway Interface) server such as <strong>Uvicorn</strong>, which handles the heavy lifting of network traffic, concurrency, and keeping the application alive.</p>
+
+    <p>The application is started by running the following from the command line:</p>
+    <pre><code>uvicorn main:app --host 0.0.0.0 --port 8000</code></pre>
+
+    <p>In Tier 1, Nginx passes traffic to <code>app1.internal:8000</code>. Uvicorn running on port 8000, receives the request, translates it, and hands it off to your FastAPI <code>app</code> object in <code>main.py</code> to run the machine learning prediction.</p>
+
+        <p>Notice how this tier has to do two things: it receives the routed request from Tier 1, and then reaches out to Tier 3 to get the data it needs to run its predictions.</p>
+
+        <h3>Tier 3: The Data Tier</h3>
+        <p>This tier holds the historical data, feature vectors, or user profiles that the ML model relies on to make accurate predictions. It;s main job is to efficiently store and retrieve data when queried. It typically consists of a database (e.g., PostgreSQL, MySQL) or a data warehouse (e.g., Amazon Redshift). The application tier (Tier 2) communicates with this tier to retrieve and update data.</p>
+
+        <h4>N-Tier: The Grown-Up Version</h4>
+        <p>Real production systems grow beyond three tiers, adding: a <strong>caching tier</strong> (Redis between app and database), an <strong>API gateway tier</strong> (rate limiting and routing before requests reach servers), a <strong>CDN tier</strong> (static assets distributed globally), and a <strong>message queue tier</strong> (async decoupling between services). N-tier simply means "more than three layers, each with a specialized role."</p>
+
+        <figure class="illustration" id="fig-tiers">
+          <img src="images/multi-tier-architecture.png" alt="Diagram showing the evolution from 2-Tier to 3-Tier to N-Tier architecture, with labeled components at each layer." />
+          <figcaption><strong>Figure 2:</strong> Multi-Tier Architecture Evolution. Left: 2-Tier client-to-database. Center: 3-Tier with application logic as an independent layer. Right: N-Tier with caching, API Gateway, CDN, and message queues added as specialized infrastructure tiers.</figcaption>
+        </figure>
+
+        <h3>The Tradeoffs Are Real</h3>
+
+        <p>What you gain is real: separation of concerns improves maintainability, the database is never directly exposed to the internet, you can scale the tiers that need it independently. What you pay is also real: every tier boundary is a network hop. A 3-tier system with naive implementation might add 5–10ms to every request. Deployment complexity rises — three codebases, three pipelines, three failure surfaces.</p>
+
+        <h3>Key Concepts: Scaling Within Tiers</h3>
+
+        <p><strong>Horizontal scaling</strong> means adding more instances behind a load balancer. Traffic distributes across them; any single server can fail without dropping requests. <strong>Vertical scaling</strong> means making a single instance bigger — simpler, but with hard physical limits. The load balancer is the mechanism that makes horizontal scaling work.</p>
+
+
+
+        <div class="callout info">
+          <span class="callout-icon">📐</span>
+          <div class="callout-body"><strong>Best fit:</strong> Web applications with distinct presentation and logic concerns, systems requiring clear security boundaries, teams large enough to own independent tier deployments, and data platforms with clear separation between serving and storage.</div>
+        </div>
+      </section>
+
+      <div class="section-divider">· · ·</div>
+
+      <!-- Part 3: Microservices -->
+      <section id="microservices">
+        <span class="part-label">Part 3</span>
+        <h2>Microservices — The Architecture That Ate the Internet</h2>
+
+        <h3>The Promise (And the Mythology)</h3>
+
+        <p>Around 2010–2015, a narrative crystallized in the industry: Netflix decomposed their monolith and saved themselves. Amazon teams organized around APIs. The message — often oversimplified — was that microservices were the inevitable destination of any serious engineering organization. The reality is more nuanced, and worth understanding clearly before you drink the Kool-Aid.</p>
+
+        <p>A microservices architecture decomposes an application into a collection of <strong>small, independently deployable services</strong>, each owning a narrow slice of business capability. The <code>UserService</code> manages user identity. The <code>RecommendationService</code> runs inference. They communicate over the network — HTTP/gRPC for synchronous requests, or message queues for async operations. Each service has its own codebase, deployment pipeline, data store, and on-call rotation.</p>
+
+        <h3>Where Microservices Genuinely Shine</h3>
+
+        <p><strong>Independent scaling and deployment</strong> is the headline benefit. In a monolith, high CPU usage on inference means scaling the entire application. In microservices, you scale only the <code>InferenceService</code> — 50 replicas there, 2 replicas of the lightly-loaded <code>AnalyticsService</code>. Capacity planning becomes precise and cloud costs become attributable.</p>
+
+        <pre>
+<span class="code-label">YAML · Kubernetes deployment</span><code><span class="cm"># Scale inference independently of everything else</span>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inference-service
+spec:
+  replicas: <span class="nm">50</span>    <span class="cm"># scale this independently</span>
+  template:
+    spec:
+      containers:
+      - name: inference-service
+        image: ml-platform/inference:<span class="nm">v1.4.2</span>
+        resources:
+          requests: { cpu: <span class="st">"2"</span>, memory: <span class="st">"4Gi"</span> }
+          limits:   { cpu: <span class="st">"4"</span>, memory: <span class="st">"8Gi"</span> }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics-service
+spec:
+  replicas: <span class="nm">2</span>     <span class="cm"># this one barely needs anything</span>
+  ...</code></pre>
+
+  <p>The above Kubernetes Deployment manifest code tells Kubernetes to maintain a stable set of 50 identical pods (containers running your app) for the inference engine. If a container crashes, Kubernetes will automatically spin up a new one to replace it. </p>
+  <p>The <code>resources</code> scetion lays a guaranteed baseline and hard ceiling on resource usage. Each of the 50 pods is guaranteed 2 CPU cores and 4 Gibibytes (Gi) of RAM. But if a pod tries to use more than 4 CPUs or 8Gi of RAM, Kubernetes will throttle or terminate it to prevent it from starving other services on the server.</p>
+
+        <p><strong>Fault isolation</strong> is equally valuable. When the <code>NotificationService</code> goes down in a well-designed system, users stop receiving emails — but they can still use the product. A monolith would fall entirely. The key phrase is <em>well-designed</em>: fault isolation requires deliberate engineering — circuit breakers, bulkheads, graceful degradation.</p>
+
+        <p><strong>Technology stack freedom (polyglot architecture)</strong> is underrated. The data team writes Python. The core API team uses Go. The ML team deploys a Julia service for numerical computation. Each service is a black box with a network interface — the implementation language is an internal detail. For ML engineering specifically, this is huge.</p>
+
+        <figure class="illustration" id="fig-microservices">
+          <img src="images/microservices-architecture.png" alt="Diagram showing a microservices ecosystem with an API Gateway, service mesh, independent services with private data stores, observability infrastructure, and independent CI/CD pipelines." />
+          <figcaption><strong>Figure 3:</strong> Microservices Architecture — The Full Picture. An API Gateway is the single external entry point. Inside the service mesh, independently deployed services each own their private data store. An observability stack (metrics, logs, traces) spans the entire cluster. Each service has its own CI/CD pipeline.</figcaption>
+        </figure>
+  <p><strong>The Naive Approach</strong></p>
+        <pre>
+<span class="code-label">Python · naive service call</span><code><span class="cm"># Naive service call — don't do this</span>
+<span class="kw">import</span> requests
+response = requests.<span class="fn">get</span>(<span class="st">f"http://feature-service/features/{user_id}"</span>)</code></pre>
+
+  <p>
+    This single line of code makes a massive, dangerous assumption: that the network and the
+    destination service are perfectly reliable.
+  </p>
+
+  <ul>
+    <li>
+      <strong>No Timeouts:</strong>
+      If <code>feature-service</code> freezes or the network drops the connection silently,
+      this code will wait forever. The thread running this code gets permanently blocked.
+    </li>
+
+    <li>
+      <strong>No Error Handling:</strong>
+      If the service returns a <code>500 Internal Server Error</code>, or if the DNS fails
+      to resolve <code>feature-service</code>, this code crashes the entire function.
+    </li>
+
+    <li>
+      <strong>Synchronous Blocking:</strong>
+      It uses the standard <code>requests</code> library, which stops all other operations
+      in that thread until the HTTP request finishes.
+    </li>
+  </ul>
+<br>
+  <p><strong>The Better Approach</strong></p>
+        <pre>
+<span class="code-label">Python · resilient service call</span><code><span class="cm"># Better: timeouts, retries, graceful degradation</span>
+<span class="kw">import</span> httpx
+<span class="kw">from</span> tenacity <span class="kw">import</span> retry, stop_after_attempt, wait_exponential
+
+<span class="at">@retry</span>(<span class="fn">stop</span>=<span class="fn">stop_after_attempt</span>(<span class="nm">3</span>), <span class="fn">wait</span>=<span class="fn">wait_exponential</span>(min=<span class="nm">1</span>, max=<span class="nm">4</span>))
+<span class="kw">async def</span> <span class="fn">get_user_features</span>(user_id: <span class="tp">str</span>, client: <span class="tp">httpx.AsyncClient</span>):
+    <span class="kw">try</span>:
+        response = <span class="kw">await</span> client.<span class="fn">get</span>(
+            <span class="st">f"http://feature-service/features/{user_id}"</span>,
+            timeout=httpx.<span class="fn">Timeout</span>(connect=<span class="nm">1.0</span>, read=<span class="nm">2.0</span>, pool=<span class="nm">0.5</span>)
+        )
+        response.<span class="fn">raise_for_status</span>()
+        <span class="kw">return</span> response.<span class="fn">json</span>()
+    <span class="kw">except</span> httpx.HTTPStatusError <span class="kw">as</span> e:
+        <span class="kw">if</span> e.response.status_code == <span class="nm">503</span>:
+            <span class="kw">raise</span>   <span class="cm"># trigger retry</span>
+        <span class="kw">return</span> <span class="nm">None</span>  <span class="cm"># degrade gracefully for non-retryable errors</span></code></pre>
+  <p>
+    This block of code systematically dismantles the assumptions of the naive approach
+    using defensive programming.
+  </p>
+
+  <ul>
+    <li>
+      <strong>Asynchronous I/O (<code>httpx.AsyncClient</code>):</strong>
+      Instead of blocking the thread while waiting for the network,
+      <code>await client.get()</code> frees up the system to handle other requests.
+      This is crucial for high-throughput microservices.
+    </li>
+
+    <li>
+      <strong>Strict Timeouts:</strong>
+      The code enforces a maximum wait time for every phase of the connection:
+      1 second to connect, 2 seconds to read the data, and 0.5 seconds to acquire a
+      connection from the internal pool. If any of these are breached, it aborts rather
+      than hanging.
+    </li>
+
+    <li>
+      <strong>Smart Retries (<code>@retry</code>):</strong>
+      Networks are inherently glitchy. This code uses the
+      <code>tenacity</code> library to automatically retry the request up to 3 times.
+    </li>
+
+    <li>
+      <strong>Exponential Backoff (<code>wait_exponential</code>):</strong>
+      Instead of retrying immediately, it waits 1 second, then 2 seconds, then 4 seconds.
+      If <code>feature-service</code> is struggling under heavy load, blasting it with
+      immediate retries will only crash it faster. Backing off gives the struggling service
+      room to breathe.
+    </li>
+
+    <li>
+      <strong>Graceful Degradation (<code>except httpx.HTTPStatusError</code>):</strong>
+      If the service returns a <code>503 Service Unavailable</code>, it triggers the retry logic.
+      However, if it returns another error (like a <code>404 Not Found</code> or a hard failure
+      after retries), it catches the error and returns <code>None</code>. The calling application
+      can then gracefully degrade—perhaps hiding the "Features" UI widget from the user—rather
+      than crashing the whole page.
+    </li>
+  </ul>
+
+
+        <h3>The Hidden Costs That Nobody Warns You About</h3>
+
+        <p><strong>Inter-service communication complexity</strong> is the implicit tax. In a monolith, a function call is free. In microservices, that same call is now an HTTP request with network latency, serialization overhead, a new failure mode, retry logic, and timeout management. Every service boundary multiplies these concerns.</p>
+
+
+
+        <p><strong>Distributed data consistency</strong> is where many microservices migrations can potentially break down. In a monolith, a transaction is atomic. In microservices, each service owns its own database — a "transaction" spanning two services is not atomic. This is solved through sagas and eventual consistency patterns, neither of which is simple to implement correctly.</p>
+
+        <p><strong>Observability overhead</strong> is the third hidden cost. In a monolith, you read one log file. In a microservices system, a single user request might touch 10 services, requiring distributed tracing to understand what happened. Tools like Jaeger or Honeycomb make this feasible — but setting them up correctly is non-trivial work.</p>
+
+        <h3>The Supporting Infrastructure</h3>
+
+        <p>Three components are non-negotiable in a microservices architecture:</p>
+
+        <p><strong>API Gateway</strong> — the single entry point for external traffic, handling authentication, rate limiting, SSL termination, and routing. AWS API Gateway, Kong, and Envoy are common choices.</p>
+
+        <p><strong>Service Mesh</strong> — a network proxy layer (often sidecar containers) that handles mutual TLS between services, load balancing, circuit breaking, retry policies, and distributed tracing. Istio and Linkerd are dominant. Tradeoff: real resource overhead and significant operational complexity.</p>
+
+        <p><strong>CI/CD pipelines</strong> — each service needs its own pipeline. Without solid CI/CD, "independent deployment" is theoretical, not actual.</p>
+
+        <div class="callout warn">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body"><strong>Industry context:</strong> Netflix, Uber, and Amazon invested years and significant engineering capacity to make microservices work at scale. Their architectures are a result of scale <em>requiring</em> distribution, not distribution <em>enabling</em> scale. Start with the problem, not the pattern.</div>
+        </div>
+
+        <div class="callout info">
+          <span class="callout-icon">📐</span>
+          <div class="callout-body"><strong>Best fit:</strong> Large-scale systems with many independent teams, products with wildly different component scaling requirements, organizations mature enough to invest in platform infrastructure, and systems where fault isolation is a genuine business requirement.</div>
+        </div>
+      </section>
+
+      <div class="section-divider">· · ·</div>
+
+      <!-- Part 4: EDA -->
+      <section id="event-driven">
+        <span class="part-label">Part 4</span>
+        <h2>Event-Driven Architecture — Reacting to the World in Real Time</h2>
+
+        <h3>The Mental Model Shift</h3>
+
+        <p>In traditional request-response architectures, services <em>ask</em> for things. Service A calls Service B: "Give me the user's features." Service B responds. It's a <em>telephone call</em>.</p>
+
+        <p>Event-driven architecture flips this. Services <em>announce</em> what happened. The <code>UserService</code> emits: "User 12345 signed up." It has no idea who will react, or when, or how many systems will process it. It puts the event into the world and moves on. If request-response was a <em>telephone call</em>, you can think of this as a <em>radio broadcast</em>. This decouples the services <strong>temporally</strong> (the producer doesn't wait for consumers) and <strong>spatially</strong> (the producer doesn't know who the consumers are), allowing new consumers to simply subscribe without modifying the <em>broadcasting service</em>.</p>
+
+        <h3>Two Models: Pub-Sub vs. Event Streaming</h3>
+
+        <p>These are often confused but represent meaningfully different patterns:</p>
+
+        <p><strong>Publish-Subscribe (Pub-Sub)</strong> — one producer sends to a topic, multiple consumers receive it. Key property: <strong>messages are delivered and not retained</strong>. Once all subscribers receive the message, it's gone. Tools: RabbitMQ, AWS SNS, Google Pub/Sub. Best for: fan-out notifications, task distribution.</p>
+
+        <p><strong>Event Streaming</strong> — maintains an <strong>ordered, durable, replayable log</strong> of events. Consumers read from a position in the log, at their own pace. A new service can be added and read event history from day one. Tools: Apache Kafka, AWS Kinesis. Best for: audit logs, event sourcing, ML feature pipelines, any system where replay is valuable.</p>
+
+        <figure class="illustration" id="fig-eda">
+          <img src="images/event-driven-architecture.png" alt="Side-by-side diagram comparing Pub-Sub (ephemeral message delivery) and Event Streaming (durable ordered log), showing producers, brokers, and consumers for each model." />
+          <figcaption><strong>Figure 4:</strong> Pub-Sub vs. Event Streaming. Left: Pub-Sub delivers messages to all subscribers, then discards them. Right: Event streaming keeps a durable, ordered log — each consumer reads at its own pace and can replay history. Same producer, fundamentally different guarantees.</figcaption>
+        </figure>
+
+        <h3>The Three Actors: Producers, Brokers, Consumers</h3>
+
+        <p><strong>Producers</strong> detect and emit events. They don't decide what happens next — that is explicitly not their responsibility. A well-behaved producer emits a clean, schema-validated event and returns immediately.</p>
+
+        <p><strong>Brokers</strong> are the infrastructure layer — Kafka clusters, Kinesis streams, RabbitMQ nodes — handling routing, storage, ordering guarantees, and delivery semantics. The broker is why event-driven systems can absorb traffic spikes: the queue acts as a buffer between the rate of production and the rate of consumption.</p>
+
+        <p><strong>Consumers</strong> subscribe to events and execute business logic in response. The crucial property: <strong>idempotency</strong> — processing the same event twice produces the same result as processing it once. Distributed systems guarantee at-least-once delivery, not exactly-once. Your consumer <em>will</em> see duplicate events. Design for it from day one.</p>
+
+        <p>Here is the step-by-step breakdown what exactly happens when an event is received:</p>
+
+  <h3>Step 1: The User Action (Frontend)</h3>
+
+  <p>
+    The journey begins in the user's web browser or mobile app. The user fills out a registration form and clicks
+    "Submit." The frontend application takes that data and fires it off to your backend server.
+  </p>
+
+  <pre>
+<span class="code-label">JavaScript running in the user's browser</span><code><span class="kw">const</span> userData = {
+    email: <span class="str">"newuser@example.com"</span>,
+    password: <span class="str">"securepassword"</span>,
+    plan: <span class="str">"premium"</span>
+};
+
+<span class="cm">// Send a POST request to our backend API</span>
+fetch(<span class="str">'https://api.yourwebsite.com/v1/register'</span>, {
+    method: <span class="str">'POST'</span>,
+    headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },
+    body: JSON.stringify(userData)
+});
+</code></pre>
+
+<h3>Step 2: The Backend API &amp; Producer (Python Web Server)</h3>
+
+  <p>
+    The frontend app sends an HTTP <code>POST</code> request to your backend server (written in a framework like
+    FastAPI, Flask, Django, or Node.js) containing the user's data.
+  </p>
+
+  <p>
+    The backend server receives this request. It performs the core business logic required to create a user:
+  </p>
+
+  <ol>
+    <li><strong>Validates</strong> the input data (e.g., checks if the email is well-formed).</li>
+    <li><strong>Hashes</strong> the password for security.</li>
+    <li><strong>Saves</strong> the new user record into the primary application database (like PostgreSQL or MongoDB).</li>
+    <li><strong>Generates</strong> a unique ID for that user (e.g., <code>user_12345</code>).</li>
+  </ol>
+<br>
+  <p>
+    Right after the database successfully saves the user, the backend application triggers the event-driven notification.
+    Inside the backend controller/route handler, the code would look like this:
+  </p>
+
+<pre>
+<span class="code-label">Python · FastAPI backend with Kafka producer</span><code><span class="kw">import</span> json
+<span class="kw">import</span> uuid
+<span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI, HTTPException, status
+<span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel, EmailStr
+<span class="kw">import</span> bcrypt
+<span class="kw">from</span> confluent_kafka <span class="kw">import</span> Producer
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime, UTC
+
+<span class="cm"># Assuming 'db_connection' is your pre-existing, globally configured db client</span>
+<span class="kw">from</span> my_database_module <span class="kw">import</span> db_connection
+
+app = <span class="fn">FastAPI</span>()
+
+<span class="cm"># =====================================================================</span>
+<span class="cm"># 1. KAFKA PRODUCER SETUP</span>
+<span class="cm"># =====================================================================</span>
+
+producer = <span class="fn">Producer</span>({
+    <span class="st">'bootstrap.servers'</span>: <span class="st">'kafka.internal:9092'</span>,
+    <span class="st">'acks'</span>: <span class="st">'all'</span>,
+    <span class="st">'linger.ms'</span>: <span class="nm">5</span>,
+})
+
+<span class="kw">def</span> <span class="fn">delivery_callback</span>(err, msg):
+    <span class="kw">if</span> err <span class="kw">is not</span> <span class="nm">None</span>:
+        <span class="fn">print</span>(<span class="st">f"[Kafka Error] Delivery failed: {err}"</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="st">f"[Kafka Success] Delivered to {msg.topic()} [{msg.partition()}]"</span>)
+
+<span class="kw">def</span> <span class="fn">emit_user_signed_up</span>(user_id: <span class="tp">str</span>, email: <span class="tp">str</span>, plan: <span class="tp">str</span>):
+    event = {
+        <span class="st">"event_type"</span>: <span class="st">"user.signed_up"</span>,
+        <span class="st">"user_id"</span>: user_id,
+        <span class="st">"email"</span>: email,
+        <span class="st">"plan"</span>: plan,
+        <span class="st">"occurred_at"</span>: datetime.<span class="fn">now</span>(UTC).<span class="fn">isoformat</span>() + <span class="st">'Z'</span>
+    }
+
+    producer.<span class="fn">produce</span>(
+        topic=<span class="st">'user-events'</span>,
+        key=user_id,
+        value=json.<span class="fn">dumps</span>(event).<span class="fn">encode</span>(<span class="st">'utf-8'</span>),
+        on_delivery=delivery_callback
+    )
+
+    producer.<span class="fn">flush</span>()
+</code></pre>
+
+  <p>
+    When instantiating the <code>Producer</code>, a configuration dictionary is passed to define its behavior:
+  </p>
+
+  <ul>
+    <li>
+      <strong><code>bootstrap.servers</code></strong>: Set to
+      <code>'kafka.internal:9092'</code>. This is the initial address (host and port) the producer uses to discover
+      the full topology of the Kafka cluster.
+    </li>
+
+    <li>
+      <strong><code>acks</code></strong>: Set to <code>'all'</code> (equivalent to <code>-1</code>). This is the
+      <strong>highest level of data reliability</strong>. It tells the leader broker to wait for
+      <em>all</em> in-sync replicas (ISRs) to acknowledge they have received the message before sending a success
+      confirmation back to the producer.
+              <div class="callout purple">
+          <span class="callout-icon">📐</span>
+          <div class="callout-body">  <strong>Note:</strong> The Follower Brokers (ISRs) are "backups". These are other brokers in your cluster whose only job is to constantly copy whatever the Leader writes down. Because they are caught up and synchronized with the Leader, they are called In-Sync Replicas (ISRs).
+</div>
+        </div>
+    </li>
+
+    <li>
+      <strong><code>linger.ms</code></strong>: Set to <code>5</code>. Instead of sending every single message
+      immediately, the producer waits up to 5 milliseconds to batch multiple messages together and reduce network
+      overhead.
+    </li>
+  </ul>
+<br>
+  <p>
+    The <code>emit_user_signed_up</code> function acts as a wrapper. It accepts parameters related to a user
+    registration and formats them into a standardized Kafka message.
+  </p>
+
+  <p>
+    The <code>producer.produce()</code> method is <strong>asynchronous</strong>. It places the message into an
+    internal background queue instead of immediately sending it over the network.
+  </p>
+
+  <ul>
+    <li><strong><code>topic='user-events'</code></strong>: Specifies the Kafka topic.</li>
+    <li><strong><code>key=user_id</code></strong>: Used for partition routing.</li>
+    <li><strong><code>value=json.dumps(event).encode('utf-8')</code></strong>: Kafka stores raw bytes.</li>
+    <li>
+      <strong><code>on_delivery=delivery_callback</code></strong>: Registers a callback for delivery success/failure.
+    </li>
+  </ul>
+
+<pre>
+<span class="code-label">Python · Password hashing + raw SQL + API endpoint</span><code><span class="cm"># =====================================================================</span>
+<span class="cm"># 2. CRYPTOGRAPHY &amp; RAW SQL HELPER FUNCTIONS</span>
+<span class="cm"># =====================================================================</span>
+
+<span class="kw">def</span> <span class="fn">hash_password</span>(plain_text_password: <span class="tp">str</span>) -&gt; <span class="tp">str</span>:
+    <span class="st">"""Hashes a plain-text password securely using bcrypt."""</span>
+
+    salt = bcrypt.<span class="fn">gensalt</span>()
+    hashed_bytes = bcrypt.<span class="fn">hashpw</span>(
+        plain_text_password.<span class="fn">encode</span>(<span class="st">'utf-8'</span>),
+        salt
+    )
+
+    <span class="kw">return</span> hashed_bytes.<span class="fn">decode</span>(<span class="st">'utf-8'</span>)
+
+<span class="kw">def</span> <span class="fn">save_to_database</span>(
+    email: <span class="tp">str</span>,
+    password_hash: <span class="tp">str</span>,
+    plan: <span class="tp">str</span>
+) -&gt; <span class="tp">str</span>:
+
+    generated_id = <span class="st">f"usr_{uuid.uuid4().hex}"</span>
+
+    cursor = db_connection.<span class="fn">cursor</span>()
+
+    <span class="kw">try</span>:
+        check_query = <span class="st">"SELECT id FROM users WHERE email = %s;"</span>
+
+        cursor.<span class="fn">execute</span>(check_query, (email,))
+
+        <span class="kw">if</span> cursor.<span class="fn">fetchone</span>():
+            <span class="kw">raise</span> <span class="fn">ValueError</span>(<span class="st">"Email already registered."</span>)
+
+        insert_query = <span class="st">"""
+            INSERT INTO users (id, email, password_hash, plan)
+            VALUES (%s, %s, %s, %s);
+        """</span>
+
+        cursor.<span class="fn">execute</span>(
+            insert_query,
+            (generated_id, email, password_hash, plan)
+        )
+
+        db_connection.<span class="fn">commit</span>()
+
+        <span class="kw">return</span> generated_id
+
+    <span class="kw">except</span> <span class="tp">Exception</span> <span class="kw">as</span> e:
+        db_connection.<span class="fn">rollback</span>()
+        <span class="kw">raise</span> e
+
+    <span class="kw">finally</span>:
+        cursor.<span class="fn">close</span>()
+
+<span class="cm"># =====================================================================</span>
+<span class="cm"># 3. THE TRIGGERING API ENDPOINT</span>
+<span class="cm"># =====================================================================</span>
+
+<span class="kw">class</span> <span class="tp">UserRegisterRequest</span>(BaseModel):
+    email: EmailStr
+    password: <span class="tp">str</span>
+    plan: <span class="tp">str</span>
+
+<span class="at">@app.post</span>(
+    <span class="st">"/api/v1/register"</span>,
+    status_code=status.HTTP_201_CREATED
+)
+<span class="kw">def</span> <span class="fn">register_user</span>(request_body: <span class="tp">UserRegisterRequest</span>):
+
+    <span class="kw">try</span>:
+        hashed_password = <span class="fn">hash_password</span>(request_body.password)
+
+        new_user_id = <span class="fn">save_to_database</span>(
+            email=request_body.email,
+            password_hash=hashed_password,
+            plan=request_body.plan
+        )
+
+        <span class="fn">emit_user_signed_up</span>(
+            user_id=new_user_id,
+            email=request_body.email,
+            plan=request_body.plan
+        )
+
+        <span class="kw">return</span> {
+            <span class="st">"status"</span>: <span class="st">"success"</span>,
+            <span class="st">"message"</span>: <span class="st">"User registered successfully!"</span>,
+            <span class="st">"user_id"</span>: new_user_id
+        }
+
+    <span class="kw">except</span> <span class="tp">ValueError</span> <span class="kw">as</span> val_err:
+        <span class="kw">raise</span> <span class="fn">HTTPException</span>(
+            status_code=<span class="nm">400</span>,
+            detail=<span class="fn">str</span>(val_err)
+        )
+
+    <span class="kw">except</span> <span class="tp">Exception</span> <span class="kw">as</span> e:
+        <span class="kw">raise</span> <span class="fn">HTTPException</span>(
+            status_code=<span class="nm">500</span>,
+            detail=<span class="st">f"Registration failed: {str(e)}"</span>
+        )
+</code></pre>
+
+  <p>
+    Your <code>emit_user_signed_up</code> function wakes up. It takes the
+    <code>user_id</code>, <code>email</code>, and <code>plan</code> given to it by the backend controller,
+    packages them into a clean JSON event object, and pushes it into Kafka's queue via
+    <code>producer.produce()</code>.
+  </p>
+
+  <p>
+    Once it hands the message to Kafka, the backend immediately replies to the user. It
+    <em>does not wait</em> for the email to actually be sent.
+  </p>
+
+  <h3>Step 3: The Kafka Broker (Infrastructure)</h3>
+
+  <p>
+    The event travels over the network to the Kafka Broker. The broker is a single server running the Kafka software.
+  </p>
+
+  <p>
+    It receives the <code>user.signed_up</code> event, writes it to an immutable append-only log on disk, and serves
+    those messages to consumers.
+  </p>
+
+  <pre>
+<span class="code-label">Conceptual representation of the Broker's hard drive log</span><code>[Topic: user-events]
+
+Offset 0: {"event_type": "user.upgraded", "user_id": "user_001"}
+
+Offset 1: {"event_type": "user.signed_up", "user_id": "user_123", "email": "newuser@example.com"}
+&lt;-- Your event is saved here
+</code></pre>
+
+<h3>Step 4: The Consumer (Downstream Microservice)</h3>
+
+  <p>
+    Somewhere else in your infrastructure, a completely separate application is running. For example, consider the
+    <strong>Email Service</strong>.
+  </p>
+
+  <p>
+    It is a <strong>Consumer</strong> that constantly asks the Broker for new data in the
+    <code>user-events</code> topic.
+  </p>
+
+  <p>
+    As soon as Step 3 happens, this consumer pulls the new record, reads the email address, and executes the final
+    business logic.
+  </p>
+
+<pre>
+<span class="code-label">Python · Kafka consumer service</span><code><span class="kw">from</span> confluent_kafka <span class="kw">import</span> Consumer
+<span class="kw">import</span> json
+
+<span class="cm"># Set up the consumer and tell it who it is</span>
+consumer = <span class="fn">Consumer</span>({
+    <span class="st">'bootstrap.servers'</span>: <span class="st">'kafka:9092'</span>,
+    <span class="st">'group.id'</span>: <span class="st">'email-sending-service'</span>,
+    <span class="st">'auto.offset.reset'</span>: <span class="st">'earliest'</span>
+})
+
+<span class="cm"># Tell it which topic to listen to</span>
+consumer.<span class="fn">subscribe</span>([<span class="st">'user-events'</span>])
+
+<span class="fn">print</span>(<span class="st">"Email Service is running and waiting for events..."</span>)
+
+<span class="cm"># The infinite loop that constantly asks Kafka for new data</span>
+<span class="kw">while</span> <span class="nm">True</span>:
+    msg = consumer.<span class="fn">poll</span>(timeout=<span class="nm">1.0</span>)
+
+    <span class="kw">if</span> msg <span class="kw">is</span> <span class="nm">None</span>:
+        <span class="kw">continue</span>
+
+    event_data = json.<span class="fn">loads</span>(
+        msg.<span class="fn">value</span>().<span class="fn">decode</span>(<span class="st">'utf-8'</span>)
+    )
+
+    <span class="kw">if</span> event_data[<span class="st">"event_type"</span>] == <span class="st">"user.signed_up"</span>:
+        user_email = event_data[<span class="st">"email"</span>]
+
+        <span class="cm"># ----------------------------------------------------</span>
+        <span class="cm"># THE FINAL ACTION</span>
+        <span class="cm"># ----------------------------------------------------</span>
+
+        <span class="fn">print</span>(<span class="st">f"Connecting to SMTP server..."</span>)
+        <span class="fn">print</span>(
+            <span class="st">f"Sending 'Welcome to the Platform' email to {user_email}"</span>
+        )
+</code></pre>
+
+
+        <h3>Best Practices of Event-Driven Architecture</h3>
+
+  <p><strong>Three Non-Negotiable Pillars of Event-Driven Architecture</strong></p>
+
+  <p>
+    These three concepts — <strong>Idempotency</strong>,
+    <strong>Dead-Letter Queues (DLQs)</strong>, and
+    <strong>Event Versioning</strong> — are the foundation of every stable
+    event-driven system. Without them, your architecture becomes fragile:
+    duplicated payments, blocked pipelines, crashing consumers,
+    and broken downstream services become inevitable.
+  </p>
+
+  <p><strong>1. Idempotency — Preventing Duplicate Damage</strong></p>
+
+  <p>
+    In distributed systems, duplicates are guaranteed to happen. A producer may resend a message after a network timeout,
+    or a broker may accidentally deliver the same event twice.
+  </p>
+
+  <p>
+    <strong>Idempotency</strong> means an operation produces the same final
+    result no matter how many times it is executed.
+  </p>
+
+    <strong>The Problem:</strong>
+    Imagine a consumer processing a
+    <code>payment.processed</code> event.
+    If Kafka delivers the same event three times,
+    the customer could be charged three times.
+  <br>
+    <p><strong>The Solution:</strong>
+    <ul>
+    <li>
+      <strong>Event IDs:</strong>
+      Every event gets a globally unique immutable UUID.
+    </li>
+
+    <li>
+      <strong>Deduplication Stores:</strong>
+      Before processing an event, the consumer checks a fast store
+      like Redis:
+      <em>
+        “Have I already processed Event ID 12345?”
+      </em>
+      If yes, the event is discarded safely.
+    </li>
+
+    <li>
+      <strong>Upserts Instead of Inserts:</strong>
+      Instead of blindly running SQL <code>INSERT</code> statements,
+      use operations like:
+      <code>INSERT ... ON CONFLICT DO UPDATE</code>.
+      This prevents duplicate rows and ensures repeated events
+      simply overwrite the same data.
+    </li>
+  </ul>
+</p>
+
+  <p><strong>2. Dead-Letter Queues (DLQs) — The Pipeline Safety Net</strong></p>
+
+  <p>
+    Consumers are just code — and code eventually fails. Sometimes an event arrives that simply cannot be processed.
+    This is known as a <strong>Poison Pill</strong>.
+  </p>
+
+  <p>
+    Examples:
+  </p>
+
+  <ul>
+    <li>A required field like <code>email</code> is missing</li>
+    <li>The payload is malformed</li>
+    <li>A downstream database is temporarily offline</li>
+  </ul>
+
+    <strong>The Problem Without a DLQ:</strong>
+
+    <p>
+      Kafka (or SQS) guarantees delivery.
+      So when a consumer crashes on a poison pill,
+      the broker simply sends the same message again.
+    </p>
+
+    <p>
+      The consumer keeps crashing and retrying indefinitely on that same bad message.
+    </p>
+
+    <p>
+      Meanwhile, every healthy event sitting behind that bad message
+      gets blocked — a problem called
+      <strong>Head-of-Line Blocking</strong>.
+    </p>
+
+    <p>
+      Eventually, the entire pipeline stalls.
+    </p>
+
+    <strong>The Solution:</strong>
+    Configure retry limits and isolate bad messages into a DLQ.
+
+  <ol>
+    <li>The consumer processes the message and fails. (Attempt 1)</li>
+    <li>The broker retries it. (Attempt 2)</li>
+    <li>The broker retries again. (Attempt 3)</li>
+    <li>
+      After the retry limit is reached, the message is automatically
+      removed from the main queue and moved into the
+      <strong>Dead-Letter Queue (DLQ)</strong>.
+    </li>
+  </ol>
+
+  <p>
+    The primary pipeline immediately resumes processing healthy events.
+  </p>
+
+  <p>
+    Engineers can later inspect the DLQ, debug the issue,
+    fix the bug, and replay the failed messages safely.
+  </p>
+
+  <pre>
+<span class="code-label">YAML · AWS SQS Dead-Letter Queue</span><code><span class="tp">Resources</span>:
+  <span class="tp">MainQueue</span>:
+    <span class="tp">Type</span>: AWS::SQS::Queue
+
+    <span class="tp">Properties</span>:
+      <span class="tp">QueueName</span>: user-events-processing
+
+      <span class="tp">RedrivePolicy</span>:
+        <span class="tp">deadLetterTargetArn</span>: !GetAtt DLQ.Arn
+        <span class="tp">maxReceiveCount</span>: <span class="nm">3</span> <span class="cm"># after 3 failures, send to DLQ</span>
+
+  <span class="tp">DLQ</span>:
+    <span class="tp">Type</span>: AWS::SQS::Queue
+
+    <span class="tp">Properties</span>:
+      <span class="tp">QueueName</span>: user-events-processing-dlq
+      <span class="tp">MessageRetentionPeriod</span>: <span class="nm">1209600</span> <span class="cm"># 14 days</span>
+</code></pre>
+
+  <p><strong>3. Event Versioning — Protecting the Contract</strong></p>
+
+  <p>
+    In a monolith, changing a database column is easy —
+    you update the same codebase that reads it.
+  </p>
+
+  <p>
+    In event-driven systems, producers and consumers are separate
+    applications, often owned by entirely different teams.
+  </p>
+
+    <strong>The Problem:</strong>
+
+    <p>
+      Events are effectively public APIs.
+    </p>
+
+    <p>
+      If a producer changes:
+    </p>
+
+    <pre><code>{
+  "user_id": 123
+}</code></pre>
+
+    <p>
+      into:
+    </p>
+
+    <pre><code>{
+  "userId": 123
+}</code></pre>
+
+    <p>
+      every consumer expecting <code>user_id</code>
+      immediately breaks.
+    </p>
+
+    <strong>The Solution:</strong>
+    Treat event schemas as strict contracts.
+
+  <ul>
+    <li>
+      <strong>Schema Registry:</strong>
+      Tools like Confluent Schema Registry validate the exact
+      structure ("schema") of every event.
+    </li>
+
+    <li>
+      <strong>Backward Compatibility Enforcement:</strong>
+      If a developer removes a required field or introduces a breaking
+      change, the registry can reject the event entirely before it
+      ever reaches Kafka.
+    </li>
+
+    <li>
+      <strong>Versioned Events:</strong>
+      Instead of mutating old events, publish new versions:
+      <code>user.signed_up.v1</code>,
+      <code>user.signed_up.v2</code>, etc.
+    </li>
+
+    <li>
+      <strong>Gradual Migration:</strong>
+      Consumer teams can migrate safely over weeks or months
+      before older versions are finally retired.
+    </li>
+  </ul>
+
+        <div class="callout purple">
+          <span class="callout-icon">⚡</span>
+          <div class="callout-body"><strong>Best fit:</strong> Systems needing real-time reaction (fraud detection, live recommendations), analytics pipelines and data warehouse ingestion (Kafka → Spark/Flink → BigQuery), ML feature engineering needing both historical and live data, and any system benefiting from loose coupling between components.</div>
+        </div>
+      </section>
+
+      <div class="section-divider">· · ·</div>
+
+      <!-- Part 5: Decision -->
+      <section id="decision">
+        <span class="part-label">Part 5</span>
+        <h2>Choosing the Right Architecture — A Decision Framework</h2>
+
+        <p>The question "which architecture should we use?" has no correct answer divorced from context. It is always a question about tradeoffs, and the tradeoffs that matter are specific to your business, your team, and your system's actual requirements.</p>
+
+        <h3>Axis 1: Business Urgency vs. Architectural Investment</h3>
+
+        <p>The fundamental tension is between <em>shipping now</em> and <em>building for scale</em>. A monolith ships faster. Microservices scale better. But "scale better" only matters when you need to scale, and most systems never reach the scale where microservices pay for themselves.</p>
+
+        <p>Ask honestly: what is the cost of rebuilding this in 18 months if we need to? For many internal data tools and ML systems, the answer is "cheap enough." The pragmatic move: <strong>start monolith, modularize boundaries early, distribute only when a specific scaling or independence problem demands it.</strong> Netflix didn't start as microservices. Neither did Amazon.</p>
+
+        <h3>Axis 2: Technical Requirements Matrix</h3>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Requirement</th>
+                <th>Monolith</th>
+                <th>Multi-Tier</th>
+                <th>Microservices</th>
+                <th>Event-Driven</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Sub-100ms latency</td><td>✅ Excellent</td><td>✅ Good</td><td>⚠️ Careful design</td><td>⚠️ Queue adds latency</td></tr>
+              <tr><td>Independent team scaling</td><td>❌ Hard</td><td>⚠️ Partial</td><td>✅ Excellent</td><td>✅ Good</td></tr>
+              <tr><td>Real-time data processing</td><td>⚠️ Possible</td><td>⚠️ Possible</td><td>⚠️ Needs EDA</td><td>✅ Native fit</td></tr>
+              <tr><td>Fault isolation</td><td>❌ Single process</td><td>⚠️ Tier-level</td><td>✅ Service-level</td><td>✅ Queue-buffered</td></tr>
+              <tr><td>Data consistency (ACID)</td><td>✅ Native</td><td>✅ Native</td><td>❌ Eventual only</td><td>❌ Eventual only</td></tr>
+              <tr><td>Debugging simplicity</td><td>✅ Single trace</td><td>✅ Good</td><td>❌ Distributed tracing</td><td>❌ Event chain tracing</td></tr>
+              <tr><td>Deployment simplicity</td><td>✅ One artifact</td><td>⚠️ Multiple</td><td>❌ Dozens of pipelines</td><td>❌ + broker ops</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Axis 3: Practical Constraints</h3>
+
+        <p>The most underappreciated axis. Architecture doesn't exist in a vacuum — it exists inside an organization with real limitations:</p>
+
+        <p><strong>Team size</strong> — a distributed microservices architecture requires ownership. Each service needs an on-call rotation, a deployment pipeline, a team that understands its internals. A four-person team operating 20 microservices will drown. General rule: you need at least 2–3 engineers per service to justify the overhead.</p>
+
+        <p><strong>Budget</strong> — microservices means more infrastructure: more Kubernetes nodes, more managed databases, more observability tooling. The total cost of ownership is substantially higher. For data teams with limited platform budgets, this is a real constraint, not an abstraction.</p>
+
+        <p><strong>Legacy systems</strong> — most architecture decisions aren't greenfield. A migration from a 10-year-old monolith to microservices is a multi-year program. The Strangler Fig pattern — incrementally extracting services while keeping the monolith running — is the pragmatic approach, not a full rewrite.</p>
+
+        <figure class="illustration" id="fig-decision">
+          <img src="images/architecture-decision-flowchart.png" alt="Decision flowchart for choosing an architecture style, based on team size, scaling needs, independence requirements, and real-time event processing needs." />
+          <figcaption><strong>Figure 5:</strong> Architecture Decision Flowchart. Starting from the top, four key questions guide the choice: team size and product stage, divergent scaling needs across components, independent team ownership requirements, and real-time event processing needs.</figcaption>
+        </figure>
+
+        <h3>The ML Engineering Lens: A Special Case</h3>
+
+        <p>Data and ML systems have architectural needs that general-purpose web systems don't share:</p>
+
+        <p><strong>Batch vs. real-time duality.</strong> Most ML systems live in two modes: offline training (large-scale batch on historical data) and online serving (low-latency real-time inference). These modes have opposite requirements. A lambda-style pattern — a microservice for online serving, a separate batch system for offline training, sharing data through a feature store — is the common resolution.</p>
+
+        <p><strong>Feature stores</strong> are an architectural pattern unto themselves — a N-tier system (offline store + online store + feature computation service) that bridges the batch and real-time worlds.</p>
+
+        <p><strong>Model versioning and A/B testing</strong> demand independent deployment. If inference is buried in a monolith, a controlled experiment requires a full monolith deploy. Extracting inference into a microservice enables canary deployments, shadow mode testing, and traffic-split experiments without touching the rest of the system.</p>
+      </section>
+
+      <div class="section-divider">· · ·</div>
+
+      <!-- Conclusion -->
+      <section id="conclusion">
+        <h2>Conclusion: Architecture Is a Conversation, Not a Decision</h2>
+
+        <p>The most dangerous architectural mistake is treating architecture as a one-time choice rather than an ongoing set of tradeoffs managed with deliberate attention.</p>
+
+        <p>Systems evolve. A startup that was right to launch with a monolith in Year 1 may be right to extract its first service in Year 3 and adopt event-driven patterns for its data pipeline in Year 4. This is not architectural inconsistency — it is architectural maturity. The Strangler Fig, the Modular Monolith, the Domain-Driven microservice decomposition: these are evolution strategies, not admissions of past failure.</p>
+
+        <div class="callout tip">
+          <span class="callout-icon">🗺️</span>
+          <div class="callout-body">
+            <strong>Practical guidance for engineers new to these decisions:</strong>
+            <br/><br/>
+            1. <strong>Default to simpler.</strong> The monolith is not embarrassing. It is often correct.<br/>
+            2. <strong>Modularize boundaries before you distribute them.</strong> Clean module interfaces in a monolith make future extraction straightforward.<br/>
+            3. <strong>Distribute only when a specific problem demands it.</strong> Not because a conference talk made it sound exciting.<br/>
+            4. <strong>Invest in observability before you need it.</strong> Distributed systems without distributed tracing are archaeology projects.<br/>
+            5. <strong>Think about data gravity.</strong> Where does your data live, and what architecture lets you process it close to where it sits?
+          </div>
+        </div>
+
+        <p>The boxes and arrows on a whiteboard are just notation. The architecture lives in the team structure, the deployment pipeline, the on-call rotation, and the data flows that actually move through your system at 2 AM. Design those deliberately, with clear eyes about the costs and benefits, and you'll make defensible choices that age well.</p>
+      </section>
+
+      <!-- Article Footer -->
+      <footer class="article-footer">
+        <p><strong>Further reading:</strong> <em>Building Microservices</em> by Sam Newman · <em>Designing Data-Intensive Applications</em> by Martin Kleppmann (essential for ML/data engineers) · <em>Fundamentals of Software Architecture</em> by Mark Richards &amp; Neal Ford · AWS and Google Cloud architecture best practices documentation for cloud-native implementations of each pattern.</p>
+      </footer>
+
     </article>
 
-    <aside class="toc-sidebar">
+    <!-- TOC Sidebar -->
+    <aside class="toc-sidebar" aria-label="Table of contents">
       <div class="toc-inner">
-        <div class="toc-label">Table of Contents</div>
+        <p class="toc-label">Contents</p>
         <ul class="toc-list">
-          <li><a href="#intro">Introduction</a></li>
-          <li><a href="#part-1">1 · Core Concepts</a></li>
+          <li><a href="#introduction">Introduction</a></li>
+          <li><a href="#monolith">1 · Monolithic</a></li>
+          <li><a href="#multi-tier">2 · Multi-Tier</a></li>
+          <li><a href="#microservices">3 · Microservices</a></li>
+          <li><a href="#event-driven">4 · Event-Driven</a></li>
+          <li><a href="#decision">5 · Decision Framework</a></li>
+          <li><a href="#conclusion">Conclusion</a></li>
         </ul>
       </div>
     </aside>
   </div>
 
-  <script>
+<script>
   // ─────────────────────────────────────────────
   // Persistent reading progress
   // ─────────────────────────────────────────────
